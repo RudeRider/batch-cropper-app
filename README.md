@@ -1,70 +1,109 @@
 🖼️ Batch Image Aspect Ratio Cropper
-Introduction
-The Batch Image Aspect Ratio Cropper is a client-side tool designed to efficiently prepare multiple images for publishing, particularly for platforms requiring specific aspect ratios (like social media stories, banners, or video thumbnails).
+This is a powerful, client-side web application designed for fast, accurate, and high-volume image preparation. It allows users to upload multiple JPEG or PNG images, define a single aspect ratio, and then fine-tune the crop, output format, and compression quality for each image individually before downloading the results in a single, convenient ZIP archive (or a direct download for single files).
 
-It leverages Cropper.js for precise visual manipulation and JSZip/FileSaver.js for fast, in-browser batch processing and download.
+The application operates entirely in the browser, ensuring your images are never uploaded to a server, prioritizing speed and privacy.
 
-✨ Features
-Batch Upload: Process multiple PNG or JPEG files simultaneously.
+✨ Key Features
+Category
 
-Drag-and-Drop Support: Quickly initiate upload by dragging files directly onto the upload zone.
+Feature
 
-Global Default Ratio: Set a single aspect ratio (default 9:16) that applies to all images, saving significant time.
+Description
 
-Auto-Centering: On load or crop reset, the crop box automatically centers itself within the largest possible area of the image while respecting the chosen aspect ratio.
+Workflow
 
-Per-File Overrides: Customize settings for individual images using local controls:
+Drag-and-Drop Upload
 
-Local Ratio: Override the global ratio to apply a unique ratio or enable a free crop.
+Quickly load multiple files by dragging them directly into the designated area.
 
-Fill Control: Toggle solid color filling for areas cropped outside the original image boundary, with a customizable color picker.
+Precision
 
-Reset/Rename: Reset Crop to the original auto-centered position or Regenerate ID for a unique export name prefix.
+Global Ratio Presets
 
-Flexible Output: Set the output format for each image individually:
+Set a default aspect ratio (e.g., 9:16, 1:1) instantly applied to all uploaded images.
 
-PNG: For best quality and support for transparent backgrounds (when fill is disabled).
+Automation
 
-JPEG: For smaller file sizes, with an adjustable Quality Slider (1-100).
+Auto-Centered Crop
 
-Visual Feedback: Local overrides are clearly indicated by color-coded borders on the input fields.
+On upload, the crop box automatically centers itself to intelligently frame the content based on the current aspect ratio, providing a great starting point.
 
-Batch Download: Download all processed images compiled into a single .zip file. Automatically initiates a direct download for single files.
+Flexibility
+
+Local Overrides
+
+Override the global ratio, fill color, output format, and JPEG quality for specific images that require unique treatment.
+
+Control
+
+Individual Card Controls
+
+Each image card includes buttons to Reset the Crop back to its auto-centered state and Regenerate ID for filename customization.
+
+Output
+
+Flexible Output Format
+
+Choose between PNG (for quality and transparent backgrounds) or JPEG (for smaller file size) for each file.
+
+Compression
+
+Adjustable JPEG Quality
+
+A slider appears for JPEG outputs, allowing per-file control over compression quality (1-100).
+
+Batching
+
+ZIP Download
+
+Download all processed images in a single ZIP file, maintaining their original output format and quality settings. Automatically switches to Direct Download for single files.
+
+UI/UX
+
+Visual Feedback
+
+Local override controls (ratio, color, format) show a colored border when they deviate from the global/default setting, making overrides easy to spot.
 
 🚀 How to Use
-Set Global Defaults (Section 1): Select one of the preset aspect ratios (e.g., 9:16) or define a custom ratio using the input fields. This ratio will be applied to all newly uploaded images.
+The application is designed for a simple, responsive, full-screen workflow:
 
-Upload Files (Section 2):
+1. Set Global Defaults
+Use the preset buttons (e.g., 9:16, 1:1) or the custom input fields to establish the default aspect ratio. This ratio will be applied to every image upon upload.
 
-Click the "Upload PNG or JPEG Files" input.
+2. Upload Files
+Drag and drop your JPEG or PNG files onto the dedicated drop zone, or click the zone to open the file selector.
 
-OR, drag and drop your image files directly into the dashed upload zone.
+Each valid file (max 5MB) will generate an individual Crop Gallery Card.
 
-Adjust Crops (Section 3 - Crop Gallery):
+The cropping box will appear immediately, automatically centered to the default aspect ratio.
 
-Each image appears in the gallery with the global default ratio applied (and auto-centered).
+3. Adjust and Override
+For each image card, you can:
 
-Click and drag the crop box to refine the selection.
+Visually Adjust: Drag, zoom, or pan the cropper window on the image preview to fine-tune the selection.
 
-Use the Local Ratio Override dropdown to change the ratio just for that image (e.g., switch one image to 1:1 while others remain 9:16).
+Local Ratio Override: Use the dropdown to set a ratio different from the global default (the border turns red to indicate the override).
 
-Toggle Fill Empty Area and select a color if you want to pad out the image rather than leaving transparent borders.
+Fill Control: Change the color or toggle the 'Fill Empty Area' checkbox if the crop area extends beyond the original image boundaries.
 
-Select the desired Output Format (PNG or JPEG) and adjust the quality if JPEG is chosen.
+Output Format: Switch the output from PNG to JPEG and adjust the quality slider (0-100) for compression control.
 
-Download: Click the green "Download All Cropped Images (ZIP)" button at the bottom.
+Reset/Regenerate: Use the quick buttons to reset the current crop or assign a new unique ID to change the resulting filename prefix.
 
-If only one file is present, it will download directly.
+4. Download Results
+Click the main Download button at the bottom:
 
-If multiple files are present, a ZIP archive named batch_cropped_images.zip will be downloaded containing all processed files.
+Multiple Files: A single batch_cropped_images.zip file will be downloaded containing all processed images with their unique settings.
 
-🛠️ Technology Stack
-HTML5/JavaScript: Core application logic.
+Single File: The file will be downloaded directly without zipping.
 
-Tailwind CSS: Responsive styling and modern UI.
+💻 Tech Stack
+HTML5 / Vanilla JavaScript (ES Modules): Core structure and interactivity logic.
 
-Cropper.js: Image manipulation and cropping library.
+Tailwind CSS: Fully responsive, utility-first styling framework.
 
-JSZip: Client-side file compression for batch download.
+Cropper.js (v1.6.1): Powerful, client-side image cropping library.
 
-FileSaver.js: Cross-browser file download utility.
+JSZip (v3.10.1): Used for creating the multi-file ZIP archive client-side.
+
+FileSaver.js (v2.0.5): Ensures cross-browser compatibility for file downloading.
