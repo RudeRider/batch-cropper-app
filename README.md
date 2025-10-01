@@ -1,45 +1,70 @@
-Batch Image Cropper Gallery
-A minimalist, client-side web application for batch cropping multiple PNG and JPEG images to a uniform aspect ratio or custom dimensions, with the added capability of filling transparent areas with a solid color.
+🖼️ Batch Image Aspect Ratio Cropper
+Introduction
+The Batch Image Aspect Ratio Cropper is a client-side tool designed to efficiently prepare multiple images for publishing, particularly for platforms requiring specific aspect ratios (like social media stories, banners, or video thumbnails).
 
-This tool is designed for speed and efficiency, allowing users to upload up to 30 files, view them in an interactive gallery, apply global crop settings, and download all resulting cropped images in a single ZIP archive.
+It leverages Cropper.js for precise visual manipulation and JSZip/FileSaver.js for fast, in-browser batch processing and download.
 
 ✨ Features
-Batch Processing: Upload up to 30 PNG and JPEG files at once.
+Batch Upload: Process multiple PNG or JPEG files simultaneously.
 
-Interactive Gallery: View and manipulate all uploaded images simultaneously in a responsive grid.
+Drag-and-Drop Support: Quickly initiate upload by dragging files directly onto the upload zone.
 
-Global Aspect Ratio Control: Instantly apply standard presets (16:9, 4:3, 1:1) or custom ratios to all images.
+Global Default Ratio: Set a single aspect ratio (default 9:16) that applies to all images, saving significant time.
 
-Free Crop Mode: Choose a "Free Crop" ratio (NaN) to allow independent, unrestricted cropping for each image.
+Auto-Centering: On load or crop reset, the crop box automatically centers itself within the largest possible area of the image while respecting the chosen aspect ratio.
 
-Individual Manipulation: Fine-tune the position and scale of the crop box on each image using the Cropper.js interface.
+Per-File Overrides: Customize settings for individual images using local controls:
 
-Solid Color Fill: Automatically fill transparent areas (created by cropping outside the original image boundary) with a user-specified solid color (default: white).
+Local Ratio: Override the global ratio to apply a unique ratio or enable a free crop.
 
-Single-Click ZIP Download: All successfully processed images are compressed and downloaded as one convenient batch_cropped_images.zip file.
+Fill Control: Toggle solid color filling for areas cropped outside the original image boundary, with a customizable color picker.
 
-Single-File Application: The entire tool runs client-side, requiring no server setup or complex dependencies.
+Reset/Rename: Reset Crop to the original auto-centered position or Regenerate ID for a unique export name prefix.
 
-🚀 Getting Started (Using GitHub Pages)
-Since this is a single-file application (index.html), hosting it is extremely easy using GitHub Pages.
+Flexible Output: Set the output format for each image individually:
 
-Create a Repository: Create a new public repository on GitHub (e.g., batch-cropper).
+PNG: For best quality and support for transparent backgrounds (when fill is disabled).
 
-Upload Files: Upload both the index.html and this README.md file to the root of your new repository.
+JPEG: For smaller file sizes, with an adjustable Quality Slider (1-100).
 
-Enable Pages: Go to your repository's Settings tab, navigate to Pages, select the main branch, and the / (root) folder, then click Save.
+Visual Feedback: Local overrides are clearly indicated by color-coded borders on the input fields.
 
-View Live: Your application will be live in a few moments at a URL like: https://[your-username].github.io/[repo-name]/
+Batch Download: Download all processed images compiled into a single .zip file. Automatically initiates a direct download for single files.
 
-🛠️ Usage Instructions
-Set Global Crop Settings:
+🚀 How to Use
+Set Global Defaults (Section 1): Select one of the preset aspect ratios (e.g., 9:16) or define a custom ratio using the input fields. This ratio will be applied to all newly uploaded images.
 
-Select an Aspect Ratio Preset (e.g., 16:9) or use the Custom Ratio inputs and click "Apply." This ratio will be enforced on all images.
+Upload Files (Section 2):
 
-Choose your Empty Area Fill Method: Check the box to use a solid color fill (and select the color), or uncheck it to maintain transparency in cropped-out areas.
+Click the "Upload PNG or JPEG Files" input.
 
-Upload Files: Click "Upload PNG or JPEG Files" and select up to 30 images. They will appear instantly in the gallery.
+OR, drag and drop your image files directly into the dashed upload zone.
 
-Adjust Crops: If needed, use your mouse to move (pan) the images and adjust the crop box positions within the gallery.
+Adjust Crops (Section 3 - Crop Gallery):
 
-Download: Click "Download All Cropped PNGs (ZIP)". The tool will process each image and download the final ZIP archive containing all the cropped files.
+Each image appears in the gallery with the global default ratio applied (and auto-centered).
+
+Click and drag the crop box to refine the selection.
+
+Use the Local Ratio Override dropdown to change the ratio just for that image (e.g., switch one image to 1:1 while others remain 9:16).
+
+Toggle Fill Empty Area and select a color if you want to pad out the image rather than leaving transparent borders.
+
+Select the desired Output Format (PNG or JPEG) and adjust the quality if JPEG is chosen.
+
+Download: Click the green "Download All Cropped Images (ZIP)" button at the bottom.
+
+If only one file is present, it will download directly.
+
+If multiple files are present, a ZIP archive named batch_cropped_images.zip will be downloaded containing all processed files.
+
+🛠️ Technology Stack
+HTML5/JavaScript: Core application logic.
+
+Tailwind CSS: Responsive styling and modern UI.
+
+Cropper.js: Image manipulation and cropping library.
+
+JSZip: Client-side file compression for batch download.
+
+FileSaver.js: Cross-browser file download utility.
