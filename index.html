@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Aspect Ratio Cropper</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Load JSZip for client-side compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Load FileSaver for cross-browser file downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        /* Custom styles for gallery items */
+        .gallery-item {
+            /* Responsive sizing for the container */
+            width: 100%;
+            height: 300px; /* Fixed height for consistent gallery look */
+            overflow: hidden;
+            background-color: #f7fafc; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .gallery-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Hide the cropper view until an image is loaded */
+        .cropper-hidden {
+            display: none !important;
+        }
+
+        /* Apply global aspect ratio button styling */
+        .ratio-btn.active-ratio {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 sm:p-8 font-sans">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="flex flex-col items-center text-white">
+            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="loading-text" class="mt-3 text-lg">Processing 0 files...</p>
+        </div>
+    </div>
+    
+    <!-- Changed the class here for full width -->
+    <div class="w-full min-h-screen bg-white shadow-xl rounded-xl p-6 sm:p-10 border border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">Batch Image Cropper Gallery</h1>
+        
+        <!-- GLOBAL CONTROLS -->
+        <div class="p-4 sm:p-6 mb-8 bg-indigo-50 rounded-lg border border-indigo-200 shadow-inner">
+            <h2 class="text-xl font-semibold text-indigo-800 mb-4">1. Global Crop Settings</h2>
+
+            <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-6">
+                
+                <!-- Aspect Ratios -->
+                <div class="col-span-full lg:col-span-1">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Aspect Ratios (Applies to all crops)</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button data-ratio="16/9" class="ratio-btn bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-600 transition shadow-md active-ratio" type="button">16:9</button>
+                        <button data-ratio="4/3" class="ratio-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition shadow-md" type="button">4:3</button>
+                        <button data-ratio="1/1" class="ratio-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition shadow-md" type="button">1:1</button>
+                        <button data-ratio="NaN" class="ratio-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition shadow-md" type="button">Free Crop</button>
+                    </div>
+                </div>
+
+                <!-- Custom Ratio Input -->
+                <div class="col-span-full lg:col-span-1">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Custom Ratio (e.g., 5:2)</label>
+                    <div class="flex space-x-3 items-center">
+                        <input type="number" id="customWidth" placeholder="Width (e.g., 5)" class="w-24 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center" min="1">
+                        <span class="text-xl text-gray-500">:</span>
+                        <input type="number" id="customHeight" placeholder="Height (e.g., 2)" class="w-24 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center" min="1">
+                        <button id="applyCustomRatio" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition shadow-md" type="button">Apply</button>
+                    </div>
+                    <p id="ratio-error" class="text-red-500 text-sm mt-2 hidden">Please enter valid positive numbers for width and height.</p>
+                </div>
+
+                <!-- Fill Control -->
+                <div class="col-span-full lg:col-span-1 border-t md:border-t-0 pt-4 md:pt-0">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Empty Area Fill Method</label>
+                    <div class="p-2 border rounded-lg bg-white shadow-sm" id="colorFillContainer">
+                        <label class="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                            <input type="checkbox" id="colorFillToggle" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                            <span>Fill Empty Area with Solid Color</span>
+                        </label>
+                        <div id="fillColorContainer" class="flex items-center space-x-3 mt-2">
+                            <input type="color" id="fillColor" value="#ffffff" class="h-10 w-10 p-1 border border-gray-300 rounded-lg cursor-pointer">
+                            <span class="text-sm text-gray-700">Select Fill Color (Default: White)</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Uncheck this box to download with **transparent** borders (PNG only).</p>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-4 text-xs text-indigo-600">
+                **Note:** Use the controls above to set the ratio/fill for all images. Click/drag an individual image below to fine-tune its position.
+            </p>
+        </div>
+
+
+        <!-- Step 2: Upload Images -->
+        <div class="mb-8 border-b pb-6">
+            <label for="fileInput" class="block text-lg font-medium text-gray-700 mb-3">2. Upload PNG or JPEG Files (Max 30 at once, 5MB each)</label>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer rounded-lg border border-gray-300 p-2">
+            <p id="upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
+        </div>
+
+        <!-- Step 3: Gallery View -->
+        <div id="gallerySection" class="hidden mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">3. Crop Gallery (<span id="fileCount">0</span> Files)</h2>
+            <div id="galleryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cropper cards will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Step 4: Batch Download Button -->
+        <div id="downloadSection" class="mt-8 pt-6 border-t flex justify-center hidden">
+            <button id="downloadAllBtn" class="bg-green-600 text-white text-xl font-bold px-8 py-3 rounded-xl hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                Download All Cropped PNGs (ZIP)
+            </button>
+        </div>
+        
+        <!-- Non-blocking message box for success/error -->
+        <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl hidden" role="alert">
+            <p id="messageText"></p>
+        </div>
+    </div>
+
+    <!-- Load Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script type="module">
+        // --- Firebase Initialization Placeholder (Required by environment) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        let userId = 'anonymous';
+
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+
+                const setupAuth = async () => {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                    } else {
+                        setupAuth().catch(e => console.error("Anonymous sign-in failed:", e));
+                    }
+                });
+
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+            }
+        }
+
+        // --- Core Application Variables ---
+        const fileInput = document.getElementById('fileInput');
+        const ratioBtns = document.querySelectorAll('.ratio-btn');
+        const applyCustomRatioBtn = document.getElementById('applyCustomRatio');
+        const customWidthInput = document.getElementById('customWidth');
+        const customHeightInput = document.getElementById('customHeight');
+        const uploadError = document.getElementById('upload-error');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const gallerySection = document.getElementById('gallerySection');
+        const galleryContainer = document.getElementById('galleryContainer');
+        const fileCountDisplay = document.getElementById('fileCount');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const downloadSection = document.getElementById('downloadSection');
+        const ratioError = document.getElementById('ratio-error');
+        
+        const colorFillToggle = document.getElementById('colorFillToggle');
+        const fillColor = document.getElementById('fillColor');
+        
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        let cropperInstances = []; // Stores { file: File, cropper: CropperInstance, index: number, card: HTMLElement }
+        let currentAspectRatio = 16 / 9; // Default ratio
+
+        // --- Utility Functions ---
+
+        // Show non-blocking message
+        const showMessage = (text, isError = false) => {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
+            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
+            clearTimeout(messageBox.timer);
+            messageBox.timer = setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        };
+
+        // Function to show/hide loading state with progress text
+        const toggleLoading = (isVisible, text = 'Processing...', count = 0) => {
+            loadingText.textContent = text;
+            loadingOverlay.classList.toggle('hidden', !isVisible);
+        };
+
+        // Function to update the global aspect ratio and apply it to all current croppers
+        const setCropperRatio = (ratio) => {
+            // Ratio is passed as a string like "16/9" or "1/1" or "NaN"
+            currentAspectRatio = ratio === 'NaN' ? NaN : eval(ratio);
+            
+            // Apply to all existing croppers
+            cropperInstances.forEach(item => {
+                if (item.cropper) {
+                    item.cropper.setAspectRatio(currentAspectRatio);
+                }
+            });
+        };
+
+        /**
+         * Updates the displayed index numbers and total count after deletion/initial load.
+         */
+        const updateGalleryIndexAndCount = () => {
+            fileCountDisplay.textContent = cropperInstances.length;
+            
+            // Re-index titles in the DOM
+            const cardElements = galleryContainer.querySelectorAll('.bg-white');
+            cardElements.forEach((card, newIndex) => {
+                const titleSpan = card.querySelector('.file-index');
+                if(titleSpan) titleSpan.textContent = `${newIndex + 1}.`;
+                
+                // Update the index on the delete button for accurate reference
+                const deleteBtn = card.querySelector('.delete-btn');
+                if(deleteBtn) deleteBtn.dataset.index = newIndex;
+            });
+
+            // Update global state visibility
+            if (cropperInstances.length === 0) {
+                gallerySection.classList.add('hidden');
+                downloadSection.classList.add('hidden');
+                downloadAllBtn.disabled = true;
+            } else {
+                downloadSection.classList.remove('hidden');
+                downloadAllBtn.disabled = false;
+            }
+        };
+
+        // Function to create and initialize a single cropper instance card
+        const createCropperCard = (file, index) => {
+            // 1. Create Card Structure
+            const card = document.createElement('div');
+            card.className = 'bg-white shadow-lg rounded-xl overflow-hidden flex flex-col border border-gray-200';
+            
+            card.innerHTML = `
+                <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-700 truncate" title="${file.name}">
+                        <span class="file-index">${index + 1}.</span> ${file.name}
+                    </p>
+                    <button data-index="${index}" class="delete-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove image">
+                        <!-- Trash Can SVG Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75 3.75 0 0 1-3.695 3.513H7.438a3.75 3.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-grow p-2">
+                    <div class="gallery-item">
+                        <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
+                    </div>
+                </div>
+                <div class="px-4 py-3 border-t">
+                    <p class="text-xs text-gray-600">
+                        Crop Size: <span id="crop-w-${index}" class="font-bold">0</span> x <span id="crop-h-${index}" class="font-bold">0</span> px
+                    </p>
+                </div>
+            `;
+            
+            galleryContainer.appendChild(card);
+            
+            const imageElement = card.querySelector(`#image-cropper-${index}`);
+            const widthDisplay = card.querySelector(`#crop-w-${index}`);
+            const heightDisplay = card.querySelector(`#crop-h-${index}`);
+            
+            // 2. Load Image Data
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                imageElement.src = event.target.result;
+                imageElement.classList.remove('cropper-hidden');
+
+                // 3. Initialize Cropper.js
+                const cropper = new Cropper(imageElement, {
+                    aspectRatio: currentAspectRatio,
+                    viewMode: 0, // Allow cropping outside image boundary
+                    dragMode: 'move', 
+                    background: false, 
+                    movable: true,      
+                    zoomable: true,     
+                    cropmove: () => {
+                        const cropData = cropper.getData();
+                        widthDisplay.textContent = Math.round(cropData.width);
+                        heightDisplay.textContent = Math.round(cropData.height);
+                    },
+                    ready() {
+                        const cropData = cropper.getData(); 
+                        widthDisplay.textContent = Math.round(cropData.width);
+                        heightDisplay.textContent = Math.round(cropData.height);
+                    }
+                });
+
+                // 4. Store instance and card reference
+                cropperInstances.push({ file, cropper, index, card });
+                
+                // Update file count display
+                fileCountDisplay.textContent = cropperInstances.length;
+
+                // Hide loading overlay once the last file is processed
+                if (index === cropperInstances.length - 1) {
+                    toggleLoading(false);
+                    gallerySection.classList.remove('hidden');
+                    downloadAllBtn.disabled = false;
+                    downloadSection.classList.remove('hidden');
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        };
+
+        // --- File Upload Handler ---
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            uploadError.classList.add('hidden');
+
+            if (files.length === 0) return;
+
+            toggleLoading(true, `Loading ${files.length} images...`);
+
+            // Clear previous state
+            if (cropperInstances.length > 0) {
+                cropperInstances.forEach(item => item.cropper.destroy());
+                cropperInstances = [];
+                galleryContainer.innerHTML = '';
+            }
+
+            // Filter and validate files
+            let validFiles = [];
+            let invalidFileCount = 0;
+            const supportedTypes = ['image/png', 'image/jpeg'];
+            
+            files.forEach(file => {
+                if (validFiles.length < 30) {
+                    if (supportedTypes.includes(file.type) && file.size <= 5 * 1024 * 1024) {
+                        validFiles.push(file);
+                    } else {
+                        invalidFileCount++;
+                    }
+                }
+            });
+
+            if (validFiles.length === 0) {
+                toggleLoading(false);
+                uploadError.textContent = 'No valid PNG or JPEG files (Max 5MB) were found.';
+                uploadError.classList.remove('hidden');
+                fileInput.value = '';
+                return;
+            }
+            
+            if (files.length > 30 || invalidFileCount > 0) {
+                let message = `Successfully loaded ${validFiles.length} valid files.`;
+                if (files.length > 30) message += ` (Ignored ${files.length - 30} files due to 30 file limit).`;
+                if (invalidFileCount > 0) message += ` (Ignored ${invalidFileCount} invalid or too large files).`;
+                uploadError.textContent = message;
+                uploadError.classList.remove('hidden');
+            }
+
+            // Load all valid files into the gallery
+            validFiles.forEach((file, index) => {
+                createCropperCard(file, index);
+            });
+        });
+
+        // --- Delete Handler using Event Delegation ---
+        galleryContainer.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
+                
+                if (isNaN(indexToDelete) || indexToDelete < 0 || indexToDelete >= cropperInstances.length) {
+                    console.error("Invalid index for deletion.");
+                    return;
+                }
+
+                // 1. Destroy Cropper instance and remove DOM element
+                const itemToDelete = cropperInstances[indexToDelete];
+                if (itemToDelete && itemToDelete.cropper) {
+                    itemToDelete.cropper.destroy();
+                }
+                if (itemToDelete && itemToDelete.card) {
+                    itemToDelete.card.remove();
+                }
+
+                // 2. Remove from array
+                cropperInstances.splice(indexToDelete, 1);
+
+                // 3. Update UI indexing and count
+                updateGalleryIndexAndCount();
+            }
+        });
+
+
+        // --- Global Ratio Presets Handler ---
+        ratioBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const ratio = btn.dataset.ratio;
+                setCropperRatio(ratio);
+
+                // Update button active state
+                document.querySelector('.ratio-btn.active-ratio')?.classList.replace('bg-indigo-500', 'bg-gray-200');
+                document.querySelector('.ratio-btn.active-ratio')?.classList.replace('text-white', 'text-gray-700');
+                document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                
+                btn.classList.replace('bg-gray-200', 'bg-indigo-500');
+                btn.classList.replace('text-gray-700', 'text-white');
+                btn.classList.add('active-ratio');
+
+                // Clear custom inputs when a preset is selected
+                customWidthInput.value = '';
+                customHeightInput.value = '';
+                ratioError.classList.add('hidden');
+            });
+        });
+
+        // --- Custom Ratio Handler ---
+        applyCustomRatioBtn.addEventListener('click', () => {
+            ratioError.classList.add('hidden');
+            const width = parseInt(customWidthInput.value, 10);
+            const height = parseInt(customHeightInput.value, 10);
+
+            if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                ratioError.textContent = 'Please enter valid positive numbers.';
+                ratioError.classList.remove('hidden');
+                return;
+            }
+
+            const customRatioString = `${width}/${height}`;
+            setCropperRatio(customRatioString);
+
+            // Ensure no preset is marked active when custom ratio is applied
+            document.querySelector('.ratio-btn.active-ratio')?.classList.replace('bg-indigo-500', 'bg-gray-200');
+            document.querySelector('.ratio-btn.active-ratio')?.classList.replace('text-white', 'text-gray-700');
+            document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
+        });
+
+        // --- Batch Download Handler ---
+        downloadAllBtn.addEventListener('click', async () => {
+            if (cropperInstances.length === 0) return;
+
+            downloadAllBtn.disabled = true;
+            
+            let filesProcessed = 0;
+            const totalFiles = cropperInstances.length;
+            let successfulFiles = [];
+
+            // Initialize JSZip instance
+            const zip = new JSZip();
+
+            for (const item of cropperInstances) {
+                filesProcessed++;
+                toggleLoading(true, `Processing file ${filesProcessed} of ${totalFiles}...`);
+                
+                const cropper = item.cropper;
+                const file = item.file;
+                const cropData = cropper.getData();
+                
+                let finalBase64Data = null;
+                let filename = file.name.replace(/\.(png|jpe?g)$/i, '') || `image_${item.index}`;
+                filename = `${filename}_${Math.round(cropData.width)}x${Math.round(cropData.height)}.png`;
+
+
+                try {
+                    // 1. Get the cropped canvas (which includes transparency if cropping outside image bounds)
+                    const croppedCanvas = cropper.getCroppedCanvas();
+                    const width = croppedCanvas.width;
+                    const height = croppedCanvas.height;
+
+                    if (colorFillToggle.checked) {
+                        // --- SOLID COLOR FILL PATH ---
+                        let finalCanvas = document.createElement('canvas');
+                        finalCanvas.width = width;
+                        finalCanvas.height = height;
+                        const ctx = finalCanvas.getContext('2d');
+                        
+                        ctx.fillStyle = fillColor.value;
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.drawImage(croppedCanvas, 0, 0, width, height);
+
+                        await new Promise(resolve => {
+                            finalCanvas.toBlob((blob) => {
+                                // Add the blob directly to the zip (preferred over base64 string)
+                                if (blob) {
+                                    zip.file(filename, blob);
+                                    successfulFiles.push(filename);
+                                } else {
+                                     throw new Error("Failed to create image blob.");
+                                }
+                                resolve();
+                            }, 'image/png');
+                        });
+                        
+                    } else {
+                        // --- NO FILL PATH (Just transparent cropped image) ---
+                        await new Promise(resolve => {
+                            croppedCanvas.toBlob((blob) => {
+                                if (blob) {
+                                    zip.file(filename, blob);
+                                    successfulFiles.push(filename);
+                                } else {
+                                     throw new Error("Failed to create image blob.");
+                                }
+                                resolve();
+                            }, 'image/png');
+                        });
+                    }
+
+                } catch (e) {
+                    console.error(`Error processing file ${file.name}:`, e);
+                }
+            }
+
+            // --- 2. ZIP Compilation and Download ---
+            let failureCount = totalFiles - successfulFiles.length;
+            
+            if (successfulFiles.length > 0) {
+                try {
+                    toggleLoading(true, `Compiling ZIP file with ${successfulFiles.length} images...`);
+
+                    // Generate the ZIP file as a blob
+                    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+                    // Use FileSaver.js (saveAs) to trigger cross-browser download
+                    saveAs(zipBlob, "batch_cropped_images.zip");
+
+                    // 3. Final cleanup and feedback
+                    toggleLoading(false);
+                    downloadAllBtn.disabled = false;
+                    
+                    if (failureCount === 0) {
+                        showMessage(`Batch download complete! ${totalFiles} files compiled into ZIP.`);
+                    } else {
+                        showMessage(`ZIP created successfully, but ${failureCount} file(s) failed to process. Check console for details.`, true);
+                    }
+
+                } catch (e) {
+                    toggleLoading(false);
+                    downloadAllBtn.disabled = false;
+                    console.error("Error during ZIP compilation:", e);
+                    showMessage("Error compiling or downloading ZIP file.", true);
+                }
+            } else {
+                 // All files failed
+                toggleLoading(false);
+                downloadAllBtn.disabled = false;
+                showMessage("Batch failed: Could not process any images.", true);
+            }
+        });
+
+    </script>
+</body>
+</html>
