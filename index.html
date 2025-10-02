@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batch Aspect Ratio Cropper</title>
+    <title>Digital Asset Tools: Cropper & Frame Capture</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Cropper.js CSS -->
@@ -13,11 +13,22 @@
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        /* Custom styles for gallery items */
+        /* Global Tool Menu Button Styling */
+        .tool-menu-btn {
+            transition: all 0.2s;
+            @apply shadow-md;
+        }
+        .tool-menu-btn.active-tool {
+            @apply bg-indigo-600 text-white shadow-xl;
+        }
+        .tool-menu-btn:not(.active-tool) {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+        }
+
+        /* Cropper Tool Custom Styles */
         .gallery-item {
-            /* Responsive sizing for the container */
             width: 100%;
-            height: 300px; /* Fixed height for consistent gallery look */
+            height: 300px; 
             overflow: hidden;
             background-color: #f7fafc; 
             display: flex;
@@ -27,19 +38,14 @@
             border-radius: 0.5rem;
             margin-bottom: 1rem;
         }
-
         .gallery-item img {
             max-width: 100%;
             height: auto;
             display: block;
         }
-
-        /* Hide the cropper view until an image is loaded */
         .cropper-hidden {
             display: none !important;
         }
-
-        /* Apply global aspect ratio button styling */
         .ratio-btn {
             @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition shadow-md;
         }
@@ -47,17 +53,50 @@
             @apply bg-indigo-500 text-white hover:bg-indigo-600 shadow-xl;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        
-        /* New Drag and Drop feedback style */
         .drop-active {
             @apply border-indigo-600 bg-indigo-50/50 shadow-inner;
         }
+        
+        /* Video Frame Tool Custom Styles */
+        #video-capture-preview {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            background-color: #1f2937; /* Dark background for video */
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+        #frame-canvas {
+            display: none; /* Always hidden, used for drawing frames */
+        }
     </style>
 </head>
-<!-- REMOVED BODY PADDING to let the main wrapper control the width -->
-<body class="bg-gray-50 min-h-screen font-sans">
+<body class="bg-gray-50 min-h-screen font-sans" onload="App.init()">
 
-    <!-- Loading Overlay -->
+    <!-- Header and Menu Bar (Sticky) -->
+    <header class="sticky top-0 bg-white border-b shadow-xl z-20">
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <h1 class="text-2xl font-extrabold text-gray-900">🎬 Digital Asset Tools</h1>
+            <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
+                <button onclick="App.switchTool('cropper')" id="menu-cropper" class="tool-menu-btn active-tool">
+                    <span class="flex items-center space-x-2">
+                        <!-- Crop Icon (Lucide-style) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L1 6.13"/><path d="M14 6h3a2 2 0 0 1 2 2v3"/><path d="M19 17v3a2 2 0 0 1-2 2h-3"/><path d="M10 17H7a2 2 0 0 1-2-2V8"/><path d="M14 10h-4v4h4z"/></svg>
+                        <span>Batch Cropper</span>
+                    </span>
+                </button>
+                <button onclick="App.switchTool('video')" id="menu-video" class="tool-menu-btn">
+                    <span class="flex items-center space-x-2">
+                        <!-- Video Icon (Lucide-style) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><path d="M14 12c0-2.4-.23-4.81-1.42-6.75C11.66 3.1 9.4 2 7 2H3a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4c2.4 0 4.66-1.1 5.58-3.25C13.77 16.81 14 14.4 14 12z"/></svg>
+                        <span>Video Frame Capture</span>
+                    </span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Loading Overlay (Global) -->
     <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
         <div class="flex flex-col items-center text-white">
             <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -68,21 +107,26 @@
         </div>
     </div>
     
-    <!-- Main Wrapper (Removed max-width to use full screen width, kept responsive padding) -->
-    <div class="w-full p-4 sm:p-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-2">🖼️ Batch Image Aspect Ratio Cropper</h1>
+    <!-- Non-blocking message box (Global) -->
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
+        <p id="messageText"></p>
+    </div>
+
+    <!-- --- CROPPING TOOL APP CONTAINER --- -->
+    <div id="cropper-app" class="tool-container w-full p-4 sm:p-8">
         
-        <!-- Content Area: Flex layout for Laptops/Desktops, Stacked for Mobile/Tablet -->
+        <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Batch Cropper</h2>
+        
         <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
 
             <!-- Sticky Global Controls Sidebar (Right Side on Desktop) -->
             <aside id="sticky-settings" class="lg:w-80 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start z-10">
                 
-                <!-- 1. Upload Images (Drag and Drop Zone) - NOW AT THE TOP -->
-                <div id="uploadDropZone" class="mb-8 p-6 bg-white shadow-xl rounded-xl border border-gray-200 transition-all duration-300 border-dashed border-4 border-gray-300 hover:border-indigo-400">
-                    <label for="fileInput" class="block text-lg font-bold text-gray-800 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
-                    <input type="file" id="fileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer rounded-xl border border-gray-300 p-2">
-                    <p id="upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                <!-- 1. Upload Images (Drag and Drop Zone) -->
+                <div id="cropperUploadDropZone" class="mb-8 p-6 bg-white shadow-xl rounded-xl border border-gray-200 transition-all duration-300 border-dashed border-4 border-gray-300 hover:border-indigo-400">
+                    <label for="cropperFileInput" class="block text-lg font-bold text-gray-800 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
+                    <input type="file" id="cropperFileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer rounded-xl border border-gray-300 p-2">
+                    <p id="cropper-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
                 </div>
 
                 <!-- 2. Global Crop Settings (Default) - Indigo Card -->
@@ -95,7 +139,6 @@
                         <div class="col-span-full">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Aspect Ratios (Applies to all crops)</label>
                             <div class="flex flex-wrap gap-2">
-                                <!-- 9:16 is set as the new default active ratio per user request -->
                                 <button data-ratio="9/16" class="ratio-btn active-ratio" type="button">9:16 (Story)</button>
                                 <button data-ratio="16/9" class="ratio-btn" type="button">16:9 (HD)</button>
                                 <button data-ratio="1/1" class="ratio-btn" type="button">1:1 (Square)</button>
@@ -110,7 +153,6 @@
                         <!-- Custom Ratio Input -->
                         <div class="col-span-full">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Custom Ratio (e.g., 5:2)</label>
-                            <!-- Adjusted flex container to stack items vertically or wrap easily on smaller sidebars -->
                             <div class="flex flex-col space-y-2">
                                 <div class="flex space-x-2 items-center">
                                     <input type="number" id="customWidth" placeholder="Width" class="w-1/2 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center" min="1">
@@ -128,10 +170,10 @@
                     </p>
                 </div>
                 
-                <!-- 3. Batch Download Button - MOVED HERE -->
-                <div id="downloadSection" class="pt-6 flex flex-col items-center hidden bg-white rounded-xl shadow-xl p-6 border border-gray-200">
+                <!-- 3. Batch Download Button -->
+                <div id="cropperDownloadSection" class="pt-6 flex flex-col items-center hidden bg-white rounded-xl shadow-xl p-6 border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">3. Batch Download</h2>
-                    <button id="downloadAllBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                    <button id="downloadAllCropperBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                         Download All Cropped Images (ZIP)
                     </button>
                 </div>
@@ -139,34 +181,97 @@
             </aside>
             
             <!-- Main Content Area (Left Side on Desktop) -->
-            <!-- ADDED p-6 sm:p-10 here, removed from parent wrapper in the body tag -->
-            <div id="main-content" class="flex-grow w-full bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-200">
+            <div id="cropper-main-content" class="flex-grow w-full bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-200">
 
                 <!-- 4. Gallery View -->
-                <div id="gallerySection" class="hidden mb-8">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">4. Crop Gallery (<span id="fileCount">0</span> Files)</h2>
-                    <!-- Adjusted grid to use 3 columns on medium screens and 4 columns on larger screens -->
-                    <div id="galleryContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div id="cropperGallerySection" class="hidden mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">4. Crop Gallery (<span id="cropperFileCount">0</span> Files)</h2>
+                    <div id="cropperGalleryContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                         <!-- Cropper cards will be inserted here -->
                     </div>
                 </div>
-                
-                <!-- Removed old Step 4: Batch Download Button from here -->
             </div>
         </div>
+    </div>
+    
+    <!-- --- VIDEO FRAME CAPTURE APP CONTAINER --- -->
+    <div id="video-app" class="tool-container hidden w-full p-4 sm:p-8">
+        <h2 class="text-3xl font-extrabold text-gray-800 mb-6">🎥 Video Frame Capture</h2>
         
-        <!-- Non-blocking message box for success/error -->
-        <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
-            <p id="messageText"></p>
+        <div class="flex flex-col lg:flex-row lg:gap-8 relative">
+
+            <!-- Video Player and Canvas Area (Left) -->
+            <div class="flex-grow w-full bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-200 mb-8 lg:mb-0">
+                <div class="space-y-6">
+                    <div class="border-b pb-4">
+                        <label for="videoFileInput" class="block text-xl font-bold text-gray-800 mb-2">1. Upload Video (MP4, MOV, etc.)</label>
+                        <input type="file" id="videoFileInput" accept="video/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer rounded-xl border border-gray-300 p-2">
+                        <p id="video-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                    </div>
+
+                    <div id="video-controls-area" class="hidden space-y-4">
+                        <div class="relative rounded-lg overflow-hidden shadow-2xl">
+                            <!-- Video element for preview and seeking -->
+                            <video id="video-preview" controls preload="metadata" class="w-full h-auto" crossorigin="anonymous"></video>
+                        </div>
+
+                        <!-- Time and Capture Controls -->
+                        <div class="bg-gray-100 p-4 rounded-lg shadow-inner border border-gray-200 space-y-3">
+                            <p class="text-sm font-medium text-gray-700">Current Time: <span id="video-current-time" class="font-bold">0.00</span> / <span id="video-duration" class="font-bold">0.00</span> seconds</p>
+                            
+                            <!-- Hidden Canvas for capturing frames -->
+                            <canvas id="frame-canvas" class="hidden"></canvas>
+
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <button id="capture-frame-btn" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
+                                    <span class="flex items-center space-x-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                            <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5a.75.75 0 0 0 .75-.75v-1.94l-2.432-2.432a4.5 4.5 0 0 0-1.274-1.274L12 9.5l-.711-.647c-.51-.463-1.135-.823-1.802-1.069a15.75 15.75 0 0 0-2.008-.294 1.5 1.5 0 0 0-1.196 1.052v.38c-.319.843-.732 1.63-1.243 2.332L3 16.06ZM10.5 12a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
+                                        </svg>
+                                        Capture Frame
+                                    </span>
+                                </button>
+                                <button id="capture-multiple-frames-btn" class="bg-pink-600 text-white font-bold px-6 py-3 rounded-full hover:bg-pink-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
+                                    Capture 10 Frames (Auto)
+                                </button>
+                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
+                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
+                                    <span>sec interval</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frames Gallery and Download Area (Right) -->
+            <div class="lg:w-80 lg:flex-shrink-0">
+                <div class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-200 lg:sticky lg:top-8 lg:self-start space-y-6">
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
+                    
+                    <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        <!-- Captured frames will be appended here -->
+                        <p id="frames-placeholder" class="text-sm text-gray-500">No frames captured yet. Load a video and use the capture buttons.</p>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <button id="download-all-frames-btn" class="bg-green-600 text-white font-bold w-full px-6 py-3 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                            Download All Frames (ZIP)
+                        </button>
+                        <button id="clear-frames-btn" class="mt-2 bg-red-100 text-red-600 font-semibold w-full px-6 py-3 rounded-lg hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                            Clear All Frames
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
+    
     <!-- Load Cropper.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script type="module">
         // --- Firebase Initialization Placeholder (Required by environment) ---
-        // Although this app does not use Firestore, this block is necessary for environment compatibility.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
@@ -197,66 +302,18 @@
                         setupAuth().catch(e => console.error("Anonymous sign-in failed:", e));
                     }
                 });
-
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
             }
         }
+        // --- End Firebase Placeholder ---
 
-        // --- Core Application Variables ---
-        const fileInput = document.getElementById('fileInput');
-        const uploadDropZone = document.getElementById('uploadDropZone'); // New element reference
-        const ratioBtns = document.querySelectorAll('.ratio-btn');
-        const applyCustomRatioBtn = document.getElementById('applyCustomRatio');
-        const customWidthInput = document.getElementById('customWidth');
-        const customHeightInput = document.getElementById('customHeight');
-        const uploadError = document.getElementById('upload-error');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const loadingText = document.getElementById('loading-text');
-        const gallerySection = document.getElementById('gallerySection');
-        const galleryContainer = document.getElementById('galleryContainer');
-        const fileCountDisplay = document.getElementById('fileCount');
-        const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const downloadSection = document.getElementById('downloadSection');
-        const ratioError = document.getElementById('ratio-error');
-        
+        // --- Global Utilities ---
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
 
-        // Define all ratio presets for both global buttons and local dropdowns
-        const RATIO_PRESETS = [
-            { label: "Global Default", value: "GLOBAL" },
-            { label: "9:16 (Story)", value: "9/16" },
-            { label: "16:9 (HD)", value: "16/9" },
-            { label: "1:1 (Square)", value: "1/1" },
-            { label: "4:3", value: "4/3" },
-            { label: "3:2", value: "3/2" },
-            { label: "5:4", value: "5/4" },
-            { label: "21:9 (Cinematic)", value: "21/9" },
-            { label: "Free Crop", value: "NaN" }
-        ];
-
-        // NEW: Fixed Resolution Presets
-        const RESOLUTION_PRESETS = [
-            // Changed default to 1080x1920
-            { label: "1080x1920 (Story) - Default", value: "1080x1920" }, 
-            { label: "None (Auto-size)", value: "auto" },
-            { label: "Custom Pixels...", value: "custom" },
-            { label: "1920x1080 (HD)", value: "1920x1080" },
-            { label: "1080x1080 (Square)", value: "1080x1080" },
-            { label: "1280x720 (720p)", value: "1280x720" },
-            { label: "4096x2160 (4K Cinema)", value: "4096x2160" }
-        ];
-
-
-        let cropperInstances = []; // Stores { file: File, cropper: CropperInstance, index: number, card: HTMLElement, uniqueId: string }
-        let currentAspectRatio = 9 / 16; // Default ratio is now 9:16
-
-        // --- Utility Functions ---
-
-        /**
-         * Shows a non-blocking message box for user feedback.
-         */
         const showMessage = (text, isError = false) => {
             messageText.textContent = text;
             messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
@@ -267,980 +324,954 @@
             }, 5000);
         };
 
-        /**
-         * Function to show/hide loading state with progress text
-         */
         const toggleLoading = (isVisible, text = 'Processing...', count = 0) => {
             loadingText.textContent = text;
             loadingOverlay.classList.toggle('hidden', !isVisible);
         };
 
-        /**
-         * Retrieves the integer value from a resolution input.
-         */
         const getResolutionValue = (input) => {
              const value = parseInt(input.value, 10);
              return (isNaN(value) || value <= 0) ? null : value;
         };
+        // --- End Global Utilities ---
 
-        /**
-         * Updates the local visual feedback (borders) based on local override values.
-         */
-        const updateLocalVisualFeedback = (card) => {
-            const ratioSelect = card.querySelector('.local-ratio-select');
-            const colorInput = card.querySelector('.local-fill-color');
-            const formatSelect = card.querySelector('.local-format-select');
-            const resSelect = card.querySelector('.local-resolution-select');
-            const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
-            const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+        // --- Global App State and Tool Switching ---
+        window.App = {
+            currentTool: 'cropper',
             
-            // Check if resolution is being overridden (either preset or valid custom)
-            let isResolutionActive = resSelect.value !== "auto";
-            if (resSelect.value === "custom") {
-                 isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
-            }
-            
-            // Define classes for default and active states
-            const defaultClasses = ['border-gray-300', 'focus:outline-none'];
-            const ratioActiveClasses = ['border-indigo-500', 'ring-2', 'ring-indigo-200'];
-            const colorActiveClasses = ['border-pink-500', 'ring-2', 'ring-pink-200'];
-            const formatActiveClasses = ['border-green-500', 'ring-2', 'ring-green-200'];
-            const resolutionActiveClasses = ['border-orange-500', 'ring-2', 'ring-orange-200']; // New active style
+            init: function() {
+                // Initialize modules and set initial tool view
+                cropperTool.init();
+                videoTool.init();
+                this.switchTool(this.currentTool);
+            },
 
-            // Helper to toggle classes
-            const toggleClasses = (element, isActive, activeClasses) => {
-                element.classList.remove(...activeClasses);
-                element.classList.add(...defaultClasses);
-                if (isActive) {
-                    element.classList.remove('border-gray-300');
-                    element.classList.add(...activeClasses);
-                }
-            };
-            
-            // 1. Ratio Feedback: Highlight if not set to "GLOBAL"
-            toggleClasses(ratioSelect, ratioSelect.value !== "GLOBAL", ratioActiveClasses);
+            switchTool: function(toolId) {
+                this.currentTool = toolId;
+                document.querySelectorAll('.tool-container').forEach(el => {
+                    el.classList.add('hidden');
+                });
+                document.getElementById(`${toolId}-app`).classList.remove('hidden');
 
-            // 2. Color Fill Feedback: Highlight if not default white AND checked
-            const fillToggle = card.querySelector('.local-fill-toggle');
-            toggleClasses(colorInput, fillToggle.checked && colorInput.value.toLowerCase() !== "#ffffff", colorActiveClasses);
-            
-            // 3. Format Feedback: Highlight if set to JPEG
-            toggleClasses(formatSelect, formatSelect.value === "jpeg", formatActiveClasses);
-
-            // 4. Resolution Feedback: Highlight if fixed resolution is selected or custom inputs are valid
-            toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
-            
-            // Only apply active style to custom inputs if "custom" is selected and they are valid
-            if (resSelect.value === "custom") {
-                 toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
-                 toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
-            } else {
-                 resWidthInput.classList.remove(...resolutionActiveClasses);
-                 resHeightInput.classList.remove(...resolutionActiveClasses);
-                 resWidthInput.classList.add(...defaultClasses);
-                 resHeightInput.classList.add(...defaultClasses);
-            }
-        };
-
-
-        /**
-         * Updates the global aspect ratio and applies it to all current croppers 
-         * whose local setting is still 'GLOBAL'.
-         */
-        const setCropperRatio = (ratio) => {
-            currentAspectRatio = ratio === 'NaN' ? NaN : eval(ratio);
-            
-            // Apply to all existing croppers whose local setting is 'GLOBAL'
-            cropperInstances.forEach(item => {
-                const select = item.card.querySelector('.local-ratio-select');
-                if (select && select.value === "GLOBAL") {
-                    if (item.cropper) {
-                        item.cropper.setAspectRatio(currentAspectRatio);
-                        // Re-center if the ratio changes on an already loaded image
-                        const imageWidth = item.cropper.image.naturalWidth;
-                        const imageHeight = item.cropper.image.naturalHeight;
-                        if (imageWidth && imageHeight) {
-                            applyAutoCenter(item.cropper, currentAspectRatio, imageWidth, imageHeight);
-                        }
-                    }
-                    // Crucial update: Reflect the change visually
-                    updateLocalVisualFeedback(item.card); 
-                }
-            });
-        };
-
-        /**
-         * Handles setting a local aspect ratio for a single cropper instance.
-         */
-        const handleLocalRatioChange = (ratioValue, item) => {
-            const isGlobal = ratioValue === "GLOBAL";
-            let newRatio;
-            
-            if (isGlobal) {
-                // Use the globally set ratio (currentAspectRatio variable)
-                newRatio = currentAspectRatio;
-                showMessage(`Ratio for Image ${item.index + 1} reset to Global Default.`, false);
-            } else {
-                // Use the local override ratio
-                newRatio = ratioValue === 'NaN' ? NaN : eval(ratioValue);
-                showMessage(`Ratio for Image ${item.index + 1} set to local override: ${ratioValue.replace('/', ':')}.`, false);
-            }
-
-            if (item.cropper) {
-                // Apply the new aspect ratio
-                item.cropper.setAspectRatio(newRatio);
-                // Re-center on local change
-                const imageWidth = item.cropper.image.naturalWidth;
-                const imageHeight = item.cropper.image.naturalHeight;
-                if (imageWidth && imageHeight) {
-                    applyAutoCenter(item.cropper, newRatio, imageWidth, imageHeight);
-                }
-            }
-            updateLocalVisualFeedback(item.card); // Crucial update
-        };
-
-        /**
-         * Helper function to calculate and apply the centered crop box.
-         */
-        const applyAutoCenter = (cropper, ratio, imageWidth, imageHeight) => {
-            let cropWidth = imageWidth;
-            let cropHeight = imageHeight;
-
-            if (!isNaN(ratio) && ratio > 0) {
-                const imageRatio = imageWidth / imageHeight;
+                document.querySelectorAll('.tool-menu-btn').forEach(btn => {
+                    btn.classList.remove('active-tool');
+                });
+                document.getElementById(`menu-${toolId}`).classList.add('active-tool');
                 
-                if (imageRatio > ratio) {
-                    // Image is wider than the target ratio (constrained by height)
-                    cropHeight = imageHeight;
-                    cropWidth = imageHeight * ratio;
+                // Clear state when switching
+                if (toolId === 'cropper') {
+                    document.title = 'Batch Cropper | Digital Asset Tools';
                 } else {
-                    // Image is taller than or equal to the target ratio (constrained by width)
-                    cropWidth = imageWidth;
-                    cropHeight = imageWidth / ratio;
-                }
-            } 
-            
-            // Calculate center offsets
-            const left = (imageWidth - cropWidth) / 2;
-            const top = (imageHeight - cropHeight) / 2;
-
-            // Apply the calculated crop box data. This triggers 'cropmove'
-            cropper.setCropBoxData({
-                width: cropWidth,
-                height: cropHeight,
-                left: left,
-                top: top
-            });
-        };
-
-        /**
-         * Updates the displayed index numbers, total count, and the download button text.
-         */
-        const updateGalleryIndexAndCount = () => {
-            const count = cropperInstances.length;
-            fileCountDisplay.textContent = count;
-            
-            // Iterate over the source of truth (cropperInstances) to update the DOM elements
-            cropperInstances.forEach((item, newIndex) => {
-                const card = item.card;
-                
-                // 1. Update Index in Title (Simplified display)
-                const titleP = card.querySelector('p[title]');
-                if(titleP) titleP.innerHTML = `<span class="file-index">${newIndex + 1}.</span> File Ready`;
-                
-                // 2. Update Export Filename
-                const displayFilename = `img_${item.uniqueId}`;
-                const filenameSpan = card.querySelector('.export-filename');
-                if (filenameSpan) filenameSpan.textContent = displayFilename; // Fixed variable name here
-
-                // 3. Update the index on the delete button
-                const deleteBtn = card.querySelector('.delete-btn');
-                if(deleteBtn) deleteBtn.dataset.index = newIndex;
-
-                // 4. Update the stored item's index
-                item.index = newIndex; 
-            });
-
-            // Update global state visibility and button text
-            if (count === 0) {
-                gallerySection.classList.add('hidden');
-                downloadSection.classList.add('hidden');
-                downloadAllBtn.disabled = true;
-                downloadAllBtn.textContent = 'Download Cropped Images';
-            } else {
-                gallerySection.classList.remove('hidden');
-                downloadSection.classList.remove('hidden');
-                downloadAllBtn.disabled = false;
-
-                if (count === 1) {
-                    downloadAllBtn.textContent = 'Download Cropped Image';
-                } else {
-                    downloadAllBtn.textContent = `Download All ${count} Cropped Images (ZIP)`;
+                    document.title = 'Video Frame Capture | Digital Asset Tools';
                 }
             }
         };
 
-        /**
-         * Function to create and initialize a single cropper instance card
-         */
-        const createCropperCard = (file, index) => {
-            // Generate a short, unique ID (8 hex characters)
-            const uniqueId = crypto.randomUUID().substring(0, 8); 
-            const displayFilename = `img_${uniqueId}`;
 
-            // 1. Create Card Structure with Local Dropdown and Fill Controls
-            const card = document.createElement('div');
-            card.className = 'bg-white shadow-xl rounded-xl flex flex-col border border-gray-200';
-            
-            card.innerHTML = `
-                <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
-                    <p class="text-sm font-semibold text-gray-700 truncate" title="File Index ${index + 1}">
-                        <span class="file-index">${index + 1}.</span> File Ready
-                    </p>
-                    <div class="flex items-center space-x-2">
-                        <!-- NEW: Reset Crop Button -->
-                        <button data-index="${index}" class="reset-crop-btn text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-100" type="button" title="Reset crop to auto-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                            </svg>
-                        </button>
-                        <!-- NEW: Regenerate ID Button -->
-                        <button data-index="${index}" class="regenerate-id-btn text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-yellow-100" type="button" title="Regenerate unique ID">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348H21m0 0-3.21-3.21M21 9.348l-3.21 3.21m-2.122-4.994a4.5 4.5 0 00-6.364-6.364M12 5.25v1.5m-5.878 11.246a4.5 4.5 0 006.364 0m-2.122-4.994l-.445-.445m.445.445L12 12m0 0h.01" />
-                            </svg>
-                        </button>
-                        <button data-index="${index}" class="delete-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove image">
-                            <!-- Trash Can SVG Icon -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <!-- Local Ratio Override Dropdown -->
-                <div class="px-4 py-2 border-b bg-white">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Local Ratio Override:</label>
-                    <select class="local-ratio-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none">
-                        <!-- Options injected by JS -->
-                    </select>
-                </div>
+        // =========================================================================
+        // === VIDEO FRAME CAPTURE TOOL LOGIC ===
+        // =========================================================================
+        const videoTool = {
+            // DOM Elements
+            fileInput: document.getElementById('videoFileInput'),
+            video: document.getElementById('video-preview'),
+            canvas: document.getElementById('frame-canvas'),
+            controlsArea: document.getElementById('video-controls-area'),
+            durationDisplay: document.getElementById('video-duration'),
+            currentTimeDisplay: document.getElementById('video-current-time'),
+            captureBtn: document.getElementById('capture-frame-btn'),
+            captureMultiBtn: document.getElementById('capture-multiple-frames-btn'),
+            intervalInput: document.getElementById('frame-interval-input'),
+            framesGallery: document.getElementById('frames-gallery'),
+            framesCountDisplay: document.getElementById('frames-count'),
+            downloadBtn: document.getElementById('download-all-frames-btn'),
+            clearBtn: document.getElementById('clear-frames-btn'),
+            placeholder: document.getElementById('frames-placeholder'),
+            errorDisplay: document.getElementById('video-upload-error'),
 
-                <!-- Local Fill Control -->
-                <div class="px-4 py-2 border-b bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <label class="flex items-center space-x-2 text-xs font-medium text-gray-600">
-                        <!-- Default checked and default color are set here in the HTML -->
-                        <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
-                        <span class="text-xs">Fill Empty Area:</span>
-                    </label>
-                    <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-300 rounded-lg cursor-pointer focus:outline-none">
-                </div>
+            // State
+            frames: [], // Stores { filename: string, dataUrl: string }
+
+            init: function() {
+                this.fileInput.addEventListener('change', (e) => this.handleVideoUpload(e.target.files));
+                this.video.addEventListener('loadedmetadata', () => this.handleVideoLoad());
+                this.video.addEventListener('timeupdate', () => this.updateTimeDisplay());
+                this.captureBtn.addEventListener('click', () => this.captureFrame());
+                this.captureMultiBtn.addEventListener('click', () => this.captureMultipleFrames());
+                this.downloadBtn.addEventListener('click', () => this.downloadAllFrames());
+                this.clearBtn.addEventListener('click', () => this.clearFrames());
+                this.updateUI();
+            },
+
+            handleVideoUpload: function(files) {
+                this.errorDisplay.classList.add('hidden');
+                if (files.length === 0 || !files[0].type.startsWith('video/')) {
+                    this.errorDisplay.textContent = 'Please select a valid video file.';
+                    this.errorDisplay.classList.remove('hidden');
+                    return;
+                }
                 
-                <!-- NEW: Local Output Resolution Control (Dropdown + Custom Inputs) -->
-                <div class="px-4 py-2 border-b bg-white">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Output Resolution (Optional Fixed Pixels):</label>
-                    <select class="local-resolution-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
-                        <!-- Options injected by JS -->
-                    </select>
+                const file = files[0];
+                const url = URL.createObjectURL(file);
+                this.video.src = url;
+                this.controlsArea.classList.add('hidden');
+                showMessage(`Video "${file.name}" loaded. Waiting for metadata...`);
+            },
+
+            handleVideoLoad: function() {
+                this.durationDisplay.textContent = this.video.duration.toFixed(2);
+                this.video.currentTime = 0;
+                this.controlsArea.classList.remove('hidden');
+                this.captureBtn.disabled = false;
+                this.captureMultiBtn.disabled = false;
+                showMessage('Video ready for frame capture.');
+            },
+
+            updateTimeDisplay: function() {
+                this.currentTimeDisplay.textContent = this.video.currentTime.toFixed(2);
+            },
+            
+            // Helper function to draw and get frame as Data URL
+            getFrameData: function(time, index) {
+                return new Promise(resolve => {
+                    const video = this.video;
+                    const canvas = this.canvas;
+                    const ctx = canvas.getContext('2d');
                     
-                    <div class="custom-res-inputs flex space-x-2 items-center hidden">
-                        <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
-                        <span class="text-gray-500">x</span>
-                        <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
-                    </div>
-                </div>
-
-                <!-- Local Output Format and Quality Control -->
-                <div class="px-4 py-3 border-b bg-white">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Output Format:</label>
-                    <select class="local-format-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
-                        <option value="png">PNG (Best Quality/Transparency)</option>
-                        <option value="jpeg">JPEG (Smaller File Size)</option>
-                    </select>
-                    <!-- JPEG Quality Slider (Hidden by default, because PNG is default format) -->
-                    <div class="local-quality-control hidden mt-2">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">JPEG Quality (<span class="quality-display">90</span>%):</label>
-                        <input type="range" min="1" max="100" value="90" class="local-quality-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
-                    </div>
-                </div>
-
-                <div class="flex-grow p-2">
-                    <div class="gallery-item">
-                        <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
-                    </div>
-                </div>
-                <div class="px-4 py-3 border-t">
-                    <!-- Display new randomized name -->
-                    <p class="text-xs text-gray-600 mb-1">
-                        Export Name: <span class="font-bold text-indigo-700 export-filename">${displayFilename}</span>
-                    </p>
-                    <p class="text-xs text-gray-600">
-                        Crop Size: <span id="crop-w-${index}" class="font-bold">0</span> x <span id="crop-h-${index}" class="font-bold">0</span> px (Source)
-                    </p>
-                </div>
-                <!-- NEW: Local Download Button -->
-                <div class="p-4 pt-0">
-                    <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full font-semibold px-4 py-2 text-sm rounded-lg hover:bg-indigo-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                        Download Single Image
-                    </button>
-                </div>
-            `;
-            
-            galleryContainer.appendChild(card);
-            
-            const imageElement = card.querySelector(`#image-cropper-${index}`);
-            const widthDisplay = card.querySelector(`#crop-w-${index}`);
-            const heightDisplay = card.querySelector(`#crop-h-${index}`);
-            const ratioSelectElement = card.querySelector('.local-ratio-select');
-            
-            // New local controls
-            const localFillToggle = card.querySelector('.local-fill-toggle');
-            const localFillColor = card.querySelector('.local-fill-color');
-            const formatSelectElement = card.querySelector('.local-format-select');
-            const qualityControlDiv = card.querySelector('.local-quality-control');
-            const qualitySlider = card.querySelector('.local-quality-slider');
-            const qualityDisplay = card.querySelector('.quality-display');
-            const resolutionSelect = card.querySelector('.local-resolution-select');
-            const customResInputsDiv = card.querySelector('.custom-res-inputs');
-            const localResolutionInputs = card.querySelectorAll('.local-output-res');
-
-
-            // Set initial default borders
-            updateLocalVisualFeedback(card);
-
-            // Populate the ratio dropdown with presets
-            RATIO_PRESETS.forEach(preset => {
-                const option = document.createElement('option');
-                option.value = preset.value;
-                option.textContent = preset.label;
-                ratioSelectElement.appendChild(option);
-            });
-            // Populate the resolution dropdown with presets
-            RESOLUTION_PRESETS.forEach(preset => {
-                const option = document.createElement('option');
-                option.value = preset.value;
-                option.textContent = preset.label;
-                resolutionSelect.appendChild(option);
-            });
-            // Default selection is "Global Default"
-
-            // 2. Load Image Data
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                imageElement.src = event.target.result;
-                imageElement.classList.remove('cropper-hidden');
-
-                // 3. Initialize Cropper.js
-                const cropper = new Cropper(imageElement, {
-                    aspectRatio: currentAspectRatio,
-                    viewMode: 0, // Allow cropping outside image boundary
-                    dragMode: 'move', 
-                    background: false, 
-                    movable: true,     
-                    zoomable: true,
-                    zoomOnWheel: true, // Cropper's default, allowing zoom
-                    cropmove: () => {
-                        const cropData = cropper.getData();
-                        widthDisplay.textContent = Math.round(cropData.width);
-                        heightDisplay.textContent = Math.round(cropData.height);
-                    },
-                    ready() {
-                        // --- Auto-Centering Logic ---
-                        const ratio = cropper.options.aspectRatio;
-                        const imageWidth = imageElement.naturalWidth;
-                        const imageHeight = imageElement.naturalHeight;
+                    video.currentTime = time;
+                    
+                    // Wait for the video to seek
+                    const onSeeked = () => {
+                        video.removeEventListener('seeked', onSeeked);
                         
-                        let cropWidth = imageWidth;
-                        let cropHeight = imageHeight;
-
-                        if (!isNaN(ratio) && ratio > 0) {
-                            const imageRatio = imageWidth / imageHeight;
-                            
-                            if (imageRatio > ratio) {
-                                // Image is wider than the target ratio (constrained by height)
-                                cropHeight = imageHeight;
-                                cropWidth = imageHeight * ratio;
-                            } else {
-                                // Image is taller than or equal to the target ratio (constrained by width)
-                                cropWidth = imageWidth;
-                                cropHeight = imageWidth / ratio;
-                            }
-                        } 
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
                         
-                        // Calculate center offsets
-                        const left = (imageWidth - cropWidth) / 2;
-                            const top = (imageHeight - cropHeight) / 2;
-
-                        // Apply the calculated crop box data. This triggers 'cropmove'
-                        // which updates the displayed crop size (W x H)
-                        cropper.setCropBoxData({
-                            width: cropWidth,
-                            height: cropHeight,
-                            left: left,
-                            top: top
-                        });
-                        // ----------------------------
+                        // Draw the current frame onto the canvas
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        const filename = `frame_${(time * 100).toFixed(0)}_index_${index}.png`;
+                        
+                        // Get dataURL (always PNG for maximum quality/compatibility)
+                        const dataUrl = canvas.toDataURL('image/png');
+                        
+                        resolve({ filename, dataUrl });
+                    };
+                    
+                    video.addEventListener('seeked', onSeeked);
+                    // Ensure seeking happens instantly if already at the time
+                    if (video.readyState >= 2 && video.currentTime === time) {
+                        onSeeked();
                     }
                 });
+            },
 
-                // 4. Store instance and card reference
-                const item = { file, cropper, index, card, uniqueId };
-                cropperInstances.push(item);
+            captureFrame: async function() {
+                this.captureBtn.disabled = true;
+                const time = this.video.currentTime;
                 
-                // --- FIX: Prevent accidental scaling while preserving wheel zoom ---
-                const galleryItem = card.querySelector('.gallery-item');
-                // When the mouse wheel is used over the cropper area, prevent the default 
-                // browser action (page scroll). Cropper.js will still capture the event and zoom.
-                // This makes the zoom intentional when the mouse is explicitly over the image.
-                galleryItem.addEventListener('wheel', (e) => {
-                    e.preventDefault(); 
-                }, { passive: false });
-                // ------------------------------------------------------------------
+                toggleLoading(true, `Capturing frame at ${time.toFixed(2)}s...`);
 
-                // 5. Attach Local Ratio Handler
-                ratioSelectElement.addEventListener('change', (e) => {
-                    handleLocalRatioChange(e.target.value, item);
-                });
-
-                // 6. Attach Local Format/Quality Handlers
-                formatSelectElement.addEventListener('change', (e) => {
-                    const format = e.target.value;
-                    if (format === 'jpeg') {
-                        qualityControlDiv.classList.remove('hidden');
-                    } else {
-                        qualityControlDiv.classList.add('hidden');
-                    }
-                    showMessage(`Output format for Image ${item.index + 1} set to ${format.toUpperCase()}.`, false);
-                    updateLocalVisualFeedback(card); // Visual feedback update
-                });
-
-                qualitySlider.addEventListener('input', (e) => {
-                    qualityDisplay.textContent = e.target.value;
-                });
-                
-                // 7. Attach Local Fill Color/Toggle Handler (for visual feedback)
-                [localFillColor, localFillToggle].forEach(el => {
-                    el.addEventListener('input', () => {
-                        updateLocalVisualFeedback(card);
-                    });
-                    el.addEventListener('change', () => {
-                        updateLocalVisualFeedback(card);
-                        showMessage(`Fill color/toggle for Image ${item.index + 1} updated.`, false);
-                    });
-                });
-                
-                // 8. Attach Local Resolution Handlers (for visual feedback and visibility)
-                
-                // Dropdown change: toggle custom inputs
-                resolutionSelect.addEventListener('change', (e) => {
-                    const value = e.target.value;
-                    if (value === 'custom') {
-                        customResInputsDiv.classList.remove('hidden');
-                        localResolutionInputs[0].focus();
-                    } else {
-                        customResInputsDiv.classList.add('hidden');
-                        // Clear custom inputs when switching away from custom
-                        localResolutionInputs.forEach(input => input.value = ''); 
-                    }
-                    updateLocalVisualFeedback(card);
-                    showMessage(`Output resolution for Image ${item.index + 1} set to ${value === 'auto' ? 'Auto-size' : value}.`, false);
-                });
-
-                // Custom input change: update visual feedback
-                localResolutionInputs.forEach(input => {
-                    input.addEventListener('input', () => {
-                        updateLocalVisualFeedback(card);
-                    });
-                    input.addEventListener('change', () => {
-                        updateLocalVisualFeedback(card);
-                        const w = getResolutionValue(localResolutionInputs[0]);
-                        const h = getResolutionValue(localResolutionInputs[1]);
-                        if (w || h) {
-                            showMessage(`Custom resolution for Image ${item.index + 1} set to ${w || 'auto'}x${h || 'auto'}px.`, false);
-                        }
-                    });
-                });
-                
-                // Update file count display
-                updateGalleryIndexAndCount();
-
-                // Hide loading overlay once the last file is processed
-                if (index === cropperInstances.length - 1) {
+                try {
+                    const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
+                    this.addFrameToGallery(filename, dataUrl);
+                    showMessage(`Captured frame at ${time.toFixed(2)}s.`);
+                } catch (e) {
+                    console.error("Frame capture failed:", e);
+                    showMessage("Failed to capture frame.", true);
+                } finally {
                     toggleLoading(false);
+                    this.captureBtn.disabled = false;
                 }
-            };
+            },
             
-            reader.readAsDataURL(file);
+            captureMultipleFrames: async function() {
+                const interval = parseFloat(this.intervalInput.value);
+                const duration = this.video.duration;
+                const totalFramesToCapture = 10;
+                
+                if (isNaN(interval) || interval <= 0) {
+                    showMessage("Please set a valid positive interval in seconds.", true);
+                    return;
+                }
+                
+                this.captureMultiBtn.disabled = true;
+                this.captureBtn.disabled = true;
+                
+                let time = this.video.currentTime;
+                
+                // Calculate how many frames we can get without exceeding duration
+                const maxFrames = Math.floor((duration - time) / interval) + 1;
+                const framesToGet = Math.min(totalFramesToCapture, maxFrames);
+                
+                if (framesToGet <= 0) {
+                    showMessage("Not enough video duration remaining to capture frames at this interval.", true);
+                    this.captureMultiBtn.disabled = false;
+                    this.captureBtn.disabled = false;
+                    return;
+                }
+                
+                showMessage(`Starting auto-capture of ${framesToGet} frames...`);
+                
+                for (let i = 0; i < framesToGet; i++) {
+                    toggleLoading(true, `Capturing frame ${i + 1} of ${framesToGet} at ${time.toFixed(2)}s...`);
+                    
+                    try {
+                        const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
+                        this.addFrameToGallery(filename, dataUrl);
+                        time += interval;
+                        if (time > duration) break;
+                        this.video.currentTime = time; // Update preview
+                        await new Promise(r => setTimeout(r, 100)); // Small delay for UI feedback
+                    } catch(e) {
+                        console.error(`Failed to capture frame ${i + 1}:`, e);
+                        showMessage(`Failed to capture frame ${i + 1}. Stopping batch.`, true);
+                        break;
+                    }
+                }
+                
+                toggleLoading(false);
+                this.captureMultiBtn.disabled = false;
+                this.captureBtn.disabled = false;
+                showMessage(`Finished capturing ${framesToGet} frames.`);
+            },
+
+            addFrameToGallery: function(filename, dataUrl) {
+                this.frames.push({ filename, dataUrl });
+                
+                const frameElement = document.createElement('div');
+                frameElement.className = 'flex items-center space-x-3 bg-gray-50 p-2 rounded-lg border border-gray-200';
+                frameElement.innerHTML = `
+                    <img src="${dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
+                    <span class="text-sm font-medium text-gray-700 truncate flex-grow">${filename}</span>
+                    <button data-index="${this.frames.length - 1}" class="delete-frame-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
+                        </svg>
+                    </button>
+                `;
+                this.framesGallery.appendChild(frameElement);
+
+                // Scroll to bottom to show new frame
+                this.framesGallery.scrollTop = this.framesGallery.scrollHeight;
+                
+                this.updateUI();
+            },
+            
+            deleteFrame: function(indexToDelete) {
+                if (indexToDelete < 0 || indexToDelete >= this.frames.length) return;
+                
+                // Remove from array
+                this.frames.splice(indexToDelete, 1);
+                
+                // Re-render gallery
+                this.renderGallery();
+                this.updateUI();
+                showMessage(`Frame ${indexToDelete + 1} removed.`);
+            },
+
+            renderGallery: function() {
+                this.framesGallery.innerHTML = '';
+                this.frames.forEach(frame => {
+                    const frameElement = document.createElement('div');
+                    frameElement.className = 'flex items-center space-x-3 bg-gray-50 p-2 rounded-lg border border-gray-200';
+                    frameElement.innerHTML = `
+                        <img src="${frame.dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
+                        <span class="text-sm font-medium text-gray-700 truncate flex-grow">${frame.filename}</span>
+                        <button data-index="${this.frames.indexOf(frame)}" class="delete-frame-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
+                            </svg>
+                        </button>
+                    `;
+                    this.framesGallery.appendChild(frameElement);
+                });
+            },
+
+            clearFrames: function() {
+                this.frames = [];
+                this.renderGallery();
+                this.updateUI();
+                showMessage("All captured frames cleared.");
+            },
+            
+            updateUI: function() {
+                const count = this.frames.length;
+                this.framesCountDisplay.textContent = count;
+                this.downloadBtn.disabled = count === 0;
+                this.clearBtn.disabled = count === 0;
+                this.placeholder.classList.toggle('hidden', count > 0);
+            },
+
+            downloadAllFrames: async function() {
+                if (this.frames.length === 0) return;
+                
+                this.downloadBtn.disabled = true;
+                const totalFiles = this.frames.length;
+                const zip = new JSZip();
+
+                for (let i = 0; i < totalFiles; i++) {
+                    const frame = this.frames[i];
+                    toggleLoading(true, `Adding frame ${i + 1} of ${totalFiles} to ZIP...`);
+                    
+                    // Convert DataURL to Blob and add to zip
+                    const dataUrl = frame.dataUrl;
+                    const blob = await fetch(dataUrl).then(res => res.blob());
+                    zip.file(frame.filename, blob);
+                }
+
+                try {
+                    toggleLoading(true, `Compiling ZIP file with ${totalFiles} frames...`);
+                    const zipBlob = await zip.generateAsync({ type: "blob" });
+                    saveAs(zipBlob, "video_frames.zip");
+                    showMessage(`Batch download complete! ${totalFiles} frames compiled into ZIP.`);
+                } catch (e) {
+                    console.error("Error during ZIP compilation:", e);
+                    showMessage("Error compiling or downloading ZIP file.", true);
+                } finally {
+                    toggleLoading(false);
+                    this.downloadBtn.disabled = false;
+                }
+            }
         };
         
-        /**
-         * Reads the locally set output resolution (width, height in pixels).
-         * Returns { width: number | null, height: number | null }
-         */
-        const getOutputResolution = (card) => {
-            const resSelect = card.querySelector('.local-resolution-select');
-            const value = resSelect.value;
-
-            if (value === 'auto') {
-                return { width: null, height: null };
+        // Use event delegation for frame deletion
+        videoTool.framesGallery.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-frame-btn');
+            if (deleteBtn) {
+                const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
+                videoTool.deleteFrame(indexToDelete);
             }
+        });
+        // =========================================================================
+        // === END VIDEO FRAME CAPTURE TOOL LOGIC ===
+        // =========================================================================
 
-            if (value === 'custom') {
-                 const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
-                 const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
-                 const targetWidth = getResolutionValue(widthInput);
-                 const targetHeight = getResolutionValue(heightInput);
-                 
-                 return { width: targetWidth, height: targetHeight };
-            }
+        // =========================================================================
+        // === BATCH CROPPER TOOL LOGIC (Refactored to object 'cropperTool') ===
+        // =========================================================================
+        const cropperTool = {
+            // DOM Elements
+            fileInput: document.getElementById('cropperFileInput'),
+            uploadDropZone: document.getElementById('cropperUploadDropZone'),
+            ratioBtns: document.querySelectorAll('#cropper-app .ratio-btn'),
+            applyCustomRatioBtn: document.getElementById('applyCustomRatio'),
+            customWidthInput: document.getElementById('customWidth'),
+            customHeightInput: document.getElementById('customHeight'),
+            uploadError: document.getElementById('cropper-upload-error'),
+            gallerySection: document.getElementById('cropperGallerySection'),
+            galleryContainer: document.getElementById('cropperGalleryContainer'),
+            fileCountDisplay: document.getElementById('cropperFileCount'),
+            downloadAllBtn: document.getElementById('downloadAllCropperBtn'),
+            downloadSection: document.getElementById('cropperDownloadSection'),
+            ratioError: document.getElementById('ratio-error'),
+
+            // State
+            cropperInstances: [], 
+            currentAspectRatio: 9 / 16, // Default ratio is 9:16
             
-            // Fixed preset format: "WxH" (e.g., "1080x1920")
-            const parts = value.split('x');
-            const targetWidth = parseInt(parts[0], 10);
-            const targetHeight = parseInt(parts[1], 10);
+            RATIO_PRESETS: [
+                { label: "Global Default", value: "GLOBAL" },
+                { label: "9:16 (Story)", value: "9/16" },
+                { label: "16:9 (HD)", value: "16/9" },
+                { label: "1:1 (Square)", value: "1/1" },
+                { label: "4:3", value: "4/3" },
+                { label: "3:2", value: "3/2" },
+                { label: "5:4", value: "5/4" },
+                { label: "21:9 (Cinematic)", value: "21/9" },
+                { label: "Free Crop", value: "NaN" }
+            ],
 
-            // Return target width/height only if they are positive numbers
-            return { 
-                width: targetWidth > 0 ? targetWidth : null, 
-                height: targetHeight > 0 ? targetHeight : null 
-            };
-        };
+            RESOLUTION_PRESETS: [
+                { label: "1080x1920 (Story) - Default", value: "1080x1920" }, 
+                { label: "None (Auto-size)", value: "auto" },
+                { label: "Custom Pixels...", value: "custom" },
+                { label: "1920x1080 (HD)", value: "1920x1080" },
+                { label: "1080x1080 (Square)", value: "1080x1080" },
+                { label: "1280x720 (720p)", value: "1280x720" },
+                { label: "4096x2160 (4K Cinema)", value: "4096x2160" }
+            ],
 
-        /**
-         * Core logic to process a single image using its local settings (crop, fill, resize, format).
-         * If isBatch is true, returns { filename, blob } promise for zipping.
-         * If isBatch is false, triggers a direct browser download.
-         */
-        const processAndDownloadSingle = async (item, isBatch = false) => {
-            // Only show loading for single files if not part of the batch process
-            if (!isBatch) {
-                toggleLoading(true, `Processing single file...`);
-            }
+            init: function() {
+                this.fileInput.addEventListener('change', (e) => this.processFiles(e.target.files));
+                this.downloadAllBtn.addEventListener('click', () => this.downloadAllBatch());
+                this.setupDragDrop();
+                this.setupGlobalRatioHandlers();
+                this.setupGalleryDelegation(); // For delete/reset/download buttons on cards
+            },
 
-            try {
-                // Get all settings from the card
-                const cropper = item.cropper;
-                const cropData = cropper.getData();
-                const card = item.card;
+            // --- Cropper Tool Core Functions (Simplified/Migrated) ---
+            updateLocalVisualFeedback: function(card) {
+                const ratioSelect = card.querySelector('.local-ratio-select');
+                const colorInput = card.querySelector('.local-fill-color');
+                const formatSelect = card.querySelector('.local-format-select');
+                const resSelect = card.querySelector('.local-resolution-select');
+                const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                
+                let isResolutionActive = resSelect.value !== "auto";
+                if (resSelect.value === "custom") {
+                    isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
+                }
+                
+                const defaultClasses = ['border-gray-300', 'focus:outline-none'];
+                const ratioActiveClasses = ['border-indigo-500', 'ring-2', 'ring-indigo-200'];
+                const colorActiveClasses = ['border-pink-500', 'ring-2', 'ring-pink-200'];
+                const formatActiveClasses = ['border-green-500', 'ring-2', 'ring-green-200'];
+                const resolutionActiveClasses = ['border-orange-500', 'ring-2', 'ring-orange-200'];
+
+                const toggleClasses = (element, isActive, activeClasses) => {
+                    element.classList.remove(...activeClasses);
+                    element.classList.add(...defaultClasses);
+                    if (isActive) {
+                        element.classList.remove('border-gray-300');
+                        element.classList.add(...activeClasses);
+                    }
+                };
+                
+                toggleClasses(ratioSelect, ratioSelect.value !== "GLOBAL", ratioActiveClasses);
+                const fillToggle = card.querySelector('.local-fill-toggle');
+                toggleClasses(colorInput, fillToggle.checked && colorInput.value.toLowerCase() !== "#ffffff", colorActiveClasses);
+                toggleClasses(formatSelect, formatSelect.value === "jpeg", formatActiveClasses);
+                toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
+                
+                if (resSelect.value === "custom") {
+                    toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
+                    toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
+                } else {
+                    resWidthInput.classList.remove(...resolutionActiveClasses);
+                    resHeightInput.classList.remove(...resolutionActiveClasses);
+                    resWidthInput.classList.add(...defaultClasses);
+                    resHeightInput.classList.add(...defaultClasses);
+                }
+            },
+            
+            getOutputResolution: function(card) {
+                const resSelect = card.querySelector('.local-resolution-select');
+                const value = resSelect.value;
+
+                if (value === 'auto') { return { width: null, height: null }; }
+                if (value === 'custom') {
+                     const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                     const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                     const targetWidth = getResolutionValue(widthInput);
+                     const targetHeight = getResolutionValue(heightInput);
+                     return { width: targetWidth, height: targetHeight };
+                }
+                
+                const parts = value.split('x');
+                const targetWidth = parseInt(parts[0], 10);
+                const targetHeight = parseInt(parts[1], 10);
+                return { 
+                    width: targetWidth > 0 ? targetWidth : null, 
+                    height: targetHeight > 0 ? targetHeight : null 
+                };
+            },
+
+            applyAutoCenter: function(cropper, ratio, imageWidth, imageHeight) {
+                let cropWidth = imageWidth;
+                let cropHeight = imageHeight;
+
+                if (!isNaN(ratio) && ratio > 0) {
+                    const imageRatio = imageWidth / imageHeight;
+                    
+                    if (imageRatio > ratio) {
+                        cropHeight = imageHeight;
+                        cropWidth = imageHeight * ratio;
+                    } else {
+                        cropWidth = imageWidth;
+                        cropHeight = imageWidth / ratio;
+                    }
+                } 
+                
+                const left = (imageWidth - cropWidth) / 2;
+                const top = (imageHeight - cropHeight) / 2;
+
+                cropper.setCropBoxData({ width: cropWidth, height: cropHeight, left: left, top: top });
+            },
+
+            setCropperRatio: function(ratio) {
+                this.currentAspectRatio = ratio === 'NaN' ? NaN : eval(ratio);
+                
+                this.cropperInstances.forEach(item => {
+                    const select = item.card.querySelector('.local-ratio-select');
+                    if (select && select.value === "GLOBAL") {
+                        if (item.cropper) {
+                            item.cropper.setAspectRatio(this.currentAspectRatio);
+                            const imageWidth = item.cropper.image.naturalWidth;
+                            const imageHeight = item.cropper.image.naturalHeight;
+                            if (imageWidth && imageHeight) {
+                                this.applyAutoCenter(item.cropper, this.currentAspectRatio, imageWidth, imageHeight);
+                            }
+                        }
+                        this.updateLocalVisualFeedback(item.card); 
+                    }
+                });
+            },
+
+            handleLocalRatioChange: function(ratioValue, item) {
+                const isGlobal = ratioValue === "GLOBAL";
+                let newRatio;
+                
+                if (isGlobal) {
+                    newRatio = this.currentAspectRatio;
+                    showMessage(`Ratio for Image ${item.index + 1} reset to Global Default.`, false);
+                } else {
+                    newRatio = ratioValue === 'NaN' ? NaN : eval(ratioValue);
+                    showMessage(`Ratio for Image ${item.index + 1} set to local override: ${ratioValue.replace('/', ':')}.`, false);
+                }
+
+                if (item.cropper) {
+                    item.cropper.setAspectRatio(newRatio);
+                    const imageWidth = item.cropper.image.naturalWidth;
+                    const imageHeight = item.cropper.image.naturalHeight;
+                    if (imageWidth && imageHeight) {
+                        this.applyAutoCenter(item.cropper, newRatio, imageWidth, imageHeight);
+                    }
+                }
+                this.updateLocalVisualFeedback(item.card);
+            },
+            
+            updateGalleryIndexAndCount: function() {
+                const count = this.cropperInstances.length;
+                this.fileCountDisplay.textContent = count;
+                
+                this.cropperInstances.forEach((item, newIndex) => {
+                    const card = item.card;
+                    const titleP = card.querySelector('p[title]');
+                    if(titleP) titleP.innerHTML = `<span class="file-index">${newIndex + 1}.</span> File Ready`;
+                    
+                    const displayFilename = `img_${item.uniqueId}`;
+                    const filenameSpan = card.querySelector('.export-filename');
+                    if (filenameSpan) filenameSpan.textContent = displayFilename;
+
+                    const deleteBtn = card.querySelector('.delete-btn');
+                    if(deleteBtn) deleteBtn.dataset.index = newIndex;
+
+                    item.index = newIndex; 
+                });
+
+                if (count === 0) {
+                    this.gallerySection.classList.add('hidden');
+                    this.downloadSection.classList.add('hidden');
+                    this.downloadAllBtn.disabled = true;
+                    this.downloadAllBtn.textContent = 'Download Cropped Images';
+                } else {
+                    this.gallerySection.classList.remove('hidden');
+                    this.downloadSection.classList.remove('hidden');
+                    this.downloadAllBtn.disabled = false;
+
+                    if (count === 1) {
+                        this.downloadAllBtn.textContent = 'Download Cropped Image';
+                    } else {
+                        this.downloadAllBtn.textContent = `Download All ${count} Cropped Images (ZIP)`;
+                    }
+                }
+            },
+
+            createCropperCard: function(file, index) {
+                const uniqueId = crypto.randomUUID().substring(0, 8); 
+                const displayFilename = `img_${uniqueId}`;
+
+                const card = document.createElement('div');
+                card.className = 'bg-white shadow-xl rounded-xl flex flex-col border border-gray-200';
+                
+                card.innerHTML = `
+                    <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
+                        <p class="text-sm font-semibold text-gray-700 truncate" title="File Index ${index + 1}">
+                            <span class="file-index">${index + 1}.</span> File Ready
+                        </p>
+                        <div class="flex items-center space-x-2">
+                            <button data-index="${index}" class="reset-crop-btn text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-100" type="button" title="Reset crop to auto-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                                </svg>
+                            </button>
+                            <button data-index="${index}" class="regenerate-id-btn text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-yellow-100" type="button" title="Regenerate unique ID">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348H21m0 0-3.21-3.21M21 9.348l-3.21 3.21m-2.122-4.994a4.5 4.5 0 00-6.364-6.364M12 5.25v1.5m-5.878 11.246a4.5 4.5 0 006.364 0m-2.122-4.994l-.445-.445m.445.445L12 12m0 0h.01" />
+                                </svg>
+                            </button>
+                            <button data-index="${index}" class="delete-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove image">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-4 py-2 border-b bg-white">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Local Ratio Override:</label>
+                        <select class="local-ratio-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none">
+                            ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div class="px-4 py-2 border-b bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="flex items-center space-x-2 text-xs font-medium text-gray-600">
+                            <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
+                            <span class="text-xs">Fill Empty Area:</span>
+                        </label>
+                        <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-300 rounded-lg cursor-pointer focus:outline-none">
+                    </div>
+                    
+                    <div class="px-4 py-2 border-b bg-white">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Output Resolution (Optional Fixed Pixels):</label>
+                        <select class="local-resolution-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
+                             ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === '1080x1920' ? 'selected' : ''}>${p.label}</option>`).join('')}
+                        </select>
+                        
+                        <div class="custom-res-inputs flex space-x-2 items-center hidden">
+                            <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
+                            <span class="text-gray-500">x</span>
+                            <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-3 border-b bg-white">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Output Format:</label>
+                        <select class="local-format-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
+                            <option value="png">PNG (Best Quality/Transparency)</option>
+                            <option value="jpeg">JPEG (Smaller File Size)</option>
+                        </select>
+                        <div class="local-quality-control hidden mt-2">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">JPEG Quality (<span class="quality-display">90</span>%):</label>
+                            <input type="range" min="1" max="100" value="90" class="local-quality-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        </div>
+                    </div>
+
+                    <div class="flex-grow p-2">
+                        <div class="gallery-item">
+                            <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
+                        </div>
+                    </div>
+                    <div class="px-4 py-3 border-t">
+                        <p class="text-xs text-gray-600 mb-1">
+                            Export Name: <span class="font-bold text-indigo-700 export-filename">${displayFilename}</span>
+                        </p>
+                        <p class="text-xs text-gray-600">
+                            Crop Size: <span id="crop-w-${index}" class="font-bold">0</span> x <span id="crop-h-${index}" class="font-bold">0</span> px (Source)
+                        </p>
+                    </div>
+                    <div class="p-4 pt-0">
+                        <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full font-semibold px-4 py-2 text-sm rounded-lg hover:bg-indigo-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                            Download Single Image
+                        </button>
+                    </div>
+                `;
+                
+                this.galleryContainer.appendChild(card);
+                
+                const imageElement = card.querySelector(`#image-cropper-${index}`);
+                const widthDisplay = card.querySelector(`#crop-w-${index}`);
+                const heightDisplay = card.querySelector(`#crop-h-${index}`);
+                const ratioSelectElement = card.querySelector('.local-ratio-select');
                 const localFillToggle = card.querySelector('.local-fill-toggle');
                 const localFillColor = card.querySelector('.local-fill-color');
                 const formatSelectElement = card.querySelector('.local-format-select');
+                const qualityControlDiv = card.querySelector('.local-quality-control');
                 const qualitySlider = card.querySelector('.local-quality-slider');
-                const { width: targetWidth, height: targetHeight } = getOutputResolution(card);
+                const resolutionSelect = card.querySelector('.local-resolution-select');
+                const customResInputsDiv = card.querySelector('.custom-res-inputs');
+                const localResolutionInputs = card.querySelectorAll('.local-output-res');
 
-                // Determine canvas properties and filename
-                let useSolidFill = localFillToggle.checked;
-                const finalFillColor = localFillColor.value; 
-                let outputFormat = formatSelectElement.value;
-                const jpegQuality = parseInt(qualitySlider.value, 10) / 100;
+                this.updateLocalVisualFeedback(card);
 
-                // Enforce PNG if fill is unchecked (for transparency)
-                if (!useSolidFill) { outputFormat = 'png'; }
-                
-                const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
-                const extension = outputFormat === 'jpeg' ? 'jpeg' : 'png';
-                const uniqueBaseName = item.uniqueId; 
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imageElement.src = event.target.result;
+                    imageElement.classList.remove('cropper-hidden');
 
-                // Get the cropped content (which might have transparent borders)
-                const croppedCanvas = cropper.getCroppedCanvas();
-                const sourceWidth = croppedCanvas.width;
-                const sourceHeight = croppedCanvas.height;
-                
-                // Determine final output dimensions
-                let finalWidth = targetWidth || sourceWidth;
-                let finalHeight = targetHeight || sourceHeight;
-                
-                // If one dimension is set, calculate the other to maintain crop ratio
-                if (targetWidth && !targetHeight) {
-                    finalHeight = Math.round(sourceHeight * (targetWidth / sourceWidth));
-                } else if (targetHeight && !targetWidth) {
-                    finalWidth = Math.round(sourceWidth * (targetHeight / sourceHeight));
-                }
-                
-                // Create the final filename based on the resulting dimensions
-                const dimW = finalWidth; // Use final dimensions for filename
-                const dimH = finalHeight;
-                let filename = `img_${uniqueBaseName}_${dimW}x${dimH}.${extension}`;
-                
-                
-                // Check if we need a final processing canvas (for scaling or filling)
-                const requiresResizingOrFill = (finalWidth !== sourceWidth) || (finalHeight !== sourceHeight) || useSolidFill;
-                let canvasToBlob = croppedCanvas; // Default to the cropper's output
-
-                if (requiresResizingOrFill) {
-                    canvasToBlob = document.createElement('canvas');
-                    canvasToBlob.width = finalWidth;
-                    canvasToBlob.height = finalHeight;
-                    const ctx = canvasToBlob.getContext('2d');
-                    
-                    // 1. Draw solid background color if required
-                    if (useSolidFill) {
-                        ctx.fillStyle = finalFillColor;
-                        ctx.fillRect(0, 0, finalWidth, finalHeight);
-                    }
-                    
-                    // 2. Draw the cropped image, scaled to the final dimensions
-                    ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
-                }
-                
-                // If part of batch process, return the filename and blob promise
-                if (isBatch) {
-                    return new Promise(resolve => {
-                        canvasToBlob.toBlob((blob) => {
-                            resolve({ filename, blob });
-                        }, mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0);
-                    });
-                }
-                
-                // If single download (not part of batch)
-                await new Promise(resolve => {
-                    canvasToBlob.toBlob((blob) => {
-                        if (blob) {
-                            saveAs(blob, filename);
-                            showMessage(`Single file downloaded as ${filename}.`);
-                        } else {
-                            throw new Error("Failed to create image blob for download.");
+                    const cropper = new Cropper(imageElement, {
+                        aspectRatio: this.currentAspectRatio,
+                        viewMode: 0, dragMode: 'move', background: false, movable: true, zoomable: true, zoomOnWheel: true,
+                        cropmove: () => {
+                            const cropData = cropper.getData();
+                            widthDisplay.textContent = Math.round(cropData.width);
+                            heightDisplay.textContent = Math.round(cropData.height);
+                        },
+                        ready: () => {
+                            const ratio = cropper.options.aspectRatio;
+                            const imageWidth = imageElement.naturalWidth;
+                            const imageHeight = imageElement.naturalHeight;
+                            this.applyAutoCenter(cropper, ratio, imageWidth, imageHeight);
                         }
-                        resolve();
-                    }, mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0);
-                });
-                
-            } catch (e) {
-                console.error("Error processing and downloading file:", e);
-                if (!isBatch) {
-                    showMessage("Error downloading the image.", true);
-                }
-                throw e; 
-            } finally {
-                if (!isBatch) {
-                    toggleLoading(false);
-                }
-            }
-        }
+                    });
 
+                    const item = { file, cropper, index, card, uniqueId };
+                    this.cropperInstances.push(item);
+                    
+                    const galleryItem = card.querySelector('.gallery-item');
+                    galleryItem.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false });
 
-        // --- Core File Processing Function (Called by input or drop) ---
-        const processFiles = (files) => {
-            uploadError.classList.add('hidden');
+                    ratioSelectElement.addEventListener('change', (e) => this.handleLocalRatioChange(e.target.value, item));
+                    formatSelectElement.addEventListener('change', (e) => {
+                        const format = e.target.value;
+                        qualityControlDiv.classList.toggle('hidden', format !== 'jpeg');
+                        showMessage(`Output format for Image ${item.index + 1} set to ${format.toUpperCase()}.`, false);
+                        this.updateLocalVisualFeedback(card);
+                    });
+                    qualitySlider.addEventListener('input', (e) => card.querySelector('.quality-display').textContent = e.target.value);
+                    [localFillColor, localFillToggle].forEach(el => el.addEventListener('change', () => this.updateLocalVisualFeedback(card)));
+                    
+                    resolutionSelect.addEventListener('change', (e) => {
+                        customResInputsDiv.classList.toggle('hidden', e.target.value !== 'custom');
+                        if (e.target.value !== 'custom') localResolutionInputs.forEach(input => input.value = ''); 
+                        this.updateLocalVisualFeedback(card);
+                        showMessage(`Output resolution for Image ${item.index + 1} set to ${e.target.value === 'auto' ? 'Auto-size' : e.target.value}.`, false);
+                    });
 
-            if (files.length === 0) {
-                // If coming from file input, reset it.
-                if (fileInput.files.length === 0) fileInput.value = ''; 
-                return;
-            }
-
-            // Clear previous state
-            if (cropperInstances.length > 0) {
-                cropperInstances.forEach(item => item.cropper.destroy());
-                cropperInstances = [];
-                galleryContainer.innerHTML = '';
-            }
-
-            toggleLoading(true, `Loading ${files.length} images...`);
-
-            // Filter and validate files
-            let validFiles = [];
-            let invalidFileCount = 0;
-            const maxFiles = 30;
-            const maxSize = 5 * 1024 * 1024; // 5MB
-            const supportedTypes = ['image/png', 'image/jpeg'];
+                    localResolutionInputs.forEach(input => input.addEventListener('input', () => this.updateLocalVisualFeedback(card)));
+                    
+                    this.updateGalleryIndexAndCount();
+                    if (index === this.cropperInstances.length - 1) toggleLoading(false);
+                };
+                reader.readAsDataURL(file);
+            },
             
-            // Convert FileList to Array if not already (e.g., from drop event)
-            const filesArray = Array.from(files);
+            processFiles: function(files) {
+                this.uploadError.classList.add('hidden');
+                if (files.length === 0) { if (this.fileInput.files.length === 0) this.fileInput.value = ''; return; }
 
-            filesArray.forEach(file => {
-                if (validFiles.length < maxFiles) {
-                    if (supportedTypes.includes(file.type) && file.size <= maxSize) {
+                if (this.cropperInstances.length > 0) {
+                    this.cropperInstances.forEach(item => item.cropper.destroy());
+                    this.cropperInstances = [];
+                    this.galleryContainer.innerHTML = '';
+                }
+
+                toggleLoading(true, `Loading ${files.length} images...`);
+                let validFiles = [];
+                Array.from(files).forEach(file => {
+                    if (validFiles.length < 30 && ['image/png', 'image/jpeg'].includes(file.type) && file.size <= 5 * 1024 * 1024) {
                         validFiles.push(file);
-                    } else {
-                        invalidFileCount++;
                     }
-                }
-            });
+                });
 
-            if (validFiles.length === 0) {
-                toggleLoading(false);
-                uploadError.textContent = 'No valid PNG or JPEG files (Max 5MB) were found.';
-                uploadError.classList.remove('hidden');
-                fileInput.value = '';
-                return;
-            }
-            
-            if (filesArray.length > maxFiles || invalidFileCount > 0) {
-                let message = `Successfully loaded ${validFiles.length} valid files.`;
-                if (filesArray.length > maxFiles) message += ` (Ignored ${filesArray.length - maxFiles} files due to ${maxFiles} file limit).`;
-                if (invalidFileCount > 0) message += ` (Ignored ${invalidFileCount} invalid or too large files).`;
-                uploadError.textContent = message;
-                uploadError.classList.remove('hidden');
-            }
-
-            // Reset input value after successful loading or filtration (IMPORTANT for re-uploading the same files)
-            fileInput.value = '';
-
-            // Load all valid files into the gallery
-            validFiles.forEach((file, index) => {
-                createCropperCard(file, index);
-            });
-        };
-        
-        // --- File Input Handler (Now just calls processFiles) ---
-        fileInput.addEventListener('change', (e) => {
-            processFiles(e.target.files);
-        });
-        
-        // --- Drag and Drop Handlers ---
-        
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadDropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-
-        // Add visual styling on drag over
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadDropZone.addEventListener(eventName, () => {
-                uploadDropZone.classList.add('drop-active');
-            }, false);
-        });
-
-        // Remove visual styling on drag leave/drop
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadDropZone.addEventListener(eventName, () => {
-                uploadDropZone.classList.remove('drop-active');
-            }, false);
-        });
-
-        // Handle dropped files
-        uploadDropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
-            // Pass the dropped files to the common processing function
-            processFiles(files);
-        }, false);
-
-        // --- Delete / Reset / Regenerate / LOCAL DOWNLOAD Handlers using Event Delegation ---
-        galleryContainer.addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('.delete-btn');
-            const resetCropBtn = e.target.closest('.reset-crop-btn');
-            const regenerateIdBtn = e.target.closest('.regenerate-id-btn');
-            const localDownloadBtn = e.target.closest('.local-download-btn'); // New handler
-
-            if (deleteBtn) {
-                const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
-                
-                if (isNaN(indexToDelete) || indexToDelete < 0 || indexToDelete >= cropperInstances.length) {
-                    console.error("Invalid index for deletion.");
+                if (validFiles.length === 0) {
+                    toggleLoading(false);
+                    this.uploadError.textContent = 'No valid PNG or JPEG files (Max 5MB) were found.';
+                    this.uploadError.classList.remove('hidden');
+                    this.fileInput.value = '';
                     return;
                 }
-
-                // 1. Destroy Cropper instance and remove DOM element
-                const itemToDelete = cropperInstances.find(item => item.index === indexToDelete);
-                if (itemToDelete && itemToDelete.cropper) {
-                    itemToDelete.cropper.destroy();
-                }
-                if (itemToDelete && itemToDelete.card) {
-                    itemToDelete.card.remove();
-                }
-
-                // 2. Remove from array and re-assign indices
-                const newInstances = cropperInstances.filter(item => item.index !== indexToDelete);
                 
-                // IMPORTANT: Re-index the remaining items' 'index' property for accurate lookup later.
-                cropperInstances = newInstances.map((item, newIndex) => ({
-                    ...item,
-                    index: newIndex // Update the internal index
-                }));
+                this.fileInput.value = '';
+                validFiles.forEach((file, index) => this.createCropperCard(file, index));
+            },
 
-                // 3. Update UI indexing and count
-                updateGalleryIndexAndCount();
-                return;
-            }
-            
-            if (resetCropBtn) {
-                const indexToReset = parseInt(resetCropBtn.dataset.index, 10);
-                const itemToReset = cropperInstances.find(item => item.index === indexToReset);
-                if (itemToReset && itemToReset.cropper) {
-                    const cropper = itemToReset.cropper;
-                    // Read the active aspect ratio (local override or global default)
-                    const localRatioValue = itemToReset.card.querySelector('.local-ratio-select').value;
-                    let ratio = localRatioValue === 'GLOBAL' ? currentAspectRatio : (localRatioValue === 'NaN' ? NaN : eval(localRatioValue));
-                    
-                    const imageElement = cropper.element;
-                    const imageWidth = imageElement.naturalWidth;
-                    const imageHeight = imageElement.naturalHeight;
+            setupDragDrop: function() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    this.uploadDropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+                });
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.add('drop-active'), false);
+                });
+                ['dragleave', 'drop'].forEach(eventName => {
+                    this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.remove('drop-active'), false);
+                });
+                this.uploadDropZone.addEventListener('drop', (e) => this.processFiles(e.dataTransfer.files), false);
+            },
 
-                    applyAutoCenter(cropper, ratio, imageWidth, imageHeight);
-                    showMessage(`Crop for Image ${itemToReset.index + 1} reset to auto-center.`);
-                }
-                return;
-            }
-
-            if (regenerateIdBtn) {
-                const indexToRegenerate = parseInt(regenerateIdBtn.dataset.index, 10);
-                const itemToRegenerate = cropperInstances.find(item => item.index === indexToRegenerate);
-                if (itemToRegenerate) {
-                    // Generate new 8-char unique ID
-                    const newUniqueId = crypto.randomUUID().substring(0, 8);
-                    itemToRegenerate.uniqueId = newUniqueId;
-
-                    // Update card display
-                    const filenameSpan = itemToRegenerate.card.querySelector('.export-filename');
-                    if (filenameSpan) filenameSpan.textContent = `img_${newUniqueId}`;
-
-                    showMessage(`New ID assigned to Image ${itemToRegenerate.index + 1}: ${newUniqueId}.`);
-                }
-                return;
-            }
-
-            if (localDownloadBtn) {
-                const indexToDownload = parseInt(localDownloadBtn.dataset.index, 10);
-                const itemToDownload = cropperInstances.find(item => item.index === indexToDownload);
-                if (itemToDownload) {
-                    processAndDownloadSingle(itemToDownload, false);
-                }
-                return;
-            }
-        });
-
-
-        // --- Global Ratio Presets Handler ---
-        ratioBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const ratio = btn.dataset.ratio;
-                setCropperRatio(ratio);
-
-                // Update button active state
-                document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
-                btn.classList.add('active-ratio');
-
-                // Clear custom inputs when a preset is selected
-                customWidthInput.value = '';
-                customHeightInput.value = '';
-                ratioError.classList.add('hidden');
-                showMessage(`Global ratio set to ${ratio.replace('/', ':')}`);
-            });
-        });
-
-        // --- Custom Ratio Handler ---
-        applyCustomRatioBtn.addEventListener('click', () => {
-            ratioError.classList.add('hidden');
-            const width = parseInt(customWidthInput.value, 10);
-            const height = parseInt(customHeightInput.value, 10);
-
-            if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-                ratioError.textContent = 'Please enter valid positive numbers.';
-                ratioError.classList.remove('hidden');
-                return;
-            }
-
-            const customRatioString = `${width}/${height}`;
-            setCropperRatio(customRatioString);
-
-            // Ensure no preset is marked active when custom ratio is applied
-            document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
-            
-            showMessage(`Custom ratio ${width}:${height} applied to all images.`);
-        });
-        
-
-
-        // --- Batch Download Handler (Uses uniqueId) ---
-        downloadAllBtn.addEventListener('click', async () => {
-            if (cropperInstances.length === 0) return;
-
-            downloadAllBtn.disabled = true;
-            
-            const totalFiles = cropperInstances.length;
-            
-            // --- LOGIC: SINGLE FILE DOWNLOAD (No Zip) ---
-            if (totalFiles === 1) {
-                const item = cropperInstances[0];
-                try {
-                    // Call the single download function directly (it handles loading overlay)
-                    await processAndDownloadSingle(item, false); 
-                } catch (e) {
-                    // processAndDownloadSingle handles error messaging
-                } finally {
-                    // Loading and button state handled by processAndDownloadSingle
-                    downloadAllBtn.disabled = false;
-                }
-                return; 
-            }
-            // --- END SINGLE FILE LOGIC ---
-
-
-            // --- BATCH (ZIP) DOWNLOAD LOGIC (totalFiles > 1) ---
-            let filesProcessed = 0;
-            let successfulFiles = [];
-            let tasks = [];
-
-            // Initialize JSZip instance
-            const zip = new JSZip();
-
-            for (const item of cropperInstances) {
-                filesProcessed++;
-                toggleLoading(true, `Processing file ${filesProcessed} of ${totalFiles}...`);
-
-                // Queue up the processing task
-                const task = processAndDownloadSingle(item, true)
-                    .then(({ filename, blob }) => {
-                        if (blob) {
-                            zip.file(filename, blob);
-                            successfulFiles.push(filename);
-                        }
-                    })
-                    .catch(e => {
-                        // Catch error for this file but allow batch to continue
-                        console.error(`Error processing file index ${item.index} for ZIP:`, e);
+            setupGlobalRatioHandlers: function() {
+                this.ratioBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.setCropperRatio(btn.dataset.ratio);
+                        document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                        btn.classList.add('active-ratio');
+                        this.customWidthInput.value = '';
+                        this.customHeightInput.value = '';
+                        this.ratioError.classList.add('hidden');
+                        showMessage(`Global ratio set to ${btn.dataset.ratio.replace('/', ':')}`);
                     });
-                
-                tasks.push(task);
-            }
-            
-            // Wait for all file processing to complete
-            await Promise.allSettled(tasks);
+                });
+                this.applyCustomRatioBtn.addEventListener('click', () => {
+                    this.ratioError.classList.add('hidden');
+                    const width = parseInt(this.customWidthInput.value, 10);
+                    const height = parseInt(this.customHeightInput.value, 10);
+                    if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                        this.ratioError.textContent = 'Please enter valid positive numbers.';
+                        this.ratioError.classList.remove('hidden');
+                        return;
+                    }
+                    this.setCropperRatio(`${width}/${height}`);
+                    document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                    showMessage(`Custom ratio ${width}:${height} applied to all images.`);
+                });
+            },
 
+            setupGalleryDelegation: function() {
+                this.galleryContainer.addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    const resetCropBtn = e.target.closest('.reset-crop-btn');
+                    const regenerateIdBtn = e.target.closest('.regenerate-id-btn');
+                    const localDownloadBtn = e.target.closest('.local-download-btn');
 
-            // --- 2. ZIP Compilation and Download ---
-            let failureCount = totalFiles - successfulFiles.length;
-            
-            if (successfulFiles.length > 0) {
-                try {
-                    toggleLoading(true, `Compiling ZIP file with ${successfulFiles.length} images...`);
+                    const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || regenerateIdBtn?.dataset.index || localDownloadBtn?.dataset.index;
+                    const indexVal = parseInt(index, 10);
+                    const item = this.cropperInstances.find(i => i.index === indexVal);
 
-                    // Generate the ZIP file as a blob
-                    const zipBlob = await zip.generateAsync({ type: "blob" });
+                    if (!item) return;
 
-                    // Use FileSaver.js (saveAs) to trigger cross-browser download
-                    saveAs(zipBlob, "batch_cropped_images.zip");
-
-                    // 3. Final cleanup and feedback
-                    toggleLoading(false);
-                    downloadAllBtn.disabled = false;
+                    if (deleteBtn) {
+                        item.cropper.destroy();
+                        item.card.remove();
+                        this.cropperInstances = this.cropperInstances.filter(i => i.index !== indexVal);
+                        this.cropperInstances = this.cropperInstances.map((i, newIndex) => ({ ...i, index: newIndex }));
+                        this.updateGalleryIndexAndCount();
+                        return;
+                    }
                     
-                    if (failureCount === 0) {
-                        showMessage(`Batch download complete! ${totalFiles} files compiled into ZIP.`);
-                    } else {
-                        showMessage(`ZIP created successfully, but ${failureCount} file(s) failed to process.`, true);
+                    if (resetCropBtn) {
+                        const localRatioValue = item.card.querySelector('.local-ratio-select').value;
+                        let ratio = localRatioValue === 'GLOBAL' ? this.currentAspectRatio : (localRatioValue === 'NaN' ? NaN : eval(localRatioValue));
+                        const imageElement = item.cropper.element;
+                        this.applyAutoCenter(item.cropper, ratio, imageElement.naturalWidth, imageElement.naturalHeight);
+                        showMessage(`Crop for Image ${item.index + 1} reset to auto-center.`);
+                        return;
                     }
 
-                } catch (e) {
-                    toggleLoading(false);
-                    downloadAllBtn.disabled = false;
-                    console.error("Error during ZIP compilation:", e);
-                    showMessage("Error compiling or downloading ZIP file.", true);
-                }
-            } else {
-                // All files failed
-                toggleLoading(false);
-                downloadAllBtn.disabled = false;
-                showMessage("Batch failed: Could not process any images.", true);
-            }
-        });
+                    if (regenerateIdBtn) {
+                        const newUniqueId = crypto.randomUUID().substring(0, 8);
+                        item.uniqueId = newUniqueId;
+                        item.card.querySelector('.export-filename').textContent = `img_${newUniqueId}`;
+                        showMessage(`New ID assigned to Image ${item.index + 1}: ${newUniqueId}.`);
+                        return;
+                    }
 
+                    if (localDownloadBtn) {
+                        cropperTool.processAndDownloadSingle(item, false);
+                        return;
+                    }
+                });
+            },
+
+            processAndDownloadSingle: async function(item, isBatch = false) {
+                if (!isBatch) toggleLoading(true, `Processing single file...`);
+                try {
+                    const cropper = item.cropper;
+                    const cropData = cropper.getData();
+                    const card = item.card;
+                    const localFillToggle = card.querySelector('.local-fill-toggle');
+                    const localFillColor = card.querySelector('.local-fill-color');
+                    const formatSelectElement = card.querySelector('.local-format-select');
+                    const qualitySlider = card.querySelector('.local-quality-slider');
+                    const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card);
+
+                    let useSolidFill = localFillToggle.checked;
+                    const finalFillColor = localFillColor.value; 
+                    let outputFormat = formatSelectElement.value;
+                    const jpegQuality = parseInt(qualitySlider.value, 10) / 100;
+
+                    if (!useSolidFill) outputFormat = 'png';
+                    
+                    const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+                    const extension = outputFormat === 'jpeg' ? 'jpeg' : 'png';
+                    const uniqueBaseName = item.uniqueId; 
+
+                    const croppedCanvas = cropper.getCroppedCanvas();
+                    const sourceWidth = croppedCanvas.width;
+                    const sourceHeight = croppedCanvas.height;
+                    
+                    let finalWidth = targetWidth || sourceWidth;
+                    let finalHeight = targetHeight || sourceHeight;
+                    
+                    if (targetWidth && !targetHeight) finalHeight = Math.round(sourceHeight * (targetWidth / sourceWidth));
+                    else if (targetHeight && !targetWidth) finalWidth = Math.round(sourceWidth * (targetHeight / sourceHeight));
+                    
+                    const dimW = finalWidth;
+                    const dimH = finalHeight;
+                    let filename = `img_${uniqueBaseName}_${dimW}x${dimH}.${extension}`;
+                    
+                    const requiresResizingOrFill = (finalWidth !== sourceWidth) || (finalHeight !== sourceHeight) || useSolidFill;
+                    let canvasToBlob = croppedCanvas;
+
+                    if (requiresResizingOrFill) {
+                        canvasToBlob = document.createElement('canvas');
+                        canvasToBlob.width = finalWidth;
+                        canvasToBlob.height = finalHeight;
+                        const ctx = canvasToBlob.getContext('2d');
+                        
+                        if (useSolidFill) {
+                            ctx.fillStyle = finalFillColor;
+                            ctx.fillRect(0, 0, finalWidth, finalHeight);
+                        }
+                        
+                        ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
+                    }
+                    
+                    if (isBatch) {
+                        return new Promise(resolve => canvasToBlob.toBlob((blob) => resolve({ filename, blob }), mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0));
+                    }
+                    
+                    await new Promise(resolve => {
+                        canvasToBlob.toBlob((blob) => {
+                            if (blob) { saveAs(blob, filename); showMessage(`Single file downloaded as ${filename}.`); } 
+                            else { throw new Error("Failed to create image blob."); }
+                            resolve();
+                        }, mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0);
+                    });
+                    
+                } catch (e) {
+                    console.error("Error processing and downloading file:", e);
+                    if (!isBatch) showMessage("Error downloading the image.", true);
+                    throw e; 
+                } finally {
+                    if (!isBatch) toggleLoading(false);
+                }
+            },
+
+            downloadAllBatch: async function() {
+                if (this.cropperInstances.length === 0) return;
+
+                this.downloadAllBtn.disabled = true;
+                const totalFiles = this.cropperInstances.length;
+                
+                if (totalFiles === 1) {
+                    try { await this.processAndDownloadSingle(this.cropperInstances[0], false); } 
+                    catch (e) { /* handled inside */ } 
+                    finally { this.downloadAllBtn.disabled = false; }
+                    return; 
+                }
+
+                let successfulFiles = [];
+                let tasks = [];
+                const zip = new JSZip();
+
+                for (const item of this.cropperInstances) {
+                    toggleLoading(true, `Processing file ${tasks.length + 1} of ${totalFiles}...`);
+                    const task = this.processAndDownloadSingle(item, true)
+                        .then(({ filename, blob }) => { if (blob) { zip.file(filename, blob); successfulFiles.push(filename); } })
+                        .catch(e => console.error(`Error processing file index ${item.index} for ZIP:`, e));
+                    tasks.push(task);
+                }
+                
+                await Promise.allSettled(tasks);
+
+                let failureCount = totalFiles - successfulFiles.length;
+                
+                if (successfulFiles.length > 0) {
+                    try {
+                        toggleLoading(true, `Compiling ZIP file with ${successfulFiles.length} images...`);
+                        const zipBlob = await zip.generateAsync({ type: "blob" });
+                        saveAs(zipBlob, "batch_cropped_images.zip");
+                        toggleLoading(false);
+                        this.downloadAllBtn.disabled = false;
+                        showMessage(`Batch download complete! ${totalFiles} files compiled into ZIP.${failureCount > 0 ? ` (${failureCount} failed).` : ''}`);
+                    } catch (e) {
+                        toggleLoading(false);
+                        this.downloadAllBtn.disabled = false;
+                        console.error("Error during ZIP compilation:", e);
+                        showMessage("Error compiling or downloading ZIP file.", true);
+                    }
+                } else {
+                    toggleLoading(false);
+                    this.downloadAllBtn.disabled = false;
+                    showMessage("Batch failed: Could not process any images.", true);
+                }
+            }
+        };
+        // =========================================================================
+        // === END BATCH CROPPER TOOL LOGIC ===
+        // =========================================================================
     </script>
 </body>
 </html>

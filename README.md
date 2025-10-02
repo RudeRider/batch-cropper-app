@@ -1,88 +1,74 @@
-🖼️ Batch Image Aspect Ratio Cropper
-This is a powerful, client-side application designed for efficiently cropping multiple images to a uniform aspect ratio (or fixed pixel resolution). All processing, including cropping, resizing, filling, and ZIP compilation, is handled directly in your browser, ensuring speed and privacy.
+🎬 Digital Asset Tools: Batch Cropper & Frame Capture
+This application bundles two powerful, client-side tools designed for efficient media asset preparation directly in your browser. All processing, including image manipulation, frame extraction, and ZIP compilation, is handled locally for speed and privacy.
 
-The user interface is split into two main columns:
+✨ Application Structure
+The interface uses a sticky header for quick tool switching and a responsive two-column layout on large screens:
 
-Controls (Right Sticky Sidebar): Persistent access to upload, global settings, and batch download, regardless of scroll position.
+Controls (Right Sticky Sidebar): Provides persistent access to file upload, global settings, and batch download buttons for the active tool, regardless of scroll position.
 
-Gallery (Left Scrollable Area): Displays individual cropping previews and local, per-image overrides.
+Tool Content (Left Area): Displays the working area, such as the Cropper Gallery or the Video Player.
 
-✨ Features
-Batch Upload: Supports multiple PNG and JPEG files via file selection or drag-and-drop.
+🖼️ Tool 1: Batch Image Cropper
+This tool streamlines the process of cropping multiple images to a specific aspect ratio or fixed pixel resolution.
 
-Sticky Controls: Global settings and download button remain visible in a fixed sidebar while scrolling the gallery.
+🚀 Batch Cropper Workflow
+1. Upload Files (Sticky Sidebar): Drag-and-drop or select your PNG/JPEG images.
 
-Global Aspect Ratio Presets: Easily set a default ratio (e.g., 9:16, 1:1, 16:9) applied to all images.
+2. Set Global Settings (Sticky Sidebar): Define the default Aspect Ratio (e.g., 9:16) for all images.
 
-Custom Ratio Input: Define any custom ratio (e.g., 5:2).
+4. Crop Gallery (Left Area): Review all images and use the local controls for granular adjustments.
 
-Individual Cropping Previews: Adjust the crop box for each image visually using the Cropper.js interface.
+3. Batch Download (Sticky Sidebar): Use the main button to download all processed images in a single ZIP file.
 
-Prevent Accidental Zoom: Mouse wheel scrolling over the image area is reserved for image zoom only, preventing accidental page scroll interference.
-
-Local Overrides (Per Image):
-
-Local Ratio Override: Set a unique aspect ratio for an individual image.
-
-Output Format & Quality: Choose PNG (for transparency) or JPEG (with adjustable quality/compression).
-
-Solid Color Fill: Apply a solid background color to areas outside the original image boundary (useful when cropping a landscape photo to a portrait ratio).
-
-Fixed Output Resolution: Select from preset pixel sizes (like 1080×1920) or define a custom width and height for the final output.
-
-Download Options:
-
-Batch Download (ZIP): Download all processed images compiled into a single ZIP file.
-
-Local Download: Download a single processed image directly from its card.
-
-🚀 Workflow
-Upload Files (Step 1 - Sticky): Use the file input or drag-and-drop your PNG/JPEG images into the zone in the sticky sidebar.
-
-Set Global Settings (Step 2 - Sticky): Select a default Aspect Ratio or apply a Custom Ratio. This is automatically applied to all loaded images.
-
-Review Gallery (Step 4 - Left Area): Images appear in the gallery area on the left.
-
-For each image, you can manually drag the crop box to refine the selection.
-
-Use the local controls on each card to override the ratio, set a fixed Output Resolution (using presets or custom), choose Fill Color, or change the Output Format.
-
-Download (Step 3 - Sticky):
-
-Use the large "Download All Cropped Images (ZIP)" button in the sidebar to process and download the entire batch.
-
-Use the "Download Single Image" button on individual cards for immediate download.
-
-🛠️ Local Controls Explained
-Each image card provides detailed local controls that override the global settings:
-
+🛠️ Local Controls Explained (Per Image)
 Control
 
 Description
 
-Visual Feedback
+Default Setting
 
 Local Ratio Override
 
-Sets a specific ratio for this image only.
+Overrides the global aspect ratio for this image only. Keeps the mouse wheel zoom enabled for precise control, while preventing accidental scrolling of the main page.
 
-Indigo border/ring if not set to "Global Default".
-
-Fill Empty Area
-
-Toggles solid color filling for transparent areas (when cropping outside the source image bounds).
-
-Pink border/ring if fill color is not the default white (#ffffff) and the toggle is checked.
+Uses Global Default
 
 Output Resolution
 
-Selects a fixed pixel dimension (e.g., 1080×1920) or allows custom input. Default is 1080×1920.
+Sets the final image dimensions in exact pixels. Use presets (like 1080x1920) or define custom WxH.
 
-Orange border/ring if a fixed size is selected or if valid custom dimensions are entered.
+1080x1920 (Story)
+
+Fill Empty Area
+
+Toggles solid color filling for transparent areas (occurs when cropping outside the original image bounds).
+
+Checked (White Fill)
 
 Output Format
 
-Allows selection between PNG (better for transparency/quality) or JPEG (smaller size, uses quality slider).
+Allows selection between PNG (better for quality/transparency) or JPEG (smaller file size, uses quality slider).
 
-Green border/ring if set to JPEG.
+PNG
 
+Download Single Image
+
+Downloads the current image immediately, applying all local settings.
+
+N/A
+
+🎥 Tool 2: Video Frame Capture
+This tool lets you upload a short video and extract individual frames as high-quality PNG images.
+
+🚀 Frame Capture Workflow
+1. Upload Video (Left Area): Select an MP4, MOV, or other common video file.
+
+Capture Frames:
+
+Single Frame: Manually move the video timeline scrubber to the desired moment, then click "Capture Frame".
+
+Auto Batch: Use "Capture 10 Frames (Auto)" to quickly extract 10 frames based on the current time and the set interval (in seconds).
+
+2. Captured Frames (Right Sidebar): Review the gallery of captured frames. You can delete frames individually.
+
+Download: Click "Download All Frames (ZIP)" to save all captured PNG images in a compressed archive.
