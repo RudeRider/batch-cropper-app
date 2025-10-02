@@ -28,7 +28,7 @@ Output Format & Quality: Choose PNG (for transparency) or JPEG (with adjustable 
 
 Solid Color Fill: Apply a solid background color to areas outside the original image boundary (useful when cropping a landscape photo to a portrait ratio).
 
-Fixed Output Resolution: Optionally define an exact width and height in pixels for the final image output.
+Fixed Output Resolution: Select from preset pixel sizes (like 1080×1920) or define a custom width and height for the final output.
 
 Download Options:
 
@@ -37,17 +37,17 @@ Batch Download (ZIP): Download all processed images compiled into a single ZIP f
 Local Download: Download a single processed image directly from its card.
 
 🚀 Workflow
-Upload Files (Step 1): Use the file input or drag-and-drop your PNG/JPEG images into the zone in the sticky sidebar.
+Upload Files (Step 1 - Sticky): Use the file input or drag-and-drop your PNG/JPEG images into the zone in the sticky sidebar.
 
-Set Global Settings (Step 2): Select a default Aspect Ratio or apply a Custom Ratio. This is automatically applied to all loaded images.
+Set Global Settings (Step 2 - Sticky): Select a default Aspect Ratio or apply a Custom Ratio. This is automatically applied to all loaded images.
 
-Review Gallery (Step 4): Images appear in the gallery area on the left.
+Review Gallery (Step 4 - Left Area): Images appear in the gallery area on the left.
 
 For each image, you can manually drag the crop box to refine the selection.
 
-Use the local controls on each card to override the ratio, set a fixed Output Resolution, choose Fill Color, or change the Output Format.
+Use the local controls on each card to override the ratio, set a fixed Output Resolution (using presets or custom), choose Fill Color, or change the Output Format.
 
-Download (Step 3):
+Download (Step 3 - Sticky):
 
 Use the large "Download All Cropped Images (ZIP)" button in the sidebar to process and download the entire batch.
 
@@ -76,9 +76,9 @@ Pink border/ring if fill color is not the default white (#ffffff) and the toggle
 
 Output Resolution
 
-Sets the exact pixel dimensions (W x H) for the final exported image (rescales the cropped content).
+Selects a fixed pixel dimension (e.g., 1080×1920) or allows custom input. Default is 1080×1920.
 
-Orange border/ring if either Width or Height has a valid input.
+Orange border/ring if a fixed size is selected or if valid custom dimensions are entered.
 
 Output Format
 

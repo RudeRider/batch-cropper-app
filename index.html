@@ -129,7 +129,7 @@
                 </div>
                 
                 <!-- 3. Batch Download Button - MOVED HERE -->
-                <div id="downloadSection" class="pt-6 flex justify-center hidden bg-white rounded-xl shadow-xl p-6 border border-gray-200">
+                <div id="downloadSection" class="pt-6 flex flex-col items-center hidden bg-white rounded-xl shadow-xl p-6 border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">3. Batch Download</h2>
                     <button id="downloadAllBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                         Download All Cropped Images (ZIP)
@@ -236,6 +236,19 @@
             { label: "Free Crop", value: "NaN" }
         ];
 
+        // NEW: Fixed Resolution Presets
+        const RESOLUTION_PRESETS = [
+            // Changed default to 1080x1920
+            { label: "1080x1920 (Story) - Default", value: "1080x1920" }, 
+            { label: "None (Auto-size)", value: "auto" },
+            { label: "Custom Pixels...", value: "custom" },
+            { label: "1920x1080 (HD)", value: "1920x1080" },
+            { label: "1080x1080 (Square)", value: "1080x1080" },
+            { label: "1280x720 (720p)", value: "1280x720" },
+            { label: "4096x2160 (4K Cinema)", value: "4096x2160" }
+        ];
+
+
         let cropperInstances = []; // Stores { file: File, cropper: CropperInstance, index: number, card: HTMLElement, uniqueId: string }
         let currentAspectRatio = 9 / 16; // Default ratio is now 9:16
 
@@ -277,11 +290,15 @@
             const ratioSelect = card.querySelector('.local-ratio-select');
             const colorInput = card.querySelector('.local-fill-color');
             const formatSelect = card.querySelector('.local-format-select');
-            const resWidthInput = card.querySelector('input[data-dim="width"]');
-            const resHeightInput = card.querySelector('input[data-dim="height"]');
-
-            // Check if resolution is being overridden
-            const isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
+            const resSelect = card.querySelector('.local-resolution-select');
+            const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+            const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+            
+            // Check if resolution is being overridden (either preset or valid custom)
+            let isResolutionActive = resSelect.value !== "auto";
+            if (resSelect.value === "custom") {
+                 isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
+            }
             
             // Define classes for default and active states
             const defaultClasses = ['border-gray-300', 'focus:outline-none'];
@@ -310,9 +327,19 @@
             // 3. Format Feedback: Highlight if set to JPEG
             toggleClasses(formatSelect, formatSelect.value === "jpeg", formatActiveClasses);
 
-            // 4. Resolution Feedback: Highlight if one or both fields are set
-            toggleClasses(resWidthInput, isResolutionActive, resolutionActiveClasses);
-            toggleClasses(resHeightInput, isResolutionActive, resolutionActiveClasses);
+            // 4. Resolution Feedback: Highlight if fixed resolution is selected or custom inputs are valid
+            toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
+            
+            // Only apply active style to custom inputs if "custom" is selected and they are valid
+            if (resSelect.value === "custom") {
+                 toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
+                 toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
+            } else {
+                 resWidthInput.classList.remove(...resolutionActiveClasses);
+                 resHeightInput.classList.remove(...resolutionActiveClasses);
+                 resWidthInput.classList.add(...defaultClasses);
+                 resHeightInput.classList.add(...defaultClasses);
+            }
         };
 
 
@@ -509,10 +536,14 @@
                     <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-300 rounded-lg cursor-pointer focus:outline-none">
                 </div>
                 
-                <!-- NEW: Local Output Resolution Control -->
+                <!-- NEW: Local Output Resolution Control (Dropdown + Custom Inputs) -->
                 <div class="px-4 py-2 border-b bg-white">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Output Resolution (Optional Fixed Pixels):</label>
-                    <div class="flex space-x-2 items-center">
+                    <select class="local-resolution-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
+                        <!-- Options injected by JS -->
+                    </select>
+                    
+                    <div class="custom-res-inputs flex space-x-2 items-center hidden">
                         <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
                         <span class="text-gray-500">x</span>
                         <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
@@ -569,7 +600,10 @@
             const qualityControlDiv = card.querySelector('.local-quality-control');
             const qualitySlider = card.querySelector('.local-quality-slider');
             const qualityDisplay = card.querySelector('.quality-display');
+            const resolutionSelect = card.querySelector('.local-resolution-select');
+            const customResInputsDiv = card.querySelector('.custom-res-inputs');
             const localResolutionInputs = card.querySelectorAll('.local-output-res');
+
 
             // Set initial default borders
             updateLocalVisualFeedback(card);
@@ -580,6 +614,13 @@
                 option.value = preset.value;
                 option.textContent = preset.label;
                 ratioSelectElement.appendChild(option);
+            });
+            // Populate the resolution dropdown with presets
+            RESOLUTION_PRESETS.forEach(preset => {
+                const option = document.createElement('option');
+                option.value = preset.value;
+                option.textContent = preset.label;
+                resolutionSelect.appendChild(option);
             });
             // Default selection is "Global Default"
 
@@ -688,7 +729,24 @@
                     });
                 });
                 
-                // 8. Attach Local Resolution Handlers (for visual feedback)
+                // 8. Attach Local Resolution Handlers (for visual feedback and visibility)
+                
+                // Dropdown change: toggle custom inputs
+                resolutionSelect.addEventListener('change', (e) => {
+                    const value = e.target.value;
+                    if (value === 'custom') {
+                        customResInputsDiv.classList.remove('hidden');
+                        localResolutionInputs[0].focus();
+                    } else {
+                        customResInputsDiv.classList.add('hidden');
+                        // Clear custom inputs when switching away from custom
+                        localResolutionInputs.forEach(input => input.value = ''); 
+                    }
+                    updateLocalVisualFeedback(card);
+                    showMessage(`Output resolution for Image ${item.index + 1} set to ${value === 'auto' ? 'Auto-size' : value}.`, false);
+                });
+
+                // Custom input change: update visual feedback
                 localResolutionInputs.forEach(input => {
                     input.addEventListener('input', () => {
                         updateLocalVisualFeedback(card);
@@ -697,7 +755,9 @@
                         updateLocalVisualFeedback(card);
                         const w = getResolutionValue(localResolutionInputs[0]);
                         const h = getResolutionValue(localResolutionInputs[1]);
-                        showMessage(`Output resolution for Image ${item.index + 1} set to ${w || 'auto'}x${h || 'auto'}px.`, false);
+                        if (w || h) {
+                            showMessage(`Custom resolution for Image ${item.index + 1} set to ${w || 'auto'}x${h || 'auto'}px.`, false);
+                        }
                     });
                 });
                 
@@ -718,14 +778,32 @@
          * Returns { width: number | null, height: number | null }
          */
         const getOutputResolution = (card) => {
-            const widthInput = card.querySelector('input[data-dim="width"]');
-            const heightInput = card.querySelector('input[data-dim="height"]');
-            
-            // Helper function defined earlier: getResolutionValue
-            const targetWidth = getResolutionValue(widthInput);
-            const targetHeight = getResolutionValue(heightInput);
+            const resSelect = card.querySelector('.local-resolution-select');
+            const value = resSelect.value;
 
-            return { width: targetWidth, height: targetHeight };
+            if (value === 'auto') {
+                return { width: null, height: null };
+            }
+
+            if (value === 'custom') {
+                 const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                 const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                 const targetWidth = getResolutionValue(widthInput);
+                 const targetHeight = getResolutionValue(heightInput);
+                 
+                 return { width: targetWidth, height: targetHeight };
+            }
+            
+            // Fixed preset format: "WxH" (e.g., "1080x1920")
+            const parts = value.split('x');
+            const targetWidth = parseInt(parts[0], 10);
+            const targetHeight = parseInt(parts[1], 10);
+
+            // Return target width/height only if they are positive numbers
+            return { 
+                width: targetWidth > 0 ? targetWidth : null, 
+                height: targetHeight > 0 ? targetHeight : null 
+            };
         };
 
         /**
@@ -780,13 +858,13 @@
                 }
                 
                 // Create the final filename based on the resulting dimensions
-                const dimW = targetWidth ? targetWidth : Math.round(sourceWidth);
-                const dimH = targetHeight ? targetHeight : Math.round(sourceHeight);
+                const dimW = finalWidth; // Use final dimensions for filename
+                const dimH = finalHeight;
                 let filename = `img_${uniqueBaseName}_${dimW}x${dimH}.${extension}`;
                 
                 
                 // Check if we need a final processing canvas (for scaling or filling)
-                const requiresResizingOrFill = (targetWidth && targetWidth !== sourceWidth) || (targetHeight && targetHeight !== sourceHeight) || useSolidFill;
+                const requiresResizingOrFill = (finalWidth !== sourceWidth) || (finalHeight !== sourceHeight) || useSolidFill;
                 let canvasToBlob = croppedCanvas; // Default to the cropper's output
 
                 if (requiresResizingOrFill) {
