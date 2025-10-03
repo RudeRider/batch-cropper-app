@@ -12,6 +12,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Prism.js for Syntax Highlighting (Dark Theme & JSON language) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <!-------------------------------------------------------------------->
+
     <style>
         /* Global Tool Menu Button Styling */
         .tool-menu-btn {
@@ -19,29 +26,29 @@
             @apply shadow-md px-4 py-2 rounded-xl text-base font-semibold;
         }
         .tool-menu-btn.active-tool {
-            @apply bg-indigo-600 text-white shadow-xl;
+            @apply bg-indigo-500 text-white shadow-xl;
         }
         .tool-menu-btn:not(.active-tool) {
-            @apply bg-gray-200 text-red-600 hover:bg-gray-300; /* Icon/Text Color: Red */
+            /* Dark Theme Adjustment */
+            @apply bg-gray-700 text-red-400 hover:bg-gray-600; 
         }
 
         /* Cropper Tool Custom Styles */
         .gallery-item {
             width: 100%;
-            /* --- MODIFIED: Adjusting Vertical Space for tighter fit --- */
-            min-height: 100px; /* Reduced minimum height */
-            /* Removed max-height entirely, as it interfered with the image size */
+            min-height: 100px; 
             overflow: hidden; 
-            background-color: #f7fafc; 
+            /* Dark Theme Adjustment */
+            background-color: #374151; /* bg-gray-700 equivalent */
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 1px solid #e5e7eb;
+            /* Dark Theme Adjustment */
+            border: 1px solid #4b5563; /* border-gray-600 */
             border-radius: 0.5rem;
         }
         .gallery-item img {
             max-width: 100%;
-            /* IMPORTANT: Cropper.js manages height/width internally, setting max-width: 100% and height: auto is crucial */
             height: auto;
             display: block;
         }
@@ -49,14 +56,15 @@
             display: none !important;
         }
         .ratio-btn {
-            @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition shadow-md;
+            /* Dark Theme Adjustment */
+            @apply bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition shadow-md;
         }
         .ratio-btn.active-ratio {
             @apply bg-indigo-500 text-white hover:bg-indigo-600 shadow-xl;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
         .drop-active {
-            @apply border-indigo-600 bg-indigo-50/50 shadow-inner;
+            @apply border-indigo-500 bg-indigo-900/50 shadow-inner;
         }
         
         /* Video Frame Tool Custom Styles */
@@ -71,14 +79,76 @@
         #frame-canvas {
             display: none; /* Always hidden, used for drawing frames */
         }
+        
+        /* NEW: Mirror Editor Styles (Updated for correct Z-index) */
+        .editor-container {
+            position: relative;
+            min-height: 50vh;
+            border-radius: 0.5rem;
+            border: 1px solid #4b5563; /* border-gray-600 */
+            background-color: #2d2d2d; /* Prism-tomorrow background */
+        }
+        
+        #text-input, .highlighted-output {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 1rem;
+            margin: 0;
+            border: none;
+            outline: none;
+            box-sizing: border-box;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.5;
+            resize: none;
+            white-space: pre; /* Essential for alignment */
+            word-wrap: normal;
+            overflow: auto; /* Match container scrolling */
+        }
+        
+        #text-input {
+            z-index: 10; /* CRITICAL FIX: Ensures the textarea is on top for interaction */
+            background-color: transparent; 
+            color: transparent; /* Hide actual text when highlighting is active */
+            caret-color: white; /* Keep the cursor visible */
+            opacity: 0.001; /* Set to transparent by default (live highlight mode) */
+        }
+        
+        #text-input.opaque {
+            background-color: #374151; /* bg-gray-700 for non-highlighted plain text */
+            color: #f3f4f6; /* text-gray-100 */
+            opacity: 1; /* Full opacity when not JSON or error state */
+        }
+        
+        /* Highlight Layer */
+        .highlighted-output {
+            z-index: 1; /* Behind the textarea */
+            display: block; 
+        }
+        /* Ensure Prism.js PRE block matches editor space */
+        .highlighted-output pre[class*="language-"] {
+            height: 100%;
+            padding: 1rem !important;
+            margin: 0 !important;
+            background: none !important;
+            border: none !important;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            color: #ccc; 
+            overflow: visible; 
+        }
+
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans" onload="App.init()">
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="App.init()">
 
     <!-- Header and Menu Bar (Sticky) -->
-    <header class="sticky top-0 bg-white border-b shadow-xl z-20">
+    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
         <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
-            <h1 class="text-2xl font-extrabold text-gray-900">🎬 Digital Asset Tools</h1>
+            <h1 class="text-2xl font-extrabold text-white">🎬 Digital Asset Tools</h1>
             <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
                 <button onclick="App.switchTool('cropper')" id="menu-cropper" class="tool-menu-btn active-tool">
                     <span class="flex items-center space-x-2">
@@ -92,6 +162,14 @@
                         <!-- Video Icon (Lucide-style) -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><path d="M14 12c0-2.4-.23-4.81-1.42-6.75C11.66 3.1 9.4 2 7 2H3a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4c2.4 0 4.66-1.1 5.58-3.25C13.77 16.81 14 14.4 14 12z"/></svg>
                         <span>Video Frame Capture</span>
+                    </span>
+                </button>
+                <!-- Text Editor Button -->
+                <button onclick="App.switchTool('text')" id="menu-text" class="tool-menu-btn">
+                    <span class="flex items-center space-x-2">
+                        <!-- File Edit Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                        <span>Text Editor</span>
                     </span>
                 </button>
             </nav>
@@ -117,7 +195,7 @@
     <!-- --- CROPPING TOOL APP CONTAINER --- -->
     <div id="cropper-app" class="tool-container w-full p-4 sm:p-8">
         
-        <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Batch Cropper</h2>
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">Batch Cropper</h2>
         
         <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
 
@@ -125,21 +203,21 @@
             <aside id="sticky-settings" class="lg:w-80 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start z-10">
                 
                 <!-- 1. Upload Images (Drag and Drop Zone) -->
-                <div id="cropperUploadDropZone" class="mb-8 p-6 bg-white shadow-xl rounded-xl border border-gray-200 transition-all duration-300 border-dashed border-4 border-gray-300 hover:border-indigo-400">
-                    <label for="cropperFileInput" class="block text-lg font-bold text-gray-800 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
-                    <input type="file" id="cropperFileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer rounded-xl border border-gray-300 p-2">
+                <div id="cropperUploadDropZone" class="mb-8 p-6 bg-gray-800 shadow-xl rounded-xl border border-gray-700 transition-all duration-300 border-dashed border-4 border-gray-600 hover:border-indigo-400">
+                    <label for="cropperFileInput" class="block text-lg font-bold text-gray-100 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
+                    <input type="file" id="cropperFileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
                     <p id="cropper-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
                 </div>
 
                 <!-- 2. Global Crop Settings (Default) - Indigo Card -->
-                <div class="p-4 sm:p-6 bg-indigo-50 rounded-xl border border-indigo-200 shadow-lg mb-8">
-                    <h2 class="text-xl font-bold text-indigo-800 mb-4">2. Global Crop Settings (Default)</h2>
+                <div class="p-4 sm:p-6 bg-indigo-950 rounded-xl border border-indigo-700 shadow-lg mb-8">
+                    <h2 class="text-xl font-bold text-indigo-300 mb-4">2. Global Crop Settings (Default)</h2>
                     
                     <div class="grid lg:grid-cols-1 gap-6">
                         
                         <!-- Aspect Ratios -->
                         <div class="col-span-full">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Aspect Ratios (Applies to all crops)</label>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Aspect Ratios (Applies to all crops)</label>
                             <div class="flex flex-wrap gap-2">
                                 <button data-ratio="9/16" class="ratio-btn active-ratio" type="button">9:16 (Story)</button>
                                 <button data-ratio="16/9" class="ratio-btn" type="button">16:9 (HD)</button>
@@ -154,26 +232,26 @@
 
                         <!-- Custom Ratio Input -->
                         <div class="col-span-full">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Custom Ratio (e.g., 5:2)</label>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Custom Ratio (e.g., 5:2)</label>
                             <div class="flex flex-col space-y-2">
                                 <div class="flex space-x-2 items-center">
-                                    <input type="number" id="customWidth" placeholder="Width" class="w-1/2 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center" min="1">
-                                    <span class="text-xl text-gray-500">:</span>
-                                    <input type="number" id="customHeight" placeholder="Height" class="w-1/2 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center" min="1">
+                                    <input type="number" id="customWidth" placeholder="Width" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
+                                    <span class="text-xl text-gray-400">:</span>
+                                    <input type="number" id="customHeight" placeholder="Height" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
                                 </div>
                                 <button id="applyCustomRatio" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition shadow-md" type="button">Apply Custom Ratio</button>
                             </div>
-                            <p id="ratio-error" class="text-red-500 text-sm mt-2 hidden">Please enter valid positive numbers for width and height.</p>
+                            <p id="ratio-error" class="text-red-500 text-sm mt-2 hidden"></p>
                         </div>
                         
                         <!-- === GLOBAL OUTPUT SETTINGS (Format & Resolution) === -->
-                        <div class="col-span-full border-t pt-4 mt-4 border-indigo-200">
-                            <h3 class="text-lg font-bold text-indigo-800 mb-3">2.5. Global Output Settings</h3>
+                        <div class="col-span-full border-t pt-4 mt-4 border-indigo-700">
+                            <h3 class="text-lg font-bold text-indigo-300 mb-3">2.5. Global Output Settings</h3>
 
                             <!-- Global Output Resolution (RE-ADDED) -->
                             <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Default Output Resolution:</label>
-                                <select id="global-resolution-select" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-indigo-500 focus:border-indigo-500 mb-2">
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Default Output Resolution:</label>
+                                <select id="global-resolution-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
                                     <option value="auto" selected>Auto-size (Based on Crop Box)</option>
                                     <option value="1920x1080">1920x1080 (HD - Default)</option>
                                     <option value="1080x1920">1080x1920 (Story)</option>
@@ -181,36 +259,36 @@
                                     <option value="custom">Custom Pixels...</option>
                                 </select>
                                 <div id="global-custom-res-inputs" class="flex space-x-2 items-center hidden">
-                                    <input type="number" id="globalWidth" placeholder="Width (px)" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm bg-white text-center" min="1">
-                                    <span class="text-xl text-gray-500">:</span>
-                                    <input type="number" id="globalHeight" placeholder="Height (px)" class="w-1/2 p-2 border border-gray-300 rounded-lg text-sm bg-white text-center" min="1">
+                                    <input type="number" id="globalWidth" placeholder="Width (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                    <span class="text-xl text-gray-400">:</span>
+                                    <input type="number" id="globalHeight" placeholder="Height (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
                                 </div>
                             </div>
                             <!-- End Global Output Resolution -->
 
                             <!-- Global Output Format (Existing) -->
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Output Format:</label>
-                            <select id="global-format-select" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-indigo-500 focus:border-indigo-500 mb-2">
+                            <label class="block text-sm font-semibold text-gray-300 mb-1">Output Format:</label>
+                            <select id="global-format-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
                                 <option value="png">PNG (Best Quality/Transparency)</option>
                                 <option value="jpeg" selected>JPEG (Smaller File Size)</option>
                             </select>
                             
-                            <div id="global-quality-control" class="hidden mt-2 p-3 bg-indigo-100 rounded-lg">
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">JPEG Quality (<span id="global-quality-display">90</span>%):</label>
-                                <input type="range" id="global-quality-slider" min="1" max="100" value="90" class="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                            <div id="global-quality-control" class="hidden mt-2 p-3 bg-indigo-900 rounded-lg">
+                                <label class="block text-sm font-semibold text-indigo-300 mb-1">JPEG Quality (<span id="global-quality-display">90</span>%):</label>
+                                <input type="range" id="global-quality-slider" min="1" max="100" value="90" class="w-full h-2 bg-indigo-700/50 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                             </div>
                         </div>
                         <!-- === END GLOBAL OUTPUT SETTINGS === -->
 
                     </div>
-                    <p class="mt-4 text-xs text-indigo-700 font-medium">
+                    <p class="mt-4 text-xs text-indigo-400 font-medium">
                         **Tip:** Use the controls above to set the default aspect ratio. To override the ratio, fill, or fixed resolution for a single image, use the controls on its card below.
                     </p>
                 </div>
                 
                 <!-- 3. Batch Download Button -->
-                <div id="cropperDownloadSection" class="pt-6 flex flex-col items-center hidden bg-white rounded-xl shadow-xl p-6 border border-gray-200">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">3. Batch Download</h2>
+                <div id="cropperDownloadSection" class="pt-6 flex flex-col items-center hidden bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
+                    <h2 class="text-xl font-bold text-gray-100 mb-4">3. Batch Download</h2>
                     <button id="downloadAllCropperBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                         Download All Cropped Images (ZIP)
                     </button>
@@ -219,11 +297,11 @@
             </aside>
             
             <!-- Main Content Area (Left Side on Desktop) -->
-            <div id="cropper-main-content" class="flex-grow w-full bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-200">
+            <div id="cropper-main-content" class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700">
 
                 <!-- 4. Gallery View -->
                 <div id="cropperGallerySection" class="hidden mb-8">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">4. Crop Gallery (<span id="cropperFileCount">0</span> Files)</h2>
+                    <h2 class="text-xl font-bold text-gray-100 mb-4">4. Crop Gallery (<span id="cropperFileCount">0</span> Files)</h2>
                     <div id="cropperGalleryContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                         <!-- Cropper cards will be inserted here -->
                     </div>
@@ -234,16 +312,16 @@
     
     <!-- --- VIDEO FRAME CAPTURE APP CONTAINER --- -->
     <div id="video-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-800 mb-6">🎥 Video Frame Capture</h2>
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎥 Video Frame Capture</h2>
         
         <div class="flex flex-col lg:flex-row lg:gap-8 relative">
 
             <!-- Video Player and Canvas Area (Left) -->
-            <div class="flex-grow w-full bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-200 mb-8 lg:mb-0">
+            <div class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700 mb-8 lg:mb-0">
                 <div class="space-y-6">
-                    <div class="border-b pb-4">
-                        <label for="videoFileInput" class="block text-xl font-bold text-gray-800 mb-2">1. Upload Video (MP4, MOV, etc.)</label>
-                        <input type="file" id="videoFileInput" accept="video/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer rounded-xl border border-gray-300 p-2">
+                    <div class="border-b border-gray-700 pb-4">
+                        <label for="videoFileInput" class="block text-xl font-bold text-gray-100 mb-2">1. Upload Video (MP4, MOV, etc.)</label>
+                        <input type="file" id="videoFileInput" accept="video/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
                         <p id="video-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
@@ -261,34 +339,34 @@
 
             <!-- Frames Gallery and Controls Area (Right) -->
             <div class="lg:w-80 lg:flex-shrink-0">
-                <div class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-200 lg:sticky lg:top-8 lg:self-start space-y-6">
+                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700 lg:sticky lg:top-8 lg:self-start space-y-6">
                     
-                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
+                    <h3 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
                     
                     <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
                         <!-- Captured frames will be appended here -->
-                        <p id="frames-placeholder" class="text-sm text-gray-500">No frames captured yet. Load a video and use the capture buttons.</p>
+                        <p id="frames-placeholder" class="text-sm text-gray-400">No frames captured yet. Load a video and use the capture buttons.</p>
                     </div>
 
                     <!-- Frame Capture Controls -->
-                    <div id="frame-capture-controls" class="border-t pt-4 hidden"> 
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">3. Frame Capture Controls</h3>
-                        <div class="bg-gray-100 p-4 rounded-lg shadow-inner border border-gray-200 space-y-3">
-                            <p class="text-sm font-medium text-gray-700">Current Time: <span id="video-current-time" class="font-bold">0.00</span> / <span id="video-duration" class="font-bold">0.00</span> seconds</p>
+                    <div id="frame-capture-controls" class="border-t border-gray-700 pt-4 hidden"> 
+                        <h3 class="text-xl font-bold text-gray-100 mb-4">3. Frame Capture Controls</h3>
+                        <div class="bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-600 space-y-3">
+                            <p class="text-sm font-medium text-gray-300">Current Time: <span id="video-current-time" class="font-bold text-gray-100">0.00</span> / <span id="video-duration" class="font-bold text-gray-100">0.00</span> seconds</p>
                             
                             <!-- New input for number of frames/interval -->
                             <div class="flex items-center space-x-2">
-                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
-                                    <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
+                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
+                                    <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
                                     <span>frames to capture</span>
                                 </label>
-                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
-                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
+                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
+                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
                                     <span>sec interval</span>
                                 </label>
                             </div>
 
-                            <div class="flex flex-wrap gap-4 items-center border-t pt-3">
+                            <div class="flex flex-wrap gap-4 items-center border-t border-gray-600 pt-3">
                                 <button id="capture-frame-btn" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
                                     <span class="flex items-center space-x-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
@@ -304,15 +382,50 @@
                         </div>
                     </div>
 
-                    <div class="border-t pt-4">
+                    <div class="border-t border-gray-700 pt-4">
                         <button id="download-all-frames-btn" class="bg-green-600 text-white font-bold w-full px-6 py-3 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                             Download All Frames (ZIP)
                         </button>
-                        <button id="clear-frames-btn" class="mt-2 bg-red-100 text-red-600 font-semibold w-full px-6 py-3 rounded-lg hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                        <button id="clear-frames-btn" class="mt-2 bg-red-800 text-red-100 font-semibold w-full px-6 py-3 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
                             Clear All Frames
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- --- TEXT EDITOR APP CONTAINER (LIVE EDITABLE HIGHLIGHTING) --- -->
+    <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Text Editor / Scratchpad (Live JSON Highlight)</h2>
+        
+        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
+                <div class="flex flex-col space-y-1 text-sm text-gray-300">
+                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
+                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
+                </div>
+                <div class="flex space-x-3">
+                    <input type="text" id="filename-input" placeholder="filename.txt (optional)" value="scratchpad" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
+
+                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                        Download TXT
+                    </button>
+                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                        Clear
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Live Mirror Editor Container -->
+            <div class="editor-container">
+                <!-- Highlighted background content (Mirror) -->
+                <div id="highlighted-output" class="highlighted-output">
+                    <pre><code id="json-code-block" class="language-json"></code></pre>
+                </div>
+                
+                <!-- Foreground editable textarea (Transparent layer) -->
+                <textarea id="text-input" class="w-full font-mono text-sm shadow-inner"></textarea>
             </div>
         </div>
     </div>
@@ -412,6 +525,7 @@
                 // Initialize modules and set initial tool view
                 cropperTool.init();
                 videoTool.init();
+                textTool.init(); // Initialize the new text tool
                 this.switchTool(this.currentTool);
             },
 
@@ -430,15 +544,148 @@
                 // Set page title for clarity
                 if (toolId === 'cropper') {
                     document.title = 'Batch Cropper | Digital Asset Tools';
-                } else {
+                } else if (toolId === 'video') {
                     document.title = 'Video Frame Capture | Digital Asset Tools';
+                } else if (toolId === 'text') {
+                    document.title = 'Text Editor | Digital Asset Tools';
                 }
             }
         };
 
 
         // =========================================================================
-        // === VIDEO FRAME CAPTURE TOOL LOGIC ===
+        // === TEXT EDITOR TOOL LOGIC (LIVE EDITABLE HIGHLIGHTING) ===
+        // =========================================================================
+
+        /**
+         * Safely strips C-style // comments from JSON. Necessary because JSON.parse() fails on comments.
+         * Note: This is a simplified regex and might fail on complex nested quotes, but handles the user's scenario.
+         * @param {string} text 
+         * @returns {string} Text with comments removed.
+         */
+        const stripJsonComments = (text) => {
+            // Regex to match C-style comments outside of double quotes
+            // This is a robust pattern often used for this task.
+            return text.replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)/gm, (match, p1, p2) => {
+                // If it's a double-slash comment (p1) or a block comment (p2), replace it with an empty string.
+                // We assume the user isn't using // inside a string value.
+                return '';
+            });
+        };
+
+        const textTool = {
+            input: document.getElementById('text-input'),
+            downloadBtn: document.getElementById('download-text-btn'),
+            clearBtn: document.getElementById('clear-text-btn'),
+            filenameInput: document.getElementById('filename-input'),
+            wordCountDisplay: document.getElementById('word-count'),
+            charCountDisplay: document.getElementById('char-count'),
+            
+            // Mirror elements
+            highlightedOutput: document.getElementById('highlighted-output'),
+            jsonCodeBlock: document.getElementById('json-code-block'),
+
+
+            init: function() {
+                this.input.addEventListener('input', () => this.updateStats());
+                this.input.addEventListener('scroll', () => this.syncScroll()); 
+                this.clearBtn.addEventListener('click', () => this.clearEditor());
+                this.downloadBtn.addEventListener('click', () => this.downloadText());
+
+                // Initial setup
+                this.updateStats();
+            },
+
+            syncScroll: function() {
+                // Synchronize scroll position between the transparent textarea and the highlighted mirror
+                this.highlightedOutput.scrollTop = this.input.scrollTop;
+                this.highlightedOutput.scrollLeft = this.input.scrollLeft;
+            },
+
+            updateStats: function() {
+                const text = this.input.value;
+                const charCount = text.length;
+                
+                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+                const wordCount = words.length;
+
+                this.charCountDisplay.textContent = charCount;
+                this.wordCountDisplay.textContent = wordCount;
+                this.downloadBtn.disabled = charCount === 0;
+
+                // --- Live Highlighting Logic ---
+                const cleanedText = stripJsonComments(text);
+
+                try {
+                    // 1. Attempt to parse the cleaned text
+                    const parsed = JSON.parse(cleanedText);
+                    
+                    // 2. Format the original text (including comments) for the code block
+                    // We must use the original text in the code block to preserve the user's comments/formatting 
+                    // for the visual mirror, otherwise the cursor won't align.
+                    this.jsonCodeBlock.textContent = text;
+                    this.jsonCodeBlock.classList.add('language-json');
+                    
+                    // 3. Highlight the content (Prism handles invalid characters if we tell it it's JSON)
+                    Prism.highlightElement(this.jsonCodeBlock);
+                    
+                    // 4. Make the textarea transparent to show the highlighted background
+                    this.input.classList.remove('opaque');
+                    
+                    // This is essential for the live mirror effect
+                    this.input.style.opacity = '0.001'; 
+                    this.input.style.color = 'transparent'; 
+
+                } catch (e) {
+                    // If parsing fails (invalid JSON or plain text)
+                    
+                    // 1. Display the raw text in the mirror for accurate scroll/line syncing
+                    this.jsonCodeBlock.textContent = text;
+                    this.jsonCodeBlock.classList.remove('language-json');
+                    
+                    // 2. Clear highlighting by re-running Prism without the language class
+                    Prism.highlightElement(this.jsonCodeBlock);
+                    
+                    // 3. Make the textarea fully opaque (normal editing)
+                    this.input.style.opacity = '1'; 
+                    this.input.style.color = '#f3f4f6'; // Revert text color to visible
+                    this.input.classList.add('opaque');
+                }
+            },
+
+            clearEditor: function() {
+                this.input.value = '';
+                this.updateStats();
+                showMessage("Text editor cleared.");
+            },
+
+            downloadText: function() {
+                const text = this.input.value;
+                if (text.length === 0) {
+                    showMessage("Editor is empty. Nothing to download.", true);
+                    return;
+                }
+
+                let filename = this.filenameInput.value.trim() || 'scratchpad';
+                
+                // Ensure filename ends with .txt if not present
+                if (!filename.toLowerCase().endsWith('.txt')) {
+                    filename += '.txt';
+                }
+
+                try {
+                    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+                    saveAs(blob, filename);
+                    showMessage(`Downloaded text as "${filename}".`);
+                } catch (e) {
+                    console.error("Error downloading text:", e);
+                    showMessage("Failed to download text file.", true);
+                }
+            }
+        };
+
+        // =========================================================================
+        // === VIDEO FRAME CAPTURE TOOL LOGIC (EXISTING) ===
         // =========================================================================
         const videoTool = {
             // DOM Elements
@@ -447,8 +694,8 @@
             canvas: document.getElementById('frame-canvas'),
             
             // Updated element IDs
-            videoPreviewArea: document.getElementById('video-preview-area'), // Area containing just the video element
-            controlsArea: document.getElementById('frame-capture-controls'), // The new controls area in the sidebar
+            videoPreviewArea: document.getElementById('video-preview-area'), 
+            controlsArea: document.getElementById('frame-capture-controls'), 
             
             durationDisplay: document.getElementById('video-duration'),
             currentTimeDisplay: document.getElementById('video-current-time'),
@@ -467,7 +714,7 @@
             frameCountDisplay: document.getElementById('capture-frame-count-display'),
 
             // State
-            frames: [], // Stores { filename: string, dataUrl: string }
+            frames: [], 
 
             init: function() {
                 this.fileInput.addEventListener('change', (e) => this.handleVideoUpload(e.target.files));
@@ -478,10 +725,8 @@
                 this.downloadBtn.addEventListener('click', () => this.downloadAllFrames());
                 this.clearBtn.addEventListener('click', () => this.clearFrames());
                 
-                // Event listener for customizable frame count input
                 this.frameCountInput.addEventListener('input', () => this.updateFrameCountDisplay());
 
-                // Event delegation for dynamically added delete buttons
                 this.framesGallery.addEventListener('click', (e) => {
                     const deleteBtn = e.target.closest('.delete-frame-btn');
                     if (deleteBtn) {
@@ -507,27 +752,26 @@
                 if (files.length === 0 || !files[0].type.startsWith('video/')) {
                     this.errorDisplay.textContent = 'Please select a valid video file.';
                     this.errorDisplay.classList.remove('hidden');
-                    this.videoPreviewArea.classList.add('hidden'); // Hide video area on error
-                    this.controlsArea.classList.add('hidden'); // Hide controls area on error
+                    this.videoPreviewArea.classList.add('hidden'); 
+                    this.controlsArea.classList.add('hidden'); 
                     return;
                 }
                 
                 const file = files[0];
-                // Revoke old URL if exists to save memory
                 if (this.video.src) URL.revokeObjectURL(this.video.src);
                 
                 const url = URL.createObjectURL(file);
                 this.video.src = url;
-                this.videoPreviewArea.classList.add('hidden'); // Hide until loaded
-                this.controlsArea.classList.add('hidden'); // Hide until loaded
+                this.videoPreviewArea.classList.add('hidden'); 
+                this.controlsArea.classList.add('hidden'); 
                 showMessage(`Video "${file.name}" loaded. Waiting for metadata...`);
             },
 
             handleVideoLoad: function() {
                 this.durationDisplay.textContent = this.video.duration.toFixed(2);
                 this.video.currentTime = 0;
-                this.videoPreviewArea.classList.remove('hidden'); // Show video area
-                this.controlsArea.classList.remove('hidden'); // Show controls area
+                this.videoPreviewArea.classList.remove('hidden'); 
+                this.controlsArea.classList.remove('hidden'); 
                 this.captureBtn.disabled = false;
                 this.captureMultiBtn.disabled = false;
                 showMessage('Video ready for frame capture.');
@@ -537,38 +781,30 @@
                 this.currentTimeDisplay.textContent = this.video.currentTime.toFixed(2);
             },
             
-            // Helper function to draw and get frame as Data URL
             getFrameData: function(time, index) {
                 return new Promise(resolve => {
                     const video = this.video;
                     const canvas = this.canvas;
                     const ctx = canvas.getContext('2d');
                     
-                    // Pause video to ensure we capture the specific frame
                     video.pause();
                     video.currentTime = time;
                     
-                    // Function executed when the video successfully seeks to the new time
                     const onSeeked = () => {
                         video.removeEventListener('seeked', onSeeked);
                         
                         canvas.width = video.videoWidth;
                         canvas.height = video.videoHeight;
                         
-                        // Draw the current frame onto the canvas
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
-                        // Use ms for filename for better precision
                         const filename = `frame_${(time * 1000).toFixed(0)}_index_${index}.png`;
-                        
-                        // Get dataURL (always PNG for maximum quality/compatibility)
                         const dataUrl = canvas.toDataURL('image/png');
                         
                         resolve({ filename, dataUrl });
                     };
                     
                     video.addEventListener('seeked', onSeeked);
-                    // Force the seeked event if the video is already ready or already at the time
                     if (video.readyState >= 2 && video.currentTime === time) {
                         onSeeked();
                     }
@@ -593,7 +829,6 @@
                     toggleLoading(false);
                     this.captureBtn.disabled = false;
                     this.captureMultiBtn.disabled = false;
-                    // Resume playback if it was playing before capture
                     if (!this.video.paused) this.video.play();
                 }
             },
@@ -601,7 +836,6 @@
             captureMultipleFrames: async function() {
                 const interval = parseFloat(this.intervalInput.value);
                 const duration = this.video.duration;
-                // Use the user-defined count
                 const totalFramesToCapture = parseInt(this.frameCountInput.value, 10) || 10; 
                 
                 if (isNaN(interval) || interval <= 0) {
@@ -614,7 +848,6 @@
                 
                 let time = this.video.currentTime;
                 
-                // Calculate how many frames we can get without exceeding duration
                 const maxFrames = Math.floor((duration - time) / interval) + 1;
                 const framesToGet = Math.min(totalFramesToCapture, maxFrames);
                 
@@ -634,14 +867,13 @@
                     toggleLoading(true, `Capturing frame ${i + 1} of ${framesToGet} at ${time.toFixed(2)}s...`);
                     
                     try {
-                        // Use a fixed frame index for file naming consistency during batch
                         const { filename, dataUrl } = await this.getFrameData(time, this.frames.length); 
                         this.addFrameToGallery(filename, dataUrl);
                         
                         time += interval;
                         if (time > duration) break;
-                        this.video.currentTime = time; // Update preview
-                        await new Promise(r => setTimeout(r, 100)); // Small delay for UI feedback
+                        this.video.currentTime = time; 
+                        await new Promise(r => setTimeout(r, 100)); 
                     } catch(e) {
                         console.error(`Failed to capture frame ${i + 1}:`, e);
                         showMessage(`Failed to capture frame ${i + 1}. Stopping batch.`, true);
@@ -658,16 +890,14 @@
 
             addFrameToGallery: function(filename, dataUrl) {
                 this.frames.push({ filename, dataUrl });
-                this.renderGallery(); // Re-render to correctly show updated indices
+                this.renderGallery(); 
             },
             
             deleteFrame: function(indexToDelete) {
                 if (indexToDelete < 0 || indexToDelete >= this.frames.length) return;
                 
-                // Remove from array
                 this.frames.splice(indexToDelete, 1);
                 
-                // Re-render gallery to update indices on all buttons and refresh UI count
                 this.renderGallery(); 
                 showMessage(`Frame removed.`);
             },
@@ -676,12 +906,12 @@
                 this.framesGallery.innerHTML = '';
                 this.frames.forEach((frame, index) => {
                     const frameElement = document.createElement('div');
-                    frameElement.className = 'flex items-center space-x-3 bg-gray-50 p-2 rounded-lg border border-gray-200';
-                    // Important: Use the index from the loop for data-index since the array is clean
+                    // Dark theme adjustment for gallery items
+                    frameElement.className = 'flex items-center space-x-3 bg-gray-700 p-2 rounded-lg border border-gray-600';
                     frameElement.innerHTML = `
                         <img src="${frame.dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
-                        <span class="text-sm font-medium text-gray-700 truncate flex-grow">${frame.filename}</span>
-                        <button data-index="${index}" class="delete-frame-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
+                        <span class="text-sm font-medium text-gray-300 truncate flex-grow">${frame.filename}</span>
+                        <button data-index="${index}" class="delete-frame-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Remove frame">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
                             </svg>
@@ -690,7 +920,6 @@
                     this.framesGallery.appendChild(frameElement);
                 });
 
-                // Scroll to bottom to show new frame
                 this.framesGallery.scrollTop = this.framesGallery.scrollHeight;
                 
                 this.updateUI();
@@ -722,7 +951,6 @@
                     const frame = this.frames[i];
                     toggleLoading(true, `Adding frame ${i + 1} of ${totalFiles} to ZIP...`);
                     
-                    // Convert DataURL to Blob and add to zip
                     const dataUrl = frame.dataUrl;
                     try {
                         const blob = await fetch(dataUrl).then(res => res.blob());
@@ -748,7 +976,7 @@
         };
         
         // =========================================================================
-        // === BATCH CROPPER TOOL LOGIC (Refactored to object 'cropperTool') ===
+        // === BATCH CROPPER TOOL LOGIC (EXISTING) ===
         // =========================================================================
         const cropperTool = {
             // DOM Elements
@@ -779,14 +1007,14 @@
 
             // State
             cropperInstances: [], 
-            currentAspectRatio: ratioToFloat("9/16"), // Default ratio is 9:16 (float)
-            currentRatioString: "9/16", // Default ratio string (for display)
+            currentAspectRatio: ratioToFloat("9/16"), 
+            currentRatioString: "9/16", 
             
             // Global Output State (RE-ADDED RESOLUTION STATE)
-            globalOutputFormat: 'jpeg', // Changed default to JPEG as it's often preferred for smaller size
+            globalOutputFormat: 'jpeg', 
             globalJpegQuality: 0.9,    
-            globalOutputWidth: null, // null = Auto-size
-            globalOutputHeight: null, // null = Auto-size
+            globalOutputWidth: null, 
+            globalOutputHeight: null, 
             
             RATIO_PRESETS: [
                 { label: "Global Default", value: "GLOBAL" },
@@ -802,7 +1030,7 @@
 
             // Resolution Presets (Updated to include GLOBAL)
             RESOLUTION_PRESETS: [
-                { label: "Global Default Resolution", value: "GLOBAL" }, // <-- Re-added this option
+                { label: "Global Default Resolution", value: "GLOBAL" }, 
                 { label: "None (Auto-size)", value: "auto" },
                 { label: "Custom Pixels...", value: "custom" },
                 { label: "1080x1920 (Story)", value: "1080x1920" }, 
@@ -817,18 +1045,15 @@
                 this.downloadAllBtn.addEventListener('click', () => this.downloadAllBatch());
                 this.setupDragDrop();
                 this.setupGlobalRatioHandlers();
-                this.setupGalleryDelegation(); // For delete/reset/download buttons on cards
+                this.setupGalleryDelegation(); 
                 
-                // Global Output Format Handlers
                 this.globalFormatSelect.addEventListener('change', (e) => this.setGlobalOutputFormat(e.target.value));
                 this.globalQualitySlider.addEventListener('input', (e) => this.setGlobalJpegQuality(parseInt(e.target.value, 10)));
-                this.updateGlobalFormatDisplay(); // Initial display setup
+                this.updateGlobalFormatDisplay(); 
 
-                // New/Re-added: Global Output Resolution Handlers
                 this.globalResolutionSelect.addEventListener('change', () => this.updateGlobalResolution());
                 this.globalWidthInput.addEventListener('input', () => this.updateGlobalResolution());
                 this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
-                // Set initial display for global custom inputs
                 this.globalCustomResInputs.classList.toggle('hidden', this.globalResolutionSelect.value !== 'custom');
                 this.globalQualityControl.classList.toggle('hidden', this.globalFormatSelect.value !== 'jpeg');
             },
@@ -862,17 +1087,14 @@
                     newWidth = getResolutionValue(this.globalWidthInput);
                     newHeight = getResolutionValue(this.globalHeightInput);
                 } else {
-                    // Handle fixed presets (e.g., 1920x1080)
                     const parts = value.split('x');
                     newWidth = parseInt(parts[0], 10);
                     newHeight = parseInt(parts[1], 10);
                 }
 
-                // Update global state
                 this.globalOutputWidth = newWidth;
                 this.globalOutputHeight = newHeight;
                 
-                // Crucial: Update visual feedback on all local cards that use the GLOBAL setting
                 this.cropperInstances.forEach(item => {
                     const resSelect = item.card.querySelector('.local-resolution-select');
                     if (resSelect.value === 'GLOBAL') {
@@ -883,31 +1105,27 @@
                 showMessage(`Global output resolution set to ${value === 'auto' ? 'Auto-size' : (value === 'custom' ? 'Custom' : value)}.`);
             },
 
-            // --- Cropper Tool Core Functions ---
             
             updateLocalVisualFeedback: function(card) {
-                // Aspect Ratio Visuals
                 const ratioSelect = card.querySelector('.local-ratio-select');
                 const ratioActiveClasses = ['border-indigo-500', 'ring-2', 'ring-indigo-200'];
                 const toggleClasses = (element, isActive, activeClasses) => {
                     element.classList.remove(...activeClasses);
-                    element.classList.remove('border-gray-300'); 
+                    element.classList.remove('border-gray-600'); 
                     
                     if (isActive) {
                         element.classList.add(...activeClasses);
                     } else {
-                        element.classList.add('border-gray-300');
+                        element.classList.add('border-gray-600'); 
                     }
                 };
                 toggleClasses(ratioSelect, ratioSelect.value !== "GLOBAL", ratioActiveClasses);
 
-                // Fill Color Visuals
                 const colorInput = card.querySelector('.local-fill-color');
                 const fillToggle = card.querySelector('.local-fill-toggle');
                 const colorActiveClasses = ['border-pink-500', 'ring-2', 'ring-pink-200']; 
                 toggleClasses(colorInput, fillToggle.checked && colorInput.value.toLowerCase() !== "#ffffff", colorActiveClasses);
                 
-                // Resolution Visuals (UPDATED LOGIC)
                 const resSelect = card.querySelector('.local-resolution-select');
                 const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
                 const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
@@ -916,24 +1134,19 @@
                 let isResolutionActive = false;
                 
                 if (resSelect.value === "GLOBAL") { 
-                    // Check if the currently set GLOBAL resolution is NOT null (i.e., not auto-size)
                     if (cropperTool.globalOutputWidth !== null || cropperTool.globalOutputHeight !== null) {
                         isResolutionActive = true;
                     }
                 } else if (resSelect.value === "custom") {
-                    // Check if a local custom resolution has been entered
                     isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
                 } else if (resSelect.value !== "auto") { 
-                    // This covers all local fixed presets (1080x1920, etc.)
                     isResolutionActive = true;
                 }
                 
                 toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
                 
-                // Show/Hide Custom Inputs
                 card.querySelector('.custom-res-inputs').classList.toggle('hidden', resSelect.value !== 'custom');
 
-                // Apply active border to custom inputs if they are being used locally
                 if (resSelect.value === "custom") {
                     toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
                     toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
@@ -945,7 +1158,6 @@
                 const value = resSelect.value;
 
                 if (value === 'GLOBAL') { 
-                    // Use global state values (can be null/null if global is set to auto)
                     return { width: this.globalOutputWidth, height: this.globalOutputHeight };
                 }
                 
@@ -961,7 +1173,6 @@
                     return { width: targetWidth, height: targetHeight };
                 }
                 
-                // Handle local fixed presets
                 const parts = value.split('x');
                 const targetWidth = parseInt(parts[0], 10);
                 const targetHeight = parseInt(parts[1], 10);
@@ -1002,7 +1213,6 @@
                 
                 this.cropperInstances.forEach(item => {
                     const select = item.card.querySelector('.local-ratio-select');
-                    // Only update images set to use the GLOBAL default ratio
                     if (select && select.value === "GLOBAL") { 
                         if (item.cropper) {
                             item.cropper.setAspectRatio(this.currentAspectRatio);
@@ -1091,52 +1301,52 @@
             createCropperCardHTML: function(file, index, uniqueId) {
                 const iconHtmlBlock = `
                     <!-- Rotate 90° Clockwise (RED) -->
-                    <button data-index="${index}" class="rotate-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Rotate 90° clockwise">
+                    <button data-index="${index}" class="rotate-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Rotate 90° clockwise">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9l-3.74 3.74"/></svg>
                     </button>
                     <!-- Flip Horizontal (RED) -->
-                    <button data-index="${index}" class="flip-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Flip Horizontal">
+                    <button data-index="${index}" class="flip-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Flip Horizontal">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M22 3H2v18h20zM7 12h10M12 7v10"/></svg>
                     </button>
                     <!-- Reset Crop (RED) -->
-                    <button data-index="${index}" class="reset-crop-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Reset crop to auto-center">
+                    <button data-index="${index}" class="reset-crop-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Reset crop to auto-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9L21 8"/><path d="M11 12h10M11 8h10M11 16h10"/></svg>
                     </button>
                     <!-- Regenerate ID (RED) -->
-                    <button data-index="${index}" class="regenerate-id-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Regenerate unique ID">
+                    <button data-index="${index}" class="regenerate-id-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Regenerate unique ID">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.79l-3 3"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.79l3-3"/></svg>
                     </button>
                     <!-- Delete Image (RED) -->
-                    <button data-index="${index}" class="delete-btn text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove image">
+                    <button data-index="${index}" class="delete-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Remove image">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                     </button>
                 `;
                 
                 return `
-                    <div class="bg-white shadow-xl rounded-xl flex flex-col border border-gray-200" data-unique-id="${uniqueId}">
+                    <div class="bg-gray-800 shadow-xl rounded-xl flex flex-col border border-gray-700" data-unique-id="${uniqueId}">
                         <!-- 1. HEADER (Minimalist/Empty) -->
-                        <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
+                        <div class="px-4 py-3 bg-gray-700 border-b border-gray-700 flex justify-between items-center">
                             <!-- Empty for minimal design -->
                         </div>
                         
                         <!-- 2. LOCAL SETTINGS -->
-                        <div class="px-4 py-2 border-b bg-white">
+                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
                             <!-- Ratio Selector -->
-                            <select class="local-ratio-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none">
+                            <select class="local-ratio-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none">
                                 ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
                             </select>
                         </div>
                         
-                        <div class="px-4 py-2 border-b bg-white">
+                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
                             <!-- Output Resolution -->
-                            <select class="local-resolution-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
+                            <select class="local-resolution-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none mb-2">
                                 ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === 'GLOBAL' ? 'selected' : ''}>${p.label}</option>`).join('')}
                             </select>
                             
                             <div class="custom-res-inputs flex space-x-2 items-center hidden">
-                                <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
-                                <span class="text-gray-500">x</span>
-                                <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-300 rounded text-sm bg-white text-center" min="1">
+                                <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                <span class="text-gray-400">x</span>
+                                <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
                             </div>
                         </div>
 
@@ -1148,17 +1358,17 @@
                         </div>
 
                         <!-- 4. NEW POSITION: FILL/COLOR (The frequently used control) -->
-                        <div class="px-4 py-2 border-t bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="px-4 py-2 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <!-- Fill/Color -->
-                            <label class="flex items-center space-x-2 text-xs font-medium text-gray-600">
-                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
+                            <label class="flex items-center space-x-2 text-xs font-medium text-gray-300">
+                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-500 border-gray-600 rounded focus:ring-pink-500" checked>
                                 <span class="text-xs">Fill Empty Area:</span>
                             </label>
-                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-300 rounded-lg cursor-pointer focus:outline-none">
+                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-600 rounded-lg cursor-pointer focus:outline-none bg-gray-700">
                         </div>
 
                         <!-- 5. ACTION ICONS -->
-                        <div class="px-4 py-2 border-t border-b flex justify-end">
+                        <div class="px-4 py-2 border-t border-gray-700 border-b flex justify-end">
                             <div class="flex items-center space-x-2">
                                 ${iconHtmlBlock}
                             </div>
@@ -1236,6 +1446,7 @@
                                 cropmove: () => { /* No DOM updates required here now */ },
                                 ready: () => {
                                     const ratio = cropper.options.aspectRatio;
+                                    const imageElement = cropper.element;
                                     const imageWidth = imageElement.naturalWidth;
                                     const imageHeight = imageElement.naturalHeight;
                                     this.applyAutoCenter(cropper, ratio, imageWidth, imageHeight);
@@ -1290,8 +1501,6 @@
 
                     } else if (result.status === 'rejected') {
                         console.error("Failed to load a file or initialize cropper:", result.reason);
-                        // The temporary card element needs to be removed if the cropper failed to initialize
-                        // We filter the cropperInstances array later based on success/failure to cleanup the card
                     }
                 });
 
@@ -1355,7 +1564,6 @@
                     const flipBtn = e.target.closest('.flip-btn');     
                     const localDownloadBtn = e.target.closest('.local-download-btn');
 
-                    // Find the index based on the button clicked
                     const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || regenerateIdBtn?.dataset.index || rotateBtn?.dataset.index || flipBtn?.dataset.index || localDownloadBtn?.dataset.index;
                     const indexVal = parseInt(index, 10);
                     const item = this.cropperInstances.find(i => i.index === indexVal); 
@@ -1365,7 +1573,6 @@
                     if (deleteBtn) {
                         item.cropper.destroy();
                         item.card.remove();
-                        // Re-filter and re-index the remaining items
                         this.cropperInstances = this.cropperInstances.filter(i => i.index !== indexVal);
                         this.cropperInstances = this.cropperInstances.map((i, newIndex) => ({ ...i, index: newIndex }));
                         this.updateGalleryIndexAndCount();
@@ -1418,19 +1625,14 @@
                     const localFillToggle = card.querySelector('.local-fill-toggle');
                     const localFillColor = card.querySelector('.local-fill-color');
                     
-                    // --- GET RESOLUTION (Checks Local, then Global) ---
                     const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card); 
-                    // --- END GET RESOLUTION ---
 
                     let useSolidFill = localFillToggle.checked;
                     const finalFillColor = localFillColor.value; 
                     
-                    // --- READ GLOBAL FORMAT/QUALITY STATE ---
                     let outputFormat = this.globalOutputFormat; 
                     const jpegQuality = this.globalJpegQuality;    
-                    // --- END READ GLOBAL FORMAT/QUALITY STATE ---
 
-                    // If not using solid fill (keeping transparent corners/area), force PNG
                     if (!useSolidFill) outputFormat = 'png'; 
                     
                     const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
@@ -1444,7 +1646,6 @@
                     let finalWidth = targetWidth || sourceWidth;
                     let finalHeight = targetHeight || sourceHeight;
                     
-                    // Handle proportional scaling if only one dimension is fixed
                     if (targetWidth && !targetHeight) finalHeight = Math.round(sourceHeight * (targetWidth / sourceWidth));
                     else if (targetHeight && !targetWidth) finalWidth = Math.round(sourceWidth * (targetHeight / sourceHeight));
                     
@@ -1466,7 +1667,6 @@
                             ctx.fillRect(0, 0, finalWidth, finalHeight);
                         }
                         
-                        // Draw the original cropped content onto the potentially resized/filled canvas
                         ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
                     }
                     

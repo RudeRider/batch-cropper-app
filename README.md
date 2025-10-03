@@ -1,41 +1,40 @@
-🎬 Digital Asset Tools (Batch Cropper & Video Frame Capture)
-This single-page application provides a suite of tools for processing and manipulating common digital assets (images and videos) directly in the browser.
+🎬 Digital Asset Tools (Single-File Application)
+This application is a self-contained HTML file providing three separate, useful tools for working with media assets. Switch between the tools using the menu bar at the top.
 
-✂️ Batch Cropper (Image Manipulation)
-The Batch Cropper allows users to upload multiple JPEG or PNG images and apply uniform or individual cropping, resizing, and rotation settings before downloading the results as a single ZIP file.
+1. Batch Cropper
+A tool for efficiently cropping and resizing multiple images (PNG/JPEG) simultaneously before downloading them as a single ZIP archive.
 
-Key Features
-Multi-File Upload: Drag-and-drop support or standard file input for batch processing multiple images.
+Key Features:
+Drag & Drop Upload: Upload multiple images instantly.
 
-Global Settings: Quickly set a default Aspect Ratio (e.g., 9:16, 1:1, Free) and Output Resolution (e.g., 1080x1920, 4K) for all loaded images.
+Global Aspect Ratio: Apply a common aspect ratio (e.g., 9:16, 1:1, custom) to all images for consistent output.
 
-Per-Image Overrides: Each image card allows for local overriding of the global ratio and resolution settings.
+Local Overrides: Customize the aspect ratio, output resolution, and background fill color for individual images.
 
-Interactive Cropping: Utilizes Cropper.js for a fluid, interactive cropping experience on each image.
+Fixed Resolution Output: Resize the cropped area to a specific pixel dimension (e.g., 1080x1920) or use auto-size based on the crop box dimensions.
 
-Image Transformations: Includes controls for Rotation and Horizontal Flip.
+Batch Download: Compile all processed images into a single .zip file.
 
-Background Fill: Option to specify a solid Fill Color (default: white) for areas outside the crop box when using a custom or non-matching ratio.
+2. Video Frame Capture
+A utility for extracting high-quality still images (frames) from an uploaded video file.
 
-Batch Download: Compresses all processed images into a single .zip file for efficient downloading.
+Key Features:
+Frame Grab: Capture the frame visible in the video player at the current time.
 
-Output Control
-Resolution Scaling: Images can be scaled up or down to a target resolution (e.g., forcing a 1920×1080 output). If only one dimension is specified, the output is scaled proportionally.
+Batch Capture (Interval): Automatically capture a specified number of frames at a constant time interval (e.g., 10 frames every 0.5 seconds).
 
-Format & Quality: Choose between PNG (for transparency and maximum quality) and JPEG (for smaller file size). JPEG output includes an adjustable quality slider.
+Frame Gallery: Review, delete, and manage captured frames before download.
 
-🎥 Video Frame Capture
-This tool allows users to extract high-quality still frames from video files loaded locally into the browser.
+ZIP Export: Download all captured frames as individual PNG files compressed in a .zip archive.
 
-Key Features
-Video Upload: Load video files (MP4, MOV, WebM, etc.) directly from your local system.
+3. Text Editor / Scratchpad (Live JSON Highlight)
+A minimalist text editor with developer-focused features, ideal for drafting, editing, or validating configuration files.
 
-Manual Capture: Use the "Capture Frame" button to extract the exact frame currently displayed in the video player.
+Key Features:
+Live Syntax Highlighting: Automatically detects and highlights text as JSON in real-time. If the content is invalid JSON or plain text, the highlighting is disabled for a clean scratchpad experience.
 
-Batch Capture: Define an Interval (in seconds) and the total Number of Frames to automatically capture a sequence of stills, useful for creating spritesheets or capturing motion.
+Stats Counter: Displays word count and character count at the top.
 
-Frames Gallery: Displays all captured frames with the corresponding timestamp used for capture.
+Download: Save the text content to a .txt file with a custom filename.
 
-Individual & Batch Management: Delete individual frames or clear the entire gallery.
-
-ZIP Download: Download all captured frames as high-quality PNG files compressed into a single .zip archive.
+Note: The editor intelligently handles and ignores JavaScript-style // and /* */ comments when attempting to validate the JSON structure, allowing for common config file practices.
