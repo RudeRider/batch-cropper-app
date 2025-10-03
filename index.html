@@ -28,18 +28,20 @@
         /* Cropper Tool Custom Styles */
         .gallery-item {
             width: 100%;
-            height: 300px; /* Default height */
-            overflow: hidden;
+            /* --- MODIFIED: Adjusting Vertical Space for tighter fit --- */
+            min-height: 100px; /* Reduced minimum height */
+            /* Removed max-height entirely, as it interfered with the image size */
+            overflow: hidden; 
             background-color: #f7fafc; 
             display: flex;
             justify-content: center;
             align-items: center;
             border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
-            margin-bottom: 1rem;
         }
         .gallery-item img {
             max-width: 100%;
+            /* IMPORTANT: Cropper.js manages height/width internally, setting max-width: 100% and height: auto is crucial */
             height: auto;
             display: block;
         }
@@ -190,7 +192,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Output Format:</label>
                             <select id="global-format-select" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-indigo-500 focus:border-indigo-500 mb-2">
                                 <option value="png">PNG (Best Quality/Transparency)</option>
-                                <option value="jpeg">JPEG (Smaller File Size)</option>
+                                <option value="jpeg" selected>JPEG (Smaller File Size)</option>
                             </select>
                             
                             <div id="global-quality-control" class="hidden mt-2 p-3 bg-indigo-100 rounded-lg">
@@ -268,14 +270,13 @@
                         <p id="frames-placeholder" class="text-sm text-gray-500">No frames captured yet. Load a video and use the capture buttons.</p>
                     </div>
 
-                    <!-- Frame Capture Controls - MOVED HERE -->
-                    <!-- This block is now hidden/shown on video load via JS -->
+                    <!-- Frame Capture Controls -->
                     <div id="frame-capture-controls" class="border-t pt-4 hidden"> 
                         <h3 class="text-xl font-bold text-gray-800 mb-4">3. Frame Capture Controls</h3>
                         <div class="bg-gray-100 p-4 rounded-lg shadow-inner border border-gray-200 space-y-3">
                             <p class="text-sm font-medium text-gray-700">Current Time: <span id="video-current-time" class="font-bold">0.00</span> / <span id="video-duration" class="font-bold">0.00</span> seconds</p>
                             
-                            <!-- New input for number of frames -->
+                            <!-- New input for number of frames/interval -->
                             <div class="flex items-center space-x-2">
                                 <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
                                     <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
@@ -668,7 +669,6 @@
                 
                 // Re-render gallery to update indices on all buttons and refresh UI count
                 this.renderGallery(); 
-                // Removed redundant call to this.updateUI(); as renderGallery already calls it.
                 showMessage(`Frame removed.`);
             },
 
@@ -725,10 +725,10 @@
                     // Convert DataURL to Blob and add to zip
                     const dataUrl = frame.dataUrl;
                     try {
-                         const blob = await fetch(dataUrl).then(res => res.blob());
-                         zip.file(frame.filename, blob);
+                        const blob = await fetch(dataUrl).then(res => res.blob());
+                        zip.file(frame.filename, blob);
                     } catch (e) {
-                         console.error(`Failed to fetch blob for file ${frame.filename}:`, e);
+                        console.error(`Failed to fetch blob for file ${frame.filename}:`, e);
                     }
                 }
 
@@ -783,8 +783,8 @@
             currentRatioString: "9/16", // Default ratio string (for display)
             
             // Global Output State (RE-ADDED RESOLUTION STATE)
-            globalOutputFormat: 'png', 
-            globalJpegQuality: 0.9,   
+            globalOutputFormat: 'jpeg', // Changed default to JPEG as it's often preferred for smaller size
+            globalJpegQuality: 0.9,    
             globalOutputWidth: null, // null = Auto-size
             globalOutputHeight: null, // null = Auto-size
             
@@ -819,7 +819,7 @@
                 this.setupGlobalRatioHandlers();
                 this.setupGalleryDelegation(); // For delete/reset/download buttons on cards
                 
-                // Global Output Format Handlers (Kept)
+                // Global Output Format Handlers
                 this.globalFormatSelect.addEventListener('change', (e) => this.setGlobalOutputFormat(e.target.value));
                 this.globalQualitySlider.addEventListener('input', (e) => this.setGlobalJpegQuality(parseInt(e.target.value, 10)));
                 this.updateGlobalFormatDisplay(); // Initial display setup
@@ -830,6 +830,7 @@
                 this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
                 // Set initial display for global custom inputs
                 this.globalCustomResInputs.classList.toggle('hidden', this.globalResolutionSelect.value !== 'custom');
+                this.globalQualityControl.classList.toggle('hidden', this.globalFormatSelect.value !== 'jpeg');
             },
 
             setGlobalOutputFormat: function(format) {
@@ -1001,11 +1002,13 @@
                 
                 this.cropperInstances.forEach(item => {
                     const select = item.card.querySelector('.local-ratio-select');
-                    if (select && select.value === "GLOBAL") {
+                    // Only update images set to use the GLOBAL default ratio
+                    if (select && select.value === "GLOBAL") { 
                         if (item.cropper) {
                             item.cropper.setAspectRatio(this.currentAspectRatio);
-                            const imageWidth = item.cropper.image.naturalWidth;
-                            const imageHeight = item.cropper.image.naturalHeight;
+                            const imageElement = item.cropper.element;
+                            const imageWidth = imageElement.naturalWidth;
+                            const imageHeight = imageElement.naturalHeight;
                             if (imageWidth && imageHeight) {
                                 this.applyAutoCenter(item.cropper, this.currentAspectRatio, imageWidth, imageHeight);
                             }
@@ -1028,8 +1031,9 @@
 
                 if (item.cropper) {
                     item.cropper.setAspectRatio(newRatio);
-                    const imageWidth = item.cropper.image.naturalWidth;
-                    const imageHeight = item.cropper.image.naturalHeight;
+                    const imageElement = item.cropper.element;
+                    const imageWidth = imageElement.naturalWidth;
+                    const imageHeight = imageElement.naturalHeight;
                     if (imageWidth && imageHeight) {
                         this.applyAutoCenter(item.cropper, newRatio, imageWidth, imageHeight);
                     }
@@ -1136,8 +1140,8 @@
                             </div>
                         </div>
 
-                        <!-- 3. IMAGE PREVIEW -->
-                        <div class="flex-grow p-2">
+                        <!-- 3. IMAGE PREVIEW (Padding reduced to minimize empty space) -->
+                        <div class="flex-grow p-1">
                             <div class="gallery-item">
                                 <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
                             </div>
@@ -1205,7 +1209,6 @@
                 this.fileInput.value = '';
                 
                 let fileLoadPromises = [];
-                let newCropperInstances = [];
 
                 validFiles.forEach((file, index) => {
                     const uniqueId = crypto.randomUUID().substring(0, 8); 
@@ -1214,7 +1217,6 @@
                     // 1. Append card container immediately (no image source yet)
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = cardHTML;
-                    // FIX: Use children[0] instead of firstChild to reliably get the element node.
                     const card = tempDiv.children[0]; 
                     this.galleryContainer.appendChild(card);
 
@@ -1288,9 +1290,8 @@
 
                     } else if (result.status === 'rejected') {
                         console.error("Failed to load a file or initialize cropper:", result.reason);
-                        // Optionally remove the placeholder card if initialization failed
-                        // In this implementation, the card is appended but its events won't fire. 
-                        // For simplicity in this single-file context, we rely on the error being logged.
+                        // The temporary card element needs to be removed if the cropper failed to initialize
+                        // We filter the cropperInstances array later based on success/failure to cleanup the card
                     }
                 });
 
@@ -1364,6 +1365,7 @@
                     if (deleteBtn) {
                         item.cropper.destroy();
                         item.card.remove();
+                        // Re-filter and re-index the remaining items
                         this.cropperInstances = this.cropperInstances.filter(i => i.index !== indexVal);
                         this.cropperInstances = this.cropperInstances.map((i, newIndex) => ({ ...i, index: newIndex }));
                         this.updateGalleryIndexAndCount();
@@ -1425,9 +1427,10 @@
                     
                     // --- READ GLOBAL FORMAT/QUALITY STATE ---
                     let outputFormat = this.globalOutputFormat; 
-                    const jpegQuality = this.globalJpegQuality;     
+                    const jpegQuality = this.globalJpegQuality;    
                     // --- END READ GLOBAL FORMAT/QUALITY STATE ---
 
+                    // If not using solid fill (keeping transparent corners/area), force PNG
                     if (!useSolidFill) outputFormat = 'png'; 
                     
                     const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
@@ -1463,6 +1466,7 @@
                             ctx.fillRect(0, 0, finalWidth, finalHeight);
                         }
                         
+                        // Draw the original cropped content onto the potentially resized/filled canvas
                         ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
                     }
                     
