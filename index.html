@@ -16,7 +16,7 @@
         /* Global Tool Menu Button Styling */
         .tool-menu-btn {
             transition: all 0.2s;
-            @apply shadow-md;
+            @apply shadow-md px-4 py-2 rounded-xl text-base font-semibold;
         }
         .tool-menu-btn.active-tool {
             @apply bg-indigo-600 text-white shadow-xl;
@@ -28,7 +28,7 @@
         /* Cropper Tool Custom Styles */
         .gallery-item {
             width: 100%;
-            height: 300px; 
+            height: 300px; /* Reverted to original height */
             overflow: hidden;
             background-color: #f7fafc; 
             display: flex;
@@ -195,7 +195,7 @@
     </div>
     
     <!-- --- VIDEO FRAME CAPTURE APP CONTAINER --- -->
-    <div id="video-app" class="tool-container hidden w-full p-4 sm:p-8">
+    <div id="video-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-800 mb-6">🎥 Video Frame Capture</h2>
         
         <div class="flex flex-col lg:flex-row lg:gap-8 relative">
@@ -209,20 +209,49 @@
                         <p id="video-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
-                    <div id="video-controls-area" class="hidden space-y-4">
+                    <!-- Area holding just the video preview -->
+                    <div id="video-preview-area" class="hidden space-y-4">
                         <div class="relative rounded-lg overflow-hidden shadow-2xl">
                             <!-- Video element for preview and seeking -->
                             <video id="video-preview" controls preload="metadata" class="w-full h-auto" crossorigin="anonymous"></video>
                         </div>
+                        <!-- Hidden Canvas for capturing frames (kept near the video for context) -->
+                        <canvas id="frame-canvas" class="hidden"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Time and Capture Controls -->
+            <!-- Frames Gallery and Controls Area (Right) -->
+            <div class="lg:w-80 lg:flex-shrink-0">
+                <div class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-200 lg:sticky lg:top-8 lg:self-start space-y-6">
+                    
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
+                    
+                    <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        <!-- Captured frames will be appended here -->
+                        <p id="frames-placeholder" class="text-sm text-gray-500">No frames captured yet. Load a video and use the capture buttons.</p>
+                    </div>
+
+                    <!-- Frame Capture Controls - MOVED HERE -->
+                    <!-- This block is now hidden/shown on video load via JS -->
+                    <div id="frame-capture-controls" class="border-t pt-4 hidden"> 
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">3. Frame Capture Controls</h3>
                         <div class="bg-gray-100 p-4 rounded-lg shadow-inner border border-gray-200 space-y-3">
                             <p class="text-sm font-medium text-gray-700">Current Time: <span id="video-current-time" class="font-bold">0.00</span> / <span id="video-duration" class="font-bold">0.00</span> seconds</p>
                             
-                            <!-- Hidden Canvas for capturing frames -->
-                            <canvas id="frame-canvas" class="hidden"></canvas>
+                            <!-- New input for number of frames -->
+                            <div class="flex items-center space-x-2">
+                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
+                                    <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
+                                    <span>frames to capture</span>
+                                </label>
+                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
+                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
+                                    <span>sec interval</span>
+                                </label>
+                            </div>
 
-                            <div class="flex flex-wrap gap-4 items-center">
+                            <div class="flex flex-wrap gap-4 items-center border-t pt-3">
                                 <button id="capture-frame-btn" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
                                     <span class="flex items-center space-x-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
@@ -232,26 +261,10 @@
                                     </span>
                                 </button>
                                 <button id="capture-multiple-frames-btn" class="bg-pink-600 text-white font-bold px-6 py-3 rounded-full hover:bg-pink-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
-                                    Capture 10 Frames (Auto)
+                                    Capture <span id="capture-frame-count-display">10</span> Frames (Auto)
                                 </button>
-                                <label class="flex items-center text-sm font-semibold text-gray-700 space-x-2">
-                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-300 rounded-lg text-center">
-                                    <span>sec interval</span>
-                                </label>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Frames Gallery and Download Area (Right) -->
-            <div class="lg:w-80 lg:flex-shrink-0">
-                <div class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-200 lg:sticky lg:top-8 lg:self-start space-y-6">
-                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
-                    
-                    <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
-                        <!-- Captured frames will be appended here -->
-                        <p id="frames-placeholder" class="text-sm text-gray-500">No frames captured yet. Load a video and use the capture buttons.</p>
                     </div>
 
                     <div class="border-t pt-4">
@@ -330,9 +343,28 @@
         };
 
         const getResolutionValue = (input) => {
-             const value = parseInt(input.value, 10);
-             return (isNaN(value) || value <= 0) ? null : value;
+            const value = parseInt(input.value, 10);
+            return (isNaN(value) || value <= 0) ? null : value;
         };
+
+        /**
+         * Safely converts a ratio string (e.g., "9/16" or "NaN") to a float or NaN.
+         * @param {string} ratioString 
+         * @returns {number} The calculated aspect ratio or NaN.
+         */
+        const ratioToFloat = (ratioString) => {
+            if (ratioString === 'NaN') return NaN;
+            
+            const parts = ratioString.split('/');
+            if (parts.length === 2) {
+                const num = parseFloat(parts[0]);
+                const den = parseFloat(parts[1]);
+                if (!isNaN(num) && !isNaN(den) && den !== 0) {
+                    return num / den;
+                }
+            }
+            return NaN; // Default to free crop on invalid input
+        }
         // --- End Global Utilities ---
 
         // --- Global App State and Tool Switching ---
@@ -358,7 +390,7 @@
                 });
                 document.getElementById(`menu-${toolId}`).classList.add('active-tool');
                 
-                // Clear state when switching
+                // Set page title for clarity
                 if (toolId === 'cropper') {
                     document.title = 'Batch Cropper | Digital Asset Tools';
                 } else {
@@ -376,7 +408,11 @@
             fileInput: document.getElementById('videoFileInput'),
             video: document.getElementById('video-preview'),
             canvas: document.getElementById('frame-canvas'),
-            controlsArea: document.getElementById('video-controls-area'),
+            
+            // Updated element IDs
+            videoPreviewArea: document.getElementById('video-preview-area'), // Area containing just the video element
+            controlsArea: document.getElementById('frame-capture-controls'), // The new controls area in the sidebar
+            
             durationDisplay: document.getElementById('video-duration'),
             currentTimeDisplay: document.getElementById('video-current-time'),
             captureBtn: document.getElementById('capture-frame-btn'),
@@ -388,6 +424,10 @@
             clearBtn: document.getElementById('clear-frames-btn'),
             placeholder: document.getElementById('frames-placeholder'),
             errorDisplay: document.getElementById('video-upload-error'),
+            
+            // New Elements for count control
+            frameCountInput: document.getElementById('frame-count-input'),
+            frameCountDisplay: document.getElementById('capture-frame-count-display'),
 
             // State
             frames: [], // Stores { filename: string, dataUrl: string }
@@ -400,7 +440,29 @@
                 this.captureMultiBtn.addEventListener('click', () => this.captureMultipleFrames());
                 this.downloadBtn.addEventListener('click', () => this.downloadAllFrames());
                 this.clearBtn.addEventListener('click', () => this.clearFrames());
+                
+                // Event listener for customizable frame count input
+                this.frameCountInput.addEventListener('input', () => this.updateFrameCountDisplay());
+
+                // Event delegation for dynamically added delete buttons
+                this.framesGallery.addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-frame-btn');
+                    if (deleteBtn) {
+                        const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
+                        this.deleteFrame(indexToDelete);
+                    }
+                });
+
                 this.updateUI();
+            },
+
+            updateFrameCountDisplay: function() {
+                let count = parseInt(this.frameCountInput.value, 10);
+                if (isNaN(count) || count < 1) {
+                    count = 1;
+                    this.frameCountInput.value = 1;
+                }
+                this.frameCountDisplay.textContent = count;
             },
 
             handleVideoUpload: function(files) {
@@ -408,20 +470,27 @@
                 if (files.length === 0 || !files[0].type.startsWith('video/')) {
                     this.errorDisplay.textContent = 'Please select a valid video file.';
                     this.errorDisplay.classList.remove('hidden');
+                    this.videoPreviewArea.classList.add('hidden'); // Hide video area on error
+                    this.controlsArea.classList.add('hidden'); // Hide controls area on error
                     return;
                 }
                 
                 const file = files[0];
+                // Revoke old URL if exists to save memory
+                if (this.video.src) URL.revokeObjectURL(this.video.src);
+                
                 const url = URL.createObjectURL(file);
                 this.video.src = url;
-                this.controlsArea.classList.add('hidden');
+                this.videoPreviewArea.classList.add('hidden'); // Hide until loaded
+                this.controlsArea.classList.add('hidden'); // Hide until loaded
                 showMessage(`Video "${file.name}" loaded. Waiting for metadata...`);
             },
 
             handleVideoLoad: function() {
                 this.durationDisplay.textContent = this.video.duration.toFixed(2);
                 this.video.currentTime = 0;
-                this.controlsArea.classList.remove('hidden');
+                this.videoPreviewArea.classList.remove('hidden'); // Show video area
+                this.controlsArea.classList.remove('hidden'); // Show controls area
                 this.captureBtn.disabled = false;
                 this.captureMultiBtn.disabled = false;
                 showMessage('Video ready for frame capture.');
@@ -438,9 +507,11 @@
                     const canvas = this.canvas;
                     const ctx = canvas.getContext('2d');
                     
+                    // Pause video to ensure we capture the specific frame
+                    video.pause();
                     video.currentTime = time;
                     
-                    // Wait for the video to seek
+                    // Function executed when the video successfully seeks to the new time
                     const onSeeked = () => {
                         video.removeEventListener('seeked', onSeeked);
                         
@@ -450,7 +521,8 @@
                         // Draw the current frame onto the canvas
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         
-                        const filename = `frame_${(time * 100).toFixed(0)}_index_${index}.png`;
+                        // Use ms for filename for better precision
+                        const filename = `frame_${(time * 1000).toFixed(0)}_index_${index}.png`;
                         
                         // Get dataURL (always PNG for maximum quality/compatibility)
                         const dataUrl = canvas.toDataURL('image/png');
@@ -459,7 +531,7 @@
                     };
                     
                     video.addEventListener('seeked', onSeeked);
-                    // Ensure seeking happens instantly if already at the time
+                    // Force the seeked event if the video is already ready or already at the time
                     if (video.readyState >= 2 && video.currentTime === time) {
                         onSeeked();
                     }
@@ -468,6 +540,7 @@
 
             captureFrame: async function() {
                 this.captureBtn.disabled = true;
+                this.captureMultiBtn.disabled = true;
                 const time = this.video.currentTime;
                 
                 toggleLoading(true, `Capturing frame at ${time.toFixed(2)}s...`);
@@ -482,13 +555,17 @@
                 } finally {
                     toggleLoading(false);
                     this.captureBtn.disabled = false;
+                    this.captureMultiBtn.disabled = false;
+                    // Resume playback if it was playing before capture
+                    if (!this.video.paused) this.video.play();
                 }
             },
             
             captureMultipleFrames: async function() {
                 const interval = parseFloat(this.intervalInput.value);
                 const duration = this.video.duration;
-                const totalFramesToCapture = 10;
+                // Use the user-defined count
+                const totalFramesToCapture = parseInt(this.frameCountInput.value, 10) || 10; 
                 
                 if (isNaN(interval) || interval <= 0) {
                     showMessage("Please set a valid positive interval in seconds.", true);
@@ -511,14 +588,19 @@
                     return;
                 }
                 
+                const wasPaused = this.video.paused;
+                this.video.pause();
+                
                 showMessage(`Starting auto-capture of ${framesToGet} frames...`);
                 
                 for (let i = 0; i < framesToGet; i++) {
                     toggleLoading(true, `Capturing frame ${i + 1} of ${framesToGet} at ${time.toFixed(2)}s...`);
                     
                     try {
-                        const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
+                        // Use a fixed frame index for file naming consistency during batch
+                        const { filename, dataUrl } = await this.getFrameData(time, this.frames.length); 
                         this.addFrameToGallery(filename, dataUrl);
+                        
                         time += interval;
                         if (time > duration) break;
                         this.video.currentTime = time; // Update preview
@@ -533,29 +615,13 @@
                 toggleLoading(false);
                 this.captureMultiBtn.disabled = false;
                 this.captureBtn.disabled = false;
+                if (!wasPaused) this.video.play();
                 showMessage(`Finished capturing ${framesToGet} frames.`);
             },
 
             addFrameToGallery: function(filename, dataUrl) {
                 this.frames.push({ filename, dataUrl });
-                
-                const frameElement = document.createElement('div');
-                frameElement.className = 'flex items-center space-x-3 bg-gray-50 p-2 rounded-lg border border-gray-200';
-                frameElement.innerHTML = `
-                    <img src="${dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
-                    <span class="text-sm font-medium text-gray-700 truncate flex-grow">${filename}</span>
-                    <button data-index="${this.frames.length - 1}" class="delete-frame-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
-                        </svg>
-                    </button>
-                `;
-                this.framesGallery.appendChild(frameElement);
-
-                // Scroll to bottom to show new frame
-                this.framesGallery.scrollTop = this.framesGallery.scrollHeight;
-                
-                this.updateUI();
+                this.renderGallery(); // Re-render to correctly show updated indices
             },
             
             deleteFrame: function(indexToDelete) {
@@ -564,21 +630,22 @@
                 // Remove from array
                 this.frames.splice(indexToDelete, 1);
                 
-                // Re-render gallery
-                this.renderGallery();
-                this.updateUI();
-                showMessage(`Frame ${indexToDelete + 1} removed.`);
+                // Re-render gallery to update indices on all buttons and refresh UI count
+                this.renderGallery(); 
+                // Removed redundant call to this.updateUI(); as renderGallery already calls it.
+                showMessage(`Frame removed.`);
             },
 
             renderGallery: function() {
                 this.framesGallery.innerHTML = '';
-                this.frames.forEach(frame => {
+                this.frames.forEach((frame, index) => {
                     const frameElement = document.createElement('div');
                     frameElement.className = 'flex items-center space-x-3 bg-gray-50 p-2 rounded-lg border border-gray-200';
+                    // Important: Use the index from the loop for data-index since the array is clean
                     frameElement.innerHTML = `
                         <img src="${frame.dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
                         <span class="text-sm font-medium text-gray-700 truncate flex-grow">${frame.filename}</span>
-                        <button data-index="${this.frames.indexOf(frame)}" class="delete-frame-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
+                        <button data-index="${index}" class="delete-frame-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove frame">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
                             </svg>
@@ -586,6 +653,11 @@
                     `;
                     this.framesGallery.appendChild(frameElement);
                 });
+
+                // Scroll to bottom to show new frame
+                this.framesGallery.scrollTop = this.framesGallery.scrollHeight;
+                
+                this.updateUI();
             },
 
             clearFrames: function() {
@@ -616,8 +688,12 @@
                     
                     // Convert DataURL to Blob and add to zip
                     const dataUrl = frame.dataUrl;
-                    const blob = await fetch(dataUrl).then(res => res.blob());
-                    zip.file(frame.filename, blob);
+                    try {
+                         const blob = await fetch(dataUrl).then(res => res.blob());
+                         zip.file(frame.filename, blob);
+                    } catch (e) {
+                         console.error(`Failed to fetch blob for file ${frame.filename}:`, e);
+                    }
                 }
 
                 try {
@@ -635,18 +711,6 @@
             }
         };
         
-        // Use event delegation for frame deletion
-        videoTool.framesGallery.addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('.delete-frame-btn');
-            if (deleteBtn) {
-                const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
-                videoTool.deleteFrame(indexToDelete);
-            }
-        });
-        // =========================================================================
-        // === END VIDEO FRAME CAPTURE TOOL LOGIC ===
-        // =========================================================================
-
         // =========================================================================
         // === BATCH CROPPER TOOL LOGIC (Refactored to object 'cropperTool') ===
         // =========================================================================
@@ -665,10 +729,11 @@
             downloadAllBtn: document.getElementById('downloadAllCropperBtn'),
             downloadSection: document.getElementById('cropperDownloadSection'),
             ratioError: document.getElementById('ratio-error'),
-
+            
             // State
             cropperInstances: [], 
-            currentAspectRatio: 9 / 16, // Default ratio is 9:16
+            currentAspectRatio: ratioToFloat("9/16"), // Default ratio is 9:16 (float)
+            currentRatioString: "9/16", // Default ratio string (for display)
             
             RATIO_PRESETS: [
                 { label: "Global Default", value: "GLOBAL" },
@@ -699,10 +764,40 @@
                 this.setupGlobalRatioHandlers();
                 this.setupGalleryDelegation(); // For delete/reset/download buttons on cards
             },
+            
+            // --- Cropper Tool Core Functions ---
+            
+            /**
+             * Updates the ratio indicator text based on whether a local override is set.
+             */
+            updateRatioIndicator: function(card, localRatioValue) {
+                const indicator = card.querySelector('.ratio-status-indicator');
+                let displayString;
+                let colorClass;
+                
+                if (localRatioValue === 'GLOBAL') {
+                    // Global setting active: Display the current GLOBAL value string
+                    const globalDisplay = this.RATIO_PRESETS.find(p => p.value === this.currentRatioString);
+                    const label = globalDisplay ? globalDisplay.label : this.currentRatioString.replace('/', ':');
+                    displayString = `Global: ${label}`;
+                    colorClass = 'text-indigo-700';
+                } else {
+                    // Local override active: Display the local selected value string
+                    const preset = this.RATIO_PRESETS.find(p => p.value === localRatioValue);
+                    const label = preset ? preset.label : localRatioValue.replace('/', ':');
 
-            // --- Cropper Tool Core Functions (Simplified/Migrated) ---
+                    displayString = `Override: ${label}`;
+                    colorClass = 'text-pink-600'; // Highlight local override
+                }
+
+                indicator.textContent = displayString;
+                indicator.className = `ratio-status-indicator font-bold text-sm ${colorClass}`;
+            },
+
             updateLocalVisualFeedback: function(card) {
                 const ratioSelect = card.querySelector('.local-ratio-select');
+                this.updateRatioIndicator(card, ratioSelect.value); // Call new indicator function
+
                 const colorInput = card.querySelector('.local-fill-color');
                 const formatSelect = card.querySelector('.local-format-select');
                 const resSelect = card.querySelector('.local-resolution-select');
@@ -712,6 +807,8 @@
                 let isResolutionActive = resSelect.value !== "auto";
                 if (resSelect.value === "custom") {
                     isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
+                } else if (resSelect.value === 'auto') {
+                    isResolutionActive = false; 
                 }
                 
                 const defaultClasses = ['border-gray-300', 'focus:outline-none'];
@@ -722,10 +819,12 @@
 
                 const toggleClasses = (element, isActive, activeClasses) => {
                     element.classList.remove(...activeClasses);
-                    element.classList.add(...defaultClasses);
+                    element.classList.remove('border-gray-300'); 
+                    
                     if (isActive) {
-                        element.classList.remove('border-gray-300');
                         element.classList.add(...activeClasses);
+                    } else {
+                        element.classList.add('border-gray-300');
                     }
                 };
                 
@@ -735,28 +834,31 @@
                 toggleClasses(formatSelect, formatSelect.value === "jpeg", formatActiveClasses);
                 toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
                 
+                card.querySelector('.custom-res-inputs').classList.toggle('hidden', resSelect.value !== 'custom');
+
                 if (resSelect.value === "custom") {
                     toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
                     toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
-                } else {
-                    resWidthInput.classList.remove(...resolutionActiveClasses);
-                    resHeightInput.classList.remove(...resolutionActiveClasses);
-                    resWidthInput.classList.add(...defaultClasses);
-                    resHeightInput.classList.add(...defaultClasses);
                 }
+                
+                const qualityControlDiv = card.querySelector('.local-quality-control');
+                qualityControlDiv.classList.toggle('hidden', formatSelect.value !== 'jpeg');
             },
             
             getOutputResolution: function(card) {
                 const resSelect = card.querySelector('.local-resolution-select');
                 const value = resSelect.value;
 
-                if (value === 'auto') { return { width: null, height: null }; }
+                if (value === 'auto') { 
+                    return { width: null, height: null }; 
+                }
+                
                 if (value === 'custom') {
-                     const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
-                     const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
-                     const targetWidth = getResolutionValue(widthInput);
-                     const targetHeight = getResolutionValue(heightInput);
-                     return { width: targetWidth, height: targetHeight };
+                    const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                    const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                    const targetWidth = getResolutionValue(widthInput);
+                    const targetHeight = getResolutionValue(heightInput);
+                    return { width: targetWidth, height: targetHeight };
                 }
                 
                 const parts = value.split('x');
@@ -787,11 +889,15 @@
                 const left = (imageWidth - cropWidth) / 2;
                 const top = (imageHeight - cropHeight) / 2;
 
+                cropWidth = Math.max(1, Math.round(cropWidth));
+                cropHeight = Math.max(1, Math.round(cropHeight));
+
                 cropper.setCropBoxData({ width: cropWidth, height: cropHeight, left: left, top: top });
             },
 
-            setCropperRatio: function(ratio) {
-                this.currentAspectRatio = ratio === 'NaN' ? NaN : eval(ratio);
+            setCropperRatio: function(ratioString) {
+                this.currentAspectRatio = ratioToFloat(ratioString);
+                this.currentRatioString = ratioString; 
                 
                 this.cropperInstances.forEach(item => {
                     const select = item.card.querySelector('.local-ratio-select');
@@ -804,8 +910,8 @@
                                 this.applyAutoCenter(item.cropper, this.currentAspectRatio, imageWidth, imageHeight);
                             }
                         }
-                        this.updateLocalVisualFeedback(item.card); 
                     }
+                    this.updateRatioIndicator(item.card, select.value); 
                 });
             },
 
@@ -817,7 +923,7 @@
                     newRatio = this.currentAspectRatio;
                     showMessage(`Ratio for Image ${item.index + 1} reset to Global Default.`, false);
                 } else {
-                    newRatio = ratioValue === 'NaN' ? NaN : eval(ratioValue);
+                    newRatio = ratioToFloat(ratioValue);
                     showMessage(`Ratio for Image ${item.index + 1} set to local override: ${ratioValue.replace('/', ':')}.`, false);
                 }
 
@@ -848,6 +954,22 @@
                     const deleteBtn = card.querySelector('.delete-btn');
                     if(deleteBtn) deleteBtn.dataset.index = newIndex;
 
+                    const resetBtn = card.querySelector('.reset-crop-btn');
+                    if(resetBtn) resetBtn.dataset.index = newIndex;
+                    
+                    const regenBtn = card.querySelector('.regenerate-id-btn');
+                    if(regenBtn) regenBtn.dataset.index = newIndex;
+                    
+                    const rotateBtn = card.querySelector('.rotate-btn');
+                    if(rotateBtn) rotateBtn.dataset.index = newIndex;
+
+                    const flipBtn = card.querySelector('.flip-btn');
+                    if(flipBtn) flipBtn.dataset.index = newIndex;
+
+
+                    const localDownloadBtn = card.querySelector('.local-download-btn');
+                    if(localDownloadBtn) localDownloadBtn.dataset.index = newIndex;
+
                     item.index = newIndex; 
                 });
 
@@ -876,37 +998,50 @@
                 const card = document.createElement('div');
                 card.className = 'bg-white shadow-xl rounded-xl flex flex-col border border-gray-200';
                 
+                // --- Updated SVG Icons for Cohesion ---
                 card.innerHTML = `
                     <div class="px-4 py-3 bg-gray-50 border-b flex justify-between items-center">
                         <p class="text-sm font-semibold text-gray-700 truncate" title="File Index ${index + 1}">
                             <span class="file-index">${index + 1}.</span> File Ready
                         </p>
                         <div class="flex items-center space-x-2">
+                            <!-- Rotate 90° Clockwise (Simple Lucide) -->
+                            <button data-index="${index}" class="rotate-btn text-purple-600 hover:text-purple-800 transition p-1 rounded-full hover:bg-purple-100" type="button" title="Rotate 90° clockwise">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9l-3.74 3.74"/></svg>
+                            </button>
+                            <!-- Flip Horizontal (Simple Lucide) -->
+                            <button data-index="${index}" class="flip-btn text-orange-600 hover:text-orange-800 transition p-1 rounded-full hover:bg-orange-100" type="button" title="Flip Horizontal">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M22 3H2v18h20zM7 12h10M12 7v10"/></svg>
+                            </button>
+                            <!-- Reset Crop (Simple Lucide) -->
                             <button data-index="${index}" class="reset-crop-btn text-blue-600 hover:text-blue-800 transition p-1 rounded-full hover:bg-blue-100" type="button" title="Reset crop to auto-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9L21 8"/><path d="M11 12h10M11 8h10M11 16h10"/></svg>
                             </button>
+                            <!-- Regenerate ID (Simple Lucide) -->
                             <button data-index="${index}" class="regenerate-id-btn text-yellow-600 hover:text-yellow-800 transition p-1 rounded-full hover:bg-yellow-100" type="button" title="Regenerate unique ID">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348H21m0 0-3.21-3.21M21 9.348l-3.21 3.21m-2.122-4.994a4.5 4.5 0 00-6.364-6.364M12 5.25v1.5m-5.878 11.246a4.5 4.5 0 006.364 0m-2.122-4.994l-.445-.445m.445.445L12 12m0 0h.01" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.79l-3 3"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.79l3-3"/></svg>
                             </button>
+                            <!-- Delete Image (Simple Lucide) -->
                             <button data-index="${index}" class="delete-btn text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-red-100" type="button" title="Remove image">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 pointer-events-none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- REVERTED TALLER SETTINGS AREA (Single Column) -->
                     <div class="px-4 py-2 border-b bg-white">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Local Ratio Override:</label>
+                        <!-- Ratio Selector -->
+                        <p class="text-xs font-medium mb-1 flex justify-between items-center">
+                            <span class="text-gray-500">Aspect Ratio:</span>
+                            <span class="ratio-status-indicator font-bold text-sm"></span>
+                        </p>
                         <select class="local-ratio-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none">
                             ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
                         </select>
                     </div>
 
                     <div class="px-4 py-2 border-b bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <!-- Fill/Color -->
                         <label class="flex items-center space-x-2 text-xs font-medium text-gray-600">
                             <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500" checked>
                             <span class="text-xs">Fill Empty Area:</span>
@@ -915,9 +1050,17 @@
                     </div>
                     
                     <div class="px-4 py-2 border-b bg-white">
+                        <!-- Output Resolution -->
                         <label class="block text-xs font-medium text-gray-500 mb-1">Output Resolution (Optional Fixed Pixels):</label>
                         <select class="local-resolution-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
-                             ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === '1080x1920' ? 'selected' : ''}>${p.label}</option>`).join('')}
+                            <!-- Removed "Inherit Global" option -->
+                            <option value="auto">None (Auto-size)</option>
+                            <option value="1080x1920">1080x1920 (Story - Default)</option>
+                            <option value="1920x1080">1920x1080 (HD)</option>
+                            <option value="1080x1080">1080x1080 (Square)</option>
+                            <option value="1280x720">1280x720 (720p)</option>
+                            <option value="4096x2160">4096x2160 (4K Cinema)</option>
+                            <option value="custom">Custom Pixels...</option>
                         </select>
                         
                         <div class="custom-res-inputs flex space-x-2 items-center hidden">
@@ -928,6 +1071,7 @@
                     </div>
 
                     <div class="px-4 py-3 border-b bg-white">
+                        <!-- Output Format -->
                         <label class="block text-xs font-medium text-gray-500 mb-1">Output Format:</label>
                         <select class="local-format-select w-full p-1 border border-gray-300 rounded text-sm bg-white focus:outline-none mb-2">
                             <option value="png">PNG (Best Quality/Transparency)</option>
@@ -938,6 +1082,7 @@
                             <input type="range" min="1" max="100" value="90" class="local-quality-slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
                         </div>
                     </div>
+                    <!-- END REVERTED TALLER SETTINGS AREA -->
 
                     <div class="flex-grow p-2">
                         <div class="gallery-item">
@@ -971,7 +1116,6 @@
                 const qualityControlDiv = card.querySelector('.local-quality-control');
                 const qualitySlider = card.querySelector('.local-quality-slider');
                 const resolutionSelect = card.querySelector('.local-resolution-select');
-                const customResInputsDiv = card.querySelector('.custom-res-inputs');
                 const localResolutionInputs = card.querySelectorAll('.local-output-res');
 
                 this.updateLocalVisualFeedback(card);
@@ -1001,21 +1145,18 @@
                     this.cropperInstances.push(item);
                     
                     const galleryItem = card.querySelector('.gallery-item');
-                    galleryItem.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false });
+                    // Prevent page scroll when zooming on cropper
+                    galleryItem.addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false }); 
 
                     ratioSelectElement.addEventListener('change', (e) => this.handleLocalRatioChange(e.target.value, item));
                     formatSelectElement.addEventListener('change', (e) => {
-                        const format = e.target.value;
-                        qualityControlDiv.classList.toggle('hidden', format !== 'jpeg');
-                        showMessage(`Output format for Image ${item.index + 1} set to ${format.toUpperCase()}.`, false);
                         this.updateLocalVisualFeedback(card);
+                        showMessage(`Output format for Image ${item.index + 1} set to ${e.target.value.toUpperCase()}.`, false);
                     });
                     qualitySlider.addEventListener('input', (e) => card.querySelector('.quality-display').textContent = e.target.value);
                     [localFillColor, localFillToggle].forEach(el => el.addEventListener('change', () => this.updateLocalVisualFeedback(card)));
                     
                     resolutionSelect.addEventListener('change', (e) => {
-                        customResInputsDiv.classList.toggle('hidden', e.target.value !== 'custom');
-                        if (e.target.value !== 'custom') localResolutionInputs.forEach(input => input.value = ''); 
                         this.updateLocalVisualFeedback(card);
                         showMessage(`Output resolution for Image ${item.index + 1} set to ${e.target.value === 'auto' ? 'Auto-size' : e.target.value}.`, false);
                     });
@@ -1023,6 +1164,8 @@
                     localResolutionInputs.forEach(input => input.addEventListener('input', () => this.updateLocalVisualFeedback(card)));
                     
                     this.updateGalleryIndexAndCount();
+                    // Initialize the indicator after the card is appended
+                    this.updateRatioIndicator(card, ratioSelectElement.value); 
                     if (index === this.cropperInstances.length - 1) toggleLoading(false);
                 };
                 reader.readAsDataURL(file);
@@ -1033,13 +1176,15 @@
                 if (files.length === 0) { if (this.fileInput.files.length === 0) this.fileInput.value = ''; return; }
 
                 if (this.cropperInstances.length > 0) {
-                    this.cropperInstances.forEach(item => item.cropper.destroy());
+                    // Destroy all previous cropper instances to free up memory
+                    this.cropperInstances.forEach(item => item.cropper?.destroy());
                     this.cropperInstances = [];
                     this.galleryContainer.innerHTML = '';
                 }
 
                 toggleLoading(true, `Loading ${files.length} images...`);
                 let validFiles = [];
+                // Simple filtering based on type and size
                 Array.from(files).forEach(file => {
                     if (validFiles.length < 30 && ['image/png', 'image/jpeg'].includes(file.type) && file.size <= 5 * 1024 * 1024) {
                         validFiles.push(file);
@@ -1059,28 +1204,33 @@
             },
 
             setupDragDrop: function() {
+                // Prevent default drag behaviors
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     this.uploadDropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
                 });
+                // Highlight drop zone on drag enter/over
                 ['dragenter', 'dragover'].forEach(eventName => {
                     this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.add('drop-active'), false);
                 });
+                // Remove highlight on drag leave/drop
                 ['dragleave', 'drop'].forEach(eventName => {
                     this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.remove('drop-active'), false);
                 });
+                // Handle dropped files
                 this.uploadDropZone.addEventListener('drop', (e) => this.processFiles(e.dataTransfer.files), false);
             },
 
             setupGlobalRatioHandlers: function() {
                 this.ratioBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        this.setCropperRatio(btn.dataset.ratio);
+                        const ratioString = btn.dataset.ratio;
+                        this.setCropperRatio(ratioString);
                         document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
                         btn.classList.add('active-ratio');
                         this.customWidthInput.value = '';
                         this.customHeightInput.value = '';
                         this.ratioError.classList.add('hidden');
-                        showMessage(`Global ratio set to ${btn.dataset.ratio.replace('/', ':')}`);
+                        showMessage(`Global ratio set to ${ratioString.replace('/', ':')}`);
                     });
                 });
                 this.applyCustomRatioBtn.addEventListener('click', () => {
@@ -1092,7 +1242,8 @@
                         this.ratioError.classList.remove('hidden');
                         return;
                     }
-                    this.setCropperRatio(`${width}/${height}`);
+                    const ratioString = `${width}/${height}`;
+                    this.setCropperRatio(ratioString);
                     document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
                     showMessage(`Custom ratio ${width}:${height} applied to all images.`);
                 });
@@ -1103,11 +1254,13 @@
                     const deleteBtn = e.target.closest('.delete-btn');
                     const resetCropBtn = e.target.closest('.reset-crop-btn');
                     const regenerateIdBtn = e.target.closest('.regenerate-id-btn');
+                    const rotateBtn = e.target.closest('.rotate-btn'); 
+                    const flipBtn = e.target.closest('.flip-btn');     
                     const localDownloadBtn = e.target.closest('.local-download-btn');
 
-                    const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || regenerateIdBtn?.dataset.index || localDownloadBtn?.dataset.index;
+                    const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || regenerateIdBtn?.dataset.index || rotateBtn?.dataset.index || flipBtn?.dataset.index || localDownloadBtn?.dataset.index;
                     const indexVal = parseInt(index, 10);
-                    const item = this.cropperInstances.find(i => i.index === indexVal);
+                    const item = this.cropperInstances.find(i => i.index === indexVal); 
 
                     if (!item) return;
 
@@ -1117,15 +1270,30 @@
                         this.cropperInstances = this.cropperInstances.filter(i => i.index !== indexVal);
                         this.cropperInstances = this.cropperInstances.map((i, newIndex) => ({ ...i, index: newIndex }));
                         this.updateGalleryIndexAndCount();
+                        showMessage(`Image ${indexVal + 1} removed from batch.`);
                         return;
                     }
                     
                     if (resetCropBtn) {
                         const localRatioValue = item.card.querySelector('.local-ratio-select').value;
-                        let ratio = localRatioValue === 'GLOBAL' ? this.currentAspectRatio : (localRatioValue === 'NaN' ? NaN : eval(localRatioValue));
+                        let ratio = localRatioValue === 'GLOBAL' ? this.currentAspectRatio : ratioToFloat(localRatioValue);
                         const imageElement = item.cropper.element;
                         this.applyAutoCenter(item.cropper, ratio, imageElement.naturalWidth, imageElement.naturalHeight);
                         showMessage(`Crop for Image ${item.index + 1} reset to auto-center.`);
+                        return;
+                    }
+
+                    if (rotateBtn) { 
+                        item.cropper.rotate(90);
+                        showMessage(`Image ${item.index + 1} rotated 90° clockwise.`);
+                        return;
+                    }
+
+                    if (flipBtn) { 
+                        const scaleX = item.cropper.getData().scaleX || 1;
+                        const newScaleX = scaleX === 1 ? -1 : 1;
+                        item.cropper.scaleX(newScaleX);
+                        showMessage(`Image ${item.index + 1} flipped horizontally.`);
                         return;
                     }
 
@@ -1148,20 +1316,19 @@
                 if (!isBatch) toggleLoading(true, `Processing single file...`);
                 try {
                     const cropper = item.cropper;
-                    const cropData = cropper.getData();
                     const card = item.card;
                     const localFillToggle = card.querySelector('.local-fill-toggle');
                     const localFillColor = card.querySelector('.local-fill-color');
                     const formatSelectElement = card.querySelector('.local-format-select');
                     const qualitySlider = card.querySelector('.local-quality-slider');
-                    const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card);
+                    const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card); 
 
                     let useSolidFill = localFillToggle.checked;
                     const finalFillColor = localFillColor.value; 
                     let outputFormat = formatSelectElement.value;
                     const jpegQuality = parseInt(qualitySlider.value, 10) / 100;
 
-                    if (!useSolidFill) outputFormat = 'png';
+                    if (!useSolidFill) outputFormat = 'png'; 
                     
                     const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
                     const extension = outputFormat === 'jpeg' ? 'jpeg' : 'png';
@@ -1205,14 +1372,14 @@
                     await new Promise(resolve => {
                         canvasToBlob.toBlob((blob) => {
                             if (blob) { saveAs(blob, filename); showMessage(`Single file downloaded as ${filename}.`); } 
-                            else { throw new Error("Failed to create image blob."); }
+                            else { showMessage("Failed to create image blob.", true); }
                             resolve();
                         }, mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0);
                     });
                     
                 } catch (e) {
                     console.error("Error processing and downloading file:", e);
-                    if (!isBatch) showMessage("Error downloading the image.", true);
+                    if (!isBatch) showMessage("Error downloading the image. Check console for details.", true);
                     throw e; 
                 } finally {
                     if (!isBatch) toggleLoading(false);
@@ -1255,7 +1422,7 @@
                         saveAs(zipBlob, "batch_cropped_images.zip");
                         toggleLoading(false);
                         this.downloadAllBtn.disabled = false;
-                        showMessage(`Batch download complete! ${totalFiles} files compiled into ZIP.${failureCount > 0 ? ` (${failureCount} failed).` : ''}`);
+                        showMessage(`Batch download complete! ${successfulFiles.length} files compiled into ZIP.${failureCount > 0 ? ` (${failureCount} failed).` : ''}`);
                     } catch (e) {
                         toggleLoading(false);
                         this.downloadAllBtn.disabled = false;

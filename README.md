@@ -1,74 +1,81 @@
-🎬 Digital Asset Tools: Batch Cropper & Frame Capture
-This application bundles two powerful, client-side tools designed for efficient media asset preparation directly in your browser. All processing, including image manipulation, frame extraction, and ZIP compilation, is handled locally for speed and privacy.
+🎬 Digital Asset Tools (Batch Cropper & Video Frame Capture)
+This is a comprehensive, single-file web application designed for fast, client-side manipulation of images and videos. It eliminates the need for server-side processing or external software by leveraging modern browser APIs, including the HTML5 Canvas, Cropper.js, and browser-based file utilities.
 
-✨ Application Structure
-The interface uses a sticky header for quick tool switching and a responsive two-column layout on large screens:
+✨ Features
+The application is split into two primary tools accessible via the header navigation:
 
-Controls (Right Sticky Sidebar): Provides persistent access to file upload, global settings, and batch download buttons for the active tool, regardless of scroll position.
+1. Batch Cropper
+The Batch Cropper allows users to upload multiple JPEG or PNG files and apply consistent or customized cropping rules across the entire batch before downloading them as a single ZIP file.
 
-Tool Content (Left Area): Displays the working area, such as the Cropper Gallery or the Video Player.
-
-🖼️ Tool 1: Batch Image Cropper
-This tool streamlines the process of cropping multiple images to a specific aspect ratio or fixed pixel resolution.
-
-🚀 Batch Cropper Workflow
-1. Upload Files (Sticky Sidebar): Drag-and-drop or select your PNG/JPEG images.
-
-2. Set Global Settings (Sticky Sidebar): Define the default Aspect Ratio (e.g., 9:16) for all images.
-
-4. Crop Gallery (Left Area): Review all images and use the local controls for granular adjustments.
-
-3. Batch Download (Sticky Sidebar): Use the main button to download all processed images in a single ZIP file.
-
-🛠️ Local Controls Explained (Per Image)
-Control
+Feature
 
 Description
 
-Default Setting
+Global Aspect Ratio
 
-Local Ratio Override
+Set a default ratio (e.g., 16:9, 1:1, 9:16) that applies to all images.
 
-Overrides the global aspect ratio for this image only. Keeps the mouse wheel zoom enabled for precise control, while preventing accidental scrolling of the main page.
+Local Overrides
 
-Uses Global Default
+Override the global ratio, output resolution, output format (PNG/JPEG), and JPEG quality for individual images.
 
-Output Resolution
+Visual Indicators
 
-Sets the final image dimensions in exact pixels. Use presets (like 1080x1920) or define custom WxH.
+Each card displays a clear indicator showing whether the image is using the Global Default or a Local Override ratio.
 
-1080x1920 (Story)
+Image Manipulation
 
-Fill Empty Area
+Controls for Rotation (90° clockwise) and Horizontal Flipping are available on each card.
 
-Toggles solid color filling for transparent areas (occurs when cropping outside the original image bounds).
+Resizing & Fill
 
-Checked (White Fill)
+Optionally set fixed output resolutions and define a solid fill color (default is white) if the cropped area doesn't match the required output dimensions.
 
-Output Format
+Batch Download
 
-Allows selection between PNG (better for quality/transparency) or JPEG (smaller file size, uses quality slider).
+Compiles all processed images into a single .zip file for efficient downloading using JSZip.
 
-PNG
+2. Video Frame Capture
+This tool allows users to load a video file and extract high-quality still frames (PNG) at specific moments or in timed batches.
 
-Download Single Image
+Feature
 
-Downloads the current image immediately, applying all local settings.
+Description
 
-N/A
+Frame Extraction
 
-🎥 Tool 2: Video Frame Capture
-This tool lets you upload a short video and extract individual frames as high-quality PNG images.
+Capture the exact frame at the current video playback position.
 
-🚀 Frame Capture Workflow
-1. Upload Video (Left Area): Select an MP4, MOV, or other common video file.
+Batch Capture
 
-Capture Frames:
+Automatically capture a user-defined number of frames at a set time interval (e.g., capture 5 frames every 0.5 seconds).
 
-Single Frame: Manually move the video timeline scrubber to the desired moment, then click "Capture Frame".
+Frame Gallery
 
-Auto Batch: Use "Capture 10 Frames (Auto)" to quickly extract 10 frames based on the current time and the set interval (in seconds).
+Review captured frames in a sidebar gallery. Frames can be individually deleted.
 
-2. Captured Frames (Right Sidebar): Review the gallery of captured frames. You can delete frames individually.
+Batch Export
 
-Download: Click "Download All Frames (ZIP)" to save all captured PNG images in a compressed archive.
+Download all captured frames compiled into a single .zip file.
+
+🛠️ Technical Stack
+This is a highly optimized, single-file HTML application utilizing client-side resources:
+
+HTML5/CSS3 (Tailwind CSS): For structure, styling, and a fully responsive layout.
+
+JavaScript (ES6+): All application logic, state management, and file handling.
+
+Cropper.js: Provides the interactive, touch-friendly image cropping interface.
+
+JSZip: Used for client-side compression to create the batch .zip download files for both cropped images and video frames.
+
+FileSaver.js: Enables cross-browser saving of the generated Blobs (images and ZIP archives).
+
+🚀 Usage
+Open digital_asset_tools.html in any modern web browser.
+
+Switch between Batch Cropper and Video Frame Capture using the buttons in the header.
+
+Follow the numbered steps provided in the sidebar of each tool.
+
+Use the global settings for batch rules, and individual card controls for fine-tuning specific files.
