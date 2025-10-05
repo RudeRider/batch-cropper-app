@@ -13,12 +13,6 @@
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <!-- Prism.js for Syntax Highlighting (Dark Theme & JSON language) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-    <!-------------------------------------------------------------------->
-
     <style>
         /* Global Tool Menu Button Styling */
         .tool-menu-btn {
@@ -80,67 +74,18 @@
             display: none; /* Always hidden, used for drawing frames */
         }
         
-        /* NEW: Mirror Editor Styles (Updated for correct Z-index) */
-        .editor-container {
-            position: relative;
+        /* New Document Editor Styles (INVERTED TO DARK THEME) */
+        .document-editor {
+            /* Dark Theme Colors */
+            background-color: #1f2937 !important; /* bg-gray-800 equivalent */
+            color: #f3f4f6 !important; /* text-gray-100 equivalent */
+            
             min-height: 50vh;
-            border-radius: 0.5rem;
-            border: 1px solid #4b5563; /* border-gray-600 */
-            background-color: #2d2d2d; /* Prism-tomorrow background */
+            line-height: 1.6;
+            /* Apply base styling */
+            @apply p-8 shadow-inner rounded-xl border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500 overflow-y-auto;
         }
         
-        #text-input, .highlighted-output {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 1rem;
-            margin: 0;
-            border: none;
-            outline: none;
-            box-sizing: border-box;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.875rem; /* text-sm */
-            line-height: 1.5;
-            resize: none;
-            white-space: pre; /* Essential for alignment */
-            word-wrap: normal;
-            overflow: auto; /* Match container scrolling */
-        }
-        
-        #text-input {
-            z-index: 10; /* CRITICAL FIX: Ensures the textarea is on top for interaction */
-            background-color: transparent; 
-            color: transparent; /* Hide actual text when highlighting is active */
-            caret-color: white; /* Keep the cursor visible */
-            opacity: 0.001; /* Set to transparent by default (live highlight mode) */
-        }
-        
-        #text-input.opaque {
-            background-color: #374151; /* bg-gray-700 for non-highlighted plain text */
-            color: #f3f4f6; /* text-gray-100 */
-            opacity: 1; /* Full opacity when not JSON or error state */
-        }
-        
-        /* Highlight Layer */
-        .highlighted-output {
-            z-index: 1; /* Behind the textarea */
-            display: block; 
-        }
-        /* Ensure Prism.js PRE block matches editor space */
-        .highlighted-output pre[class*="language-"] {
-            height: 100%;
-            padding: 1rem !important;
-            margin: 0 !important;
-            background: none !important;
-            border: none !important;
-            line-height: 1.5;
-            font-size: 0.875rem;
-            color: #ccc; 
-            overflow: visible; 
-        }
-
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="App.init()">
@@ -169,7 +114,7 @@
                     <span class="flex items-center space-x-2">
                         <!-- File Edit Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                        <span>Text Editor</span>
+                        <span>Document Pad</span>
                     </span>
                 </button>
             </nav>
@@ -395,23 +340,33 @@
         </div>
     </div>
     
-    <!-- --- TEXT EDITOR APP CONTAINER (LIVE EDITABLE HIGHLIGHTING) --- -->
+    <!-- --- TEXT EDITOR APP CONTAINER (SIMPLE DOCUMENT EDITOR) --- -->
     <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Text Editor / Scratchpad (Live JSON Highlight)</h2>
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Simple Document Pad (Rich Text Editor)</h2>
         
         <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
             <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
+                
+                <!-- Word/Character Counts -->
                 <div class="flex flex-col space-y-1 text-sm text-gray-300">
                     <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
                     <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
                 </div>
-                <div class="flex space-x-3">
-                    <input type="text" id="filename-input" placeholder="filename.txt (optional)" value="scratchpad" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
-
-                    <!-- Reverted: Removed Toggle JSON View button -->
+                
+                <!-- Toolbar and Download -->
+                <div class="flex flex-wrap items-center space-x-3">
                     
+                    <!-- Formatting Buttons -->
+                    <button id="format-bold-btn" class="bg-gray-700 text-gray-100 font-bold px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Bold">B</button>
+                    <button id="format-italic-btn" class="bg-gray-700 text-gray-100 italic px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Italic">I</button>
+                    <button id="format-underline-btn" class="bg-gray-700 text-gray-100 underline px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Underline">U</button>
+                    
+                    <!-- NO GEMINI BUTTONS -->
+
+                    <input type="text" id="filename-input" placeholder="filename.html (optional)" value="document_scratchpad" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
+
                     <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                        Download TXT
+                        Download HTML
                     </button>
                     <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
                         Clear
@@ -419,15 +374,9 @@
                 </div>
             </div>
             
-            <!-- Live Mirror Editor Container -->
-            <div class="editor-container">
-                <!-- Highlighted background content (Mirror) -->
-                <div id="highlighted-output" class="highlighted-output">
-                    <pre><code id="json-code-block" class="language-json"></code></pre>
-                </div>
-                
-                <!-- Foreground editable textarea (Transparent layer) -->
-                <textarea id="text-input" class="w-full font-mono text-sm shadow-inner"></textarea>
+            <!-- Content Editable Document Area -->
+            <div id="text-input" contenteditable="true" class="document-editor" role="textbox" aria-multiline="true">
+                <p>Start writing your document here...</p>
             </div>
         </div>
     </div>
@@ -549,68 +498,53 @@
                 } else if (toolId === 'video') {
                     document.title = 'Video Frame Capture | Digital Asset Tools';
                 } else if (toolId === 'text') {
-                    document.title = 'Text Editor | Digital Asset Tools';
+                    document.title = 'Document Pad | Digital Asset Tools';
                 }
             }
         };
 
 
         // =========================================================================
-        // === TEXT EDITOR TOOL LOGIC (LIVE EDITABLE HIGHLIGHTING) ===
+        // === TEXT EDITOR TOOL LOGIC (SIMPLE DOCUMENT PAD) ===
         // =========================================================================
 
-        /**
-         * Safely strips C-style // comments from JSON. Necessary because JSON.parse() fails on comments.
-         * Note: This is a simplified regex and might fail on complex nested quotes, but handles the user's scenario.
-         * @param {string} text 
-         * @returns {string} Text with comments removed.
-         */
-        const stripJsonComments = (text) => {
-            // Regex to match C-style comments outside of double quotes
-            // This is a robust pattern often used for this task.
-            return text.replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)/gm, (match, p1, p2) => {
-                // If it's a double-slash comment (p1) or a block comment (p2), replace it with an empty string.
-                // We assume the user isn't using // inside a string value.
-                return '';
-            });
-        };
-
         const textTool = {
-            input: document.getElementById('text-input'),
+            input: document.getElementById('text-input'), // Now a contenteditable div
             downloadBtn: document.getElementById('download-text-btn'),
             clearBtn: document.getElementById('clear-text-btn'),
             filenameInput: document.getElementById('filename-input'),
             wordCountDisplay: document.getElementById('word-count'),
             charCountDisplay: document.getElementById('char-count'),
-            // Removed: toggleBtn
             
-            // Mirror elements
-            highlightedOutput: document.getElementById('highlighted-output'),
-            jsonCodeBlock: document.getElementById('json-code-block'),
+            // New format buttons
+            boldBtn: document.getElementById('format-bold-btn'),
+            italicBtn: document.getElementById('format-italic-btn'),
+            underlineBtn: document.getElementById('format-underline-btn'),
 
-            // Removed: manualPlainTextMode flag
 
             init: function() {
-                this.input.addEventListener('input', () => this.updateStats());
-                this.input.addEventListener('scroll', () => this.syncScroll()); 
+                // Use input/keyup/mouseup for document editing
+                ['input', 'keyup', 'mouseup', 'focus', 'blur'].forEach(eventName => {
+                    this.input.addEventListener(eventName, () => this.updateStats());
+                });
+                
                 this.clearBtn.addEventListener('click', () => this.clearEditor());
                 this.downloadBtn.addEventListener('click', () => this.downloadText());
-                // Removed: toggleBtn listener
 
-                // Initial setup
+                // Rich text command listeners
+                this.boldBtn.addEventListener('click', () => this.formatText('bold'));
+                this.italicBtn.addEventListener('click', () => this.formatText('italic'));
+                this.underlineBtn.addEventListener('click', () => this.formatText('underline'));
+
+
+                // Initial setup and placeholder
+                this.input.innerHTML = `<p>Start writing your document here...</p>`;
                 this.updateStats();
             },
 
-            syncScroll: function() {
-                // Synchronize scroll position between the transparent textarea and the highlighted mirror
-                this.highlightedOutput.scrollTop = this.input.scrollTop;
-                this.highlightedOutput.scrollLeft = this.input.scrollLeft;
-            },
-            
-            // Removed: toggleHighlight function
-
             updateStats: function() {
-                const text = this.input.value;
+                // Get plaintext content from the contenteditable div
+                const text = this.input.textContent; 
                 const charCount = text.length;
                 
                 const words = text.trim().split(/\s+/).filter(word => word.length > 0);
@@ -619,63 +553,63 @@
                 this.charCountDisplay.textContent = charCount;
                 this.wordCountDisplay.textContent = wordCount;
                 this.downloadBtn.disabled = charCount === 0;
-
-                // --- Live Highlighting Logic (Reverted to automatic) ---
-                const cleanedText = stripJsonComments(text);
-                
+            },
+            
+            /**
+             * Applies simple rich text formatting using document.execCommand().
+             * @param {string} command - 'bold', 'italic', or 'underline'.
+             */
+            formatText: function(command) {
                 try {
-                    // 1. Attempt to parse the cleaned text
-                    JSON.parse(cleanedText); 
-                    
-                    // 2. Highlight Mode (JSON detected)
-                    this.jsonCodeBlock.textContent = text;
-                    this.jsonCodeBlock.classList.add('language-json');
-                    Prism.highlightElement(this.jsonCodeBlock);
-                    
-                    // 3. Make the textarea transparent
-                    this.input.classList.remove('opaque');
-                    this.input.style.opacity = '0.001'; 
-                    this.input.style.color = 'transparent'; 
+                    // document.execCommand applies formatting to the current selection
+                    document.execCommand(command, false, null);
+                    // Force the editor to regain focus after command (optional, improves UX)
+                    this.input.focus();
                 } catch (e) {
-                    // 1. Plain Text Mode (Fallback/Error state)
-                    this.jsonCodeBlock.textContent = text;
-                    this.jsonCodeBlock.classList.remove('language-json');
-                    Prism.highlightElement(this.jsonCodeBlock);
-                    
-                    // 2. Make the textarea fully opaque
-                    this.input.style.opacity = '1'; 
-                    this.input.style.color = '#f3f4f6'; 
-                    this.input.classList.add('opaque');
+                    console.error("Failed to execute format command:", e);
                 }
             },
 
             clearEditor: function() {
-                this.input.value = '';
+                this.input.innerHTML = `<p>Start writing your document here...</p>`;
                 this.updateStats();
-                showMessage("Text editor cleared.");
+                showMessage("Document editor cleared.");
             },
 
             downloadText: function() {
-                const text = this.input.value;
-                if (text.length === 0) {
+                const htmlContent = this.input.innerHTML; // Get formatted HTML
+                const plainTextContent = this.input.textContent; 
+
+                if (plainTextContent.length === 0) {
                     showMessage("Editor is empty. Nothing to download.", true);
                     return;
                 }
 
-                let filename = this.filenameInput.value.trim() || 'scratchpad';
+                let filename = this.filenameInput.value.trim() || 'document_scratchpad';
                 
-                // Ensure filename ends with .txt if not present
-                if (!filename.toLowerCase().endsWith('.txt')) {
-                    filename += '.txt';
-                }
+                // Ensure filename ends with .html to preserve formatting
+                filename = filename.replace(/\.(txt|html|json)$/i, '') + '.html';
 
                 try {
-                    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+                    // Create a minimal HTML document wrapper for the content, ensuring dark theme colors are NOT applied
+                    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${filename}</title>
+    <!-- Use standard black text on white background for the downloaded file -->
+    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #1f2937; background-color: #ffffff; }</style>
+</head>
+<body>
+${htmlContent}
+</body>
+</html>`;
+                    const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
                     saveAs(blob, filename);
-                    showMessage(`Downloaded text as "${filename}".`);
+                    showMessage(`Downloaded document as "${filename}".`);
                 } catch (e) {
-                    console.error("Error downloading text:", e);
-                    showMessage("Failed to download text file.", true);
+                    console.error("Error downloading document:", e);
+                    showMessage("Failed to download document file.", true);
                 }
             }
         };
