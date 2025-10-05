@@ -408,6 +408,8 @@
                 <div class="flex space-x-3">
                     <input type="text" id="filename-input" placeholder="filename.txt (optional)" value="scratchpad" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
 
+                    <!-- Reverted: Removed Toggle JSON View button -->
+                    
                     <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                         Download TXT
                     </button>
@@ -580,17 +582,20 @@
             filenameInput: document.getElementById('filename-input'),
             wordCountDisplay: document.getElementById('word-count'),
             charCountDisplay: document.getElementById('char-count'),
+            // Removed: toggleBtn
             
             // Mirror elements
             highlightedOutput: document.getElementById('highlighted-output'),
             jsonCodeBlock: document.getElementById('json-code-block'),
 
+            // Removed: manualPlainTextMode flag
 
             init: function() {
                 this.input.addEventListener('input', () => this.updateStats());
                 this.input.addEventListener('scroll', () => this.syncScroll()); 
                 this.clearBtn.addEventListener('click', () => this.clearEditor());
                 this.downloadBtn.addEventListener('click', () => this.downloadText());
+                // Removed: toggleBtn listener
 
                 // Initial setup
                 this.updateStats();
@@ -601,6 +606,8 @@
                 this.highlightedOutput.scrollTop = this.input.scrollTop;
                 this.highlightedOutput.scrollLeft = this.input.scrollLeft;
             },
+            
+            // Removed: toggleHighlight function
 
             updateStats: function() {
                 const text = this.input.value;
@@ -613,42 +620,31 @@
                 this.wordCountDisplay.textContent = wordCount;
                 this.downloadBtn.disabled = charCount === 0;
 
-                // --- Live Highlighting Logic ---
+                // --- Live Highlighting Logic (Reverted to automatic) ---
                 const cleanedText = stripJsonComments(text);
-
+                
                 try {
                     // 1. Attempt to parse the cleaned text
-                    const parsed = JSON.parse(cleanedText);
+                    JSON.parse(cleanedText); 
                     
-                    // 2. Format the original text (including comments) for the code block
-                    // We must use the original text in the code block to preserve the user's comments/formatting 
-                    // for the visual mirror, otherwise the cursor won't align.
+                    // 2. Highlight Mode (JSON detected)
                     this.jsonCodeBlock.textContent = text;
                     this.jsonCodeBlock.classList.add('language-json');
-                    
-                    // 3. Highlight the content (Prism handles invalid characters if we tell it it's JSON)
                     Prism.highlightElement(this.jsonCodeBlock);
                     
-                    // 4. Make the textarea transparent to show the highlighted background
+                    // 3. Make the textarea transparent
                     this.input.classList.remove('opaque');
-                    
-                    // This is essential for the live mirror effect
                     this.input.style.opacity = '0.001'; 
                     this.input.style.color = 'transparent'; 
-
                 } catch (e) {
-                    // If parsing fails (invalid JSON or plain text)
-                    
-                    // 1. Display the raw text in the mirror for accurate scroll/line syncing
+                    // 1. Plain Text Mode (Fallback/Error state)
                     this.jsonCodeBlock.textContent = text;
                     this.jsonCodeBlock.classList.remove('language-json');
-                    
-                    // 2. Clear highlighting by re-running Prism without the language class
                     Prism.highlightElement(this.jsonCodeBlock);
                     
-                    // 3. Make the textarea fully opaque (normal editing)
+                    // 2. Make the textarea fully opaque
                     this.input.style.opacity = '1'; 
-                    this.input.style.color = '#f3f4f6'; // Revert text color to visible
+                    this.input.style.color = '#f3f4f6'; 
                     this.input.classList.add('opaque');
                 }
             },
@@ -1012,7 +1008,7 @@
             
             // Global Output State (RE-ADDED RESOLUTION STATE)
             globalOutputFormat: 'jpeg', 
-            globalJpegQuality: 0.9,    
+            globalJpegQuality: 0.9, 	
             globalOutputWidth: null, 
             globalOutputHeight: null, 
             
@@ -1631,7 +1627,7 @@
                     const finalFillColor = localFillColor.value; 
                     
                     let outputFormat = this.globalOutputFormat; 
-                    const jpegQuality = this.globalJpegQuality;    
+                    const jpegQuality = this.globalJpegQuality; 	
 
                     if (!useSolidFill) outputFormat = 'png'; 
                     
