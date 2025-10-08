@@ -387,7 +387,6 @@
     <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
         
-        <!-- Simplified Structure: Removed flex-row wrapper for notebooks -->
         <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
             <!-- HEADER ROW 1: Stats and Download/Clear Buttons -->
             <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
@@ -396,9 +395,21 @@
                     <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
                     <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Loading Cloud Data...</span></p>
                 </div>
-                <div class="flex space-x-3">
+                <!-- Controls and Download Buttons -->
+                <div class="flex space-x-3 flex-wrap justify-end">
                     <input type="text" id="filename-input" placeholder="filename.html (optional)" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
 
+                    <!-- NEW: Copy Clean Text Button -->
+                    <button id="copy-text-btn" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button" title="Copy only the plain text content to clipboard">
+                        Copy Clean
+                    </button>
+
+                    <!-- NEW: Download TXT Button -->
+                    <button id="download-txt-btn" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                        Download TXT
+                    </button>
+
+                    <!-- Existing: Download HTML Button -->
                     <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
                         Download HTML
                     </button>
@@ -408,7 +419,22 @@
                 </div>
             </div>
 
-            <!-- NEW FLEX CONTAINER: Toolbar and Editor -->
+
+            <!-- NEW: Notebook Tabs (Horizontal, above main content) -->
+            <div class="mb-6">
+                <div class="bg-gray-700 rounded-xl p-2 border border-gray-600 shadow-lg flex flex-row flex-wrap gap-2 justify-start">
+                    <button onclick="window.textTool.switchNotebook('notebook1')" id="notebook-tab-notebook1" class="px-4 py-2 rounded-lg font-semibold transition text-white bg-indigo-600 hover:bg-indigo-500 flex-grow sm:flex-grow-0">
+                        Notebook 1
+                    </button>
+                    <button onclick="window.textTool.switchNotebook('notebook2')" id="notebook-tab-notebook2" class="px-4 py-2 rounded-lg font-semibold transition text-gray-300 bg-gray-600 hover:bg-gray-500 flex-grow sm:flex-grow-0">
+                        Scratchpad 2
+                    </button>
+                </div>
+            </div>
+            <!-- END NEW: Notebook Tabs -->
+
+
+            <!-- NEW FLEX CONTAINER: Toolbar and Editor (re-using old inner flex) -->
             <div class="flex flex-col md:flex-row gap-4">
                 
                 <!-- 2. SIDE TOOLBAR (Vertical on desktop, Horizontal on mobile) -->
@@ -613,7 +639,7 @@
         // =========================================================================
         
         const textTool = {
-            // Updated reference to target the contenteditable div
+            // DOM Elements
             contentDiv: document.getElementById('text-editor-content'),
             downloadBtn: document.getElementById('download-text-btn'),
             clearBtn: document.getElementById('clear-text-btn'),
@@ -621,14 +647,21 @@
             wordCountDisplay: document.getElementById('word-count'),
             charCountDisplay: document.getElementById('char-count'),
             statusDisplay: document.getElementById('text-editor-status'),
+            copyBtn: document.getElementById('copy-text-btn'), 
+            downloadTxtBtn: document.getElementById('download-txt-btn'),
             
-            // REMOVED: currentNotebook state
+            // State
+            currentNotebook: 'notebook1', // Re-added state for tabs
             unsubscribeListener: null,
             
             init: function() {
                 this.contentDiv.addEventListener('input', () => this.updateStatsAndSave());
                 this.clearBtn.addEventListener('click', () => this.clearEditor());
                 this.downloadBtn.addEventListener('click', () => this.downloadText());
+
+                // Listeners for prompt optimization features
+                this.copyBtn.addEventListener('click', () => this.copyCleanText());
+                this.downloadTxtBtn.addEventListener('click', () => this.downloadTxt());
 
                 // Attach rich text formatting listeners
                 document.querySelectorAll('#text-transform-controls .rich-text-btn').forEach(btn => {
@@ -638,14 +671,42 @@
                     ));
                 });
                 
-                // Removed notebook tab styling logic
-                
+                // NEW: Initialize tab UI
+                this.updateNotebookTabUI(this.currentNotebook);
+
                 // Initial setup of display only
                 this.updateStats();
                 this.updateStatus('Waiting for Authentication...');
             },
-            
-            // REMOVED: switchNotebook function
+
+            // NEW: Helper to update tab visual state
+            updateNotebookTabUI: function(activeId) {
+                // Ensure all tabs exist before trying to update them
+                const tabs = ['notebook1', 'notebook2'];
+                tabs.forEach(id => {
+                    const btn = document.getElementById(`notebook-tab-${id}`);
+                    if (btn) {
+                         if (id === activeId) {
+                             btn.classList.remove('bg-gray-600', 'text-gray-300');
+                             btn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-500');
+                         } else {
+                             btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-500');
+                             btn.classList.add('bg-gray-600', 'text-gray-300', 'hover:bg-gray-500');
+                         }
+                    }
+                });
+            },
+
+            // NEW: Notebook switching handler
+            switchNotebook: function(notebookId) {
+                if (this.currentNotebook === notebookId) return;
+
+                this.currentNotebook = notebookId;
+                this.updateNotebookTabUI(notebookId);
+                // Load will automatically handle unsubscribing from the old listener
+                this.loadTextFromFirestore(); 
+                showMessage(`Switched to ${notebookId.replace('notebook', 'Notebook ').replace('2', ' 2')}`);
+            },
             
             updateStatus: function(text, isError = false) {
                  this.statusDisplay.textContent = text;
@@ -661,8 +722,8 @@
 
             getDocRef: function() {
                 if (!db || !userId || !isAuthReady) return null;
-                // Simplified path to single document:
-                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/document`;
+                // Path now uses the current notebook ID
+                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/${this.currentNotebook}`;
                 return doc(db, docPath);
             },
 
@@ -699,7 +760,7 @@
                     return;
                 }
                 
-                // 2. Attach a new real-time listener to the single document
+                // 2. Attach a new real-time listener to the current document
                 this.unsubscribeListener = onSnapshot(docRef, (docSnap) => {
                     if (!isAuthReady) return; // Ignore updates until initial auth is confirmed
 
@@ -744,6 +805,8 @@
                 this.charCountDisplay.textContent = charCount;
                 this.wordCountDisplay.textContent = wordCount;
                 this.downloadBtn.disabled = charCount === 0;
+                this.copyBtn.disabled = charCount === 0; 
+                this.downloadTxtBtn.disabled = charCount === 0; 
             },
 
             clearEditor: async function() {
@@ -756,7 +819,7 @@
 
                 try {
                     await deleteDoc(docRef);
-                    showMessage("Editor cleared and cloud save deleted.", false);
+                    showMessage(`Editor for ${this.currentNotebook} cleared and cloud save deleted.`, false);
                     this.updateStatus('Cleared and deleted from cloud.', false);
                 } catch (e) {
                     // If the document didn't exist, this might fail, but that's okay.
@@ -766,8 +829,60 @@
                 }
             },
             
+            // Copies only the plain text to clipboard
+            copyCleanText: function() {
+                const text = this.contentDiv.textContent;
+                
+                // Use a hidden textarea for reliable cross-browser copy
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed'; 
+                textarea.style.opacity = 0; 
+                document.body.appendChild(textarea);
+                
+                // Select and copy
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage("Clean text copied to clipboard!");
+                } catch (e) {
+                    console.error("Copy command failed:", e);
+                    showMessage("Failed to copy text. Please copy manually.", true);
+                }
+                
+                document.body.removeChild(textarea);
+            },
+
+            // Downloads content as a plain text file
+            downloadTxt: function() {
+                const plainText = this.contentDiv.textContent;
+                if (plainText.length === 0) {
+                    showMessage("Editor is empty. Nothing to download.", true);
+                    return;
+                }
+
+                let filename = this.filenameInput.value.trim() || 'rich_text_document';
+                
+                // Ensure filename ends with .txt
+                if (filename.toLowerCase().endsWith('.html')) {
+                    filename = filename.replace(/\.html$/i, '') + '.txt';
+                } else if (!filename.toLowerCase().endsWith('.txt')) {
+                    filename += '.txt';
+                }
+
+                try {
+                    const blob = new Blob([plainText], { type: "text/plain;charset=utf-8" });
+                    saveAs(blob, filename);
+                    showMessage(`Downloaded plain text as "${filename}".`);
+                } catch (e) {
+                    console.error("Error downloading text:", e);
+                    showMessage("Failed to download TXT file.", true);
+                }
+            },
+
+            // Existing: Downloads content as an HTML file
             downloadText: function() {
-                // Now downloads HTML content wrapped in a minimal HTML file
+                // ... (Existing downloadText logic for HTML)
                 const content = this.contentDiv.innerHTML;
                 const plainText = this.contentDiv.textContent;
                 
@@ -780,10 +895,9 @@
                 
                 // Ensure filename ends with .html for rich text download
                 if (!filename.toLowerCase().endsWith('.html')) {
-                    filename = filename.replace(/\.(txt|md)$/i, '') + '.html'; // Replace old extensions if present
+                    filename = filename.replace(/\.(txt|md)$/i, '') + '.html'; 
                 }
 
-                // Wrap content in a basic HTML document structure to ensure styles apply
                 const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -810,6 +924,7 @@ ${content}
                 }
             },
 
+
             /**
              * Handles rich text formatting commands using document.execCommand.
              * @param {string} command - The command to execute (e.g., 'bold', 'insertUnorderedList').
@@ -832,7 +947,6 @@ ${content}
         };
 
         // --- EXPOSE GLOBAL REFERENCES ---
-        // This is necessary for the external HTML onclick attributes
         window.textTool = textTool; 
         
         // =========================================================================
