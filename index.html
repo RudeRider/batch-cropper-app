@@ -74,16 +74,59 @@
             display: none; /* Always hidden, used for drawing frames */
         }
         
-        /* New Document Editor Styles (INVERTED TO DARK THEME) */
-        .document-editor {
-            /* Dark Theme Colors */
-            background-color: #1f2937 !important; /* bg-gray-800 equivalent */
-            color: #f3f4f6 !important; /* text-gray-100 equivalent */
-            
+        /* NEW: Editor Styles (Microsoft Word Minimal Version) */
+        .editor-container {
+            position: relative;
             min-height: 50vh;
+            border-radius: 0.5rem;
+            border: 1px solid #4b5563; /* border-gray-600 */
+            background-color: #374151; /* Dark editor container background */
+            padding: 0; /* Remove padding from container */
+        }
+        
+        /* --- START DARK THEME EDITOR CONTENT STYLES --- */
+        #text-editor-content {
+            /* Dark Theme: Light text on dark background */
+            padding: 2rem;
+            min-height: 50vh;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
             line-height: 1.6;
-            /* Apply base styling */
-            @apply p-8 shadow-inner rounded-xl border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500 overflow-y-auto;
+            
+            background-color: #1f2937; /* Dark background for the editor surface (bg-gray-800 equivalent) */
+            color: #f3f4f6; /* Light text (text-gray-100 equivalent) */
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3); 
+
+            /* Ensures content wraps normally */
+            white-space: normal; 
+            overflow-y: auto;
+        }
+        
+        #text-editor-content:focus {
+             outline: none;
+        }
+        
+        /* Basic rich text element styling for Dark Theme */
+        #text-editor-content h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #818cf8; /* text-indigo-400 equivalent for contrast */
+        }
+        
+        #text-editor-content p:empty:before{
+            content:attr(placeholder);
+            color:#9ca3af; /* text-gray-400 for dark background visibility */
+        }
+        /* --- END DARK THEME EDITOR CONTENT STYLES --- */
+        
+        #text-editor-content ul, #text-editor-content ol {
+            list-style-position: inside;
+            margin-left: 1.5rem;
+            padding-left: 0.5rem;
         }
         
     </style>
@@ -114,7 +157,7 @@
                     <span class="flex items-center space-x-2">
                         <!-- File Edit Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                        <span>Document Pad</span>
+                        <span>Text Editor</span>
                     </span>
                 </button>
             </nav>
@@ -340,66 +383,118 @@
         </div>
     </div>
     
-    <!-- --- TEXT EDITOR APP CONTAINER (SIMPLE DOCUMENT EDITOR) --- -->
+    <!-- --- TEXT EDITOR APP CONTAINER (FIRESTORE CLOUD SCRATCHPAD) --- -->
     <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Simple Document Pad (Rich Text Editor)</h2>
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
         
-        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
-                
-                <!-- Word/Character Counts -->
-                <div class="flex flex-col space-y-1 text-sm text-gray-300">
-                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
-                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
-                </div>
-                
-                <!-- Toolbar and Download -->
-                <div class="flex flex-wrap items-center space-x-3">
-                    
-                    <!-- Formatting Buttons -->
-                    <button id="format-bold-btn" class="bg-gray-700 text-gray-100 font-bold px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Bold">B</button>
-                    <button id="format-italic-btn" class="bg-gray-700 text-gray-100 italic px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Italic">I</button>
-                    <button id="format-underline-btn" class="bg-gray-700 text-gray-100 underline px-3 py-1 rounded-lg hover:bg-gray-600 transition shadow-md" type="button" title="Underline">U</button>
-                    
-                    <!-- NO GEMINI BUTTONS -->
+        <!-- NEW FLEX CONTAINER: Sidebar and Main Content -->
+        <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
 
-                    <input type="text" id="filename-input" placeholder="filename.html (optional)" value="document_scratchpad" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
-
-                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                        Download HTML
-                    </button>
-                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                        Clear
-                    </button>
+            <!-- NOTEBOOK TABS SIDEBAR (Right side on desktop) -->
+            <aside id="text-notebook-sidebar" class="lg:w-60 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start z-10">
+                <div class="p-4 sm:p-6 bg-gray-800 shadow-xl rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-100 mb-4 border-b border-gray-700 pb-2">Cloud Notebooks</h3>
+                    <div class="flex flex-row flex-wrap md:flex-col gap-3">
+                        <button id="notebook-tab-1" data-notebook="notebook1" onclick="textTool.switchNotebook('notebook1')" class="notebook-tab-btn tool-menu-btn active-tool">
+                            📝 Notebook 1
+                        </button>
+                        <button id="notebook-tab-2" data-notebook="notebook2" onclick="textTool.switchNotebook('notebook2')" class="notebook-tab-btn tool-menu-btn">
+                            🧠 Scratchpad 2
+                        </button>
+                    </div>
+                    <p class="mt-4 text-xs text-gray-500">Each notebook syncs to a separate cloud document.</p>
                 </div>
-            </div>
-            
-            <!-- Content Editable Document Area -->
-            <div id="text-input" contenteditable="true" class="document-editor" role="textbox" aria-multiline="true">
-                <p>Start writing your document here...</p>
+            </aside>
+        
+            <!-- Main Editor Content (Left side, takes remaining space) -->
+            <div id="text-main-editor-area" class="flex-grow w-full">
+                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
+                    <!-- HEADER ROW 1: Stats and Download/Clear Buttons -->
+                    <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
+                        <div class="flex flex-col space-y-1 text-sm text-gray-300">
+                            <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
+                            <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
+                            <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Loading Cloud Data...</span></p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <input type="text" id="filename-input" placeholder="filename.html (optional)" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
+
+                            <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                                Download HTML
+                            </button>
+                            <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- NEW FLEX CONTAINER: Toolbar and Editor -->
+                    <div class="flex flex-col md:flex-row gap-4">
+                        
+                        <!-- 2. SIDE TOOLBAR (Vertical on desktop, Horizontal on mobile) -->
+                        <div id="text-transform-controls" class="flex-shrink-0 flex flex-row flex-wrap md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700 justify-start">
+                            <!-- Formatting Buttons using document.execCommand -->
+                            <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-extrabold" type="button" title="Bold (Ctrl/Cmd+B)">B</button>
+                            <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold italic" type="button" title="Italic (Ctrl/Cmd+I)">I</button>
+                            <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold underline" type="button" title="Underline (Ctrl/Cmd+U)">U</button>
+                            
+                            <span class="border-l border-gray-600 mx-2 hidden md:block"></span> <!-- Vertical separator on desktop -->
+                            <span class="border-t border-gray-600 mt-2 block md:hidden w-full"></span> <!-- Horizontal separator on mobile -->
+
+                            <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Unordered List">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                            </button>
+                            <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Heading">
+                                H3
+                            </button>
+                        </div>
+                        
+                        <!-- Editor Container (Flex-grow ensures it takes the remaining width) -->
+                        <div class="editor-container flex-grow">
+                            <!-- Content Editable Div for Rich Text Editing -->
+                            <div id="text-editor-content" contenteditable="true" class="rich-text-content">
+                                <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- END OF NEW FLEX CONTAINER: Toolbar and Editor -->
+                </div>
             </div>
         </div>
+        <!-- END OF NEW FLEX CONTAINER: Sidebar and Main Content -->
     </div>
     
     <!-- Load Cropper.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script type="module">
-        // --- Firebase Initialization Placeholder (Required by environment) ---
+        // --- Firebase Initialization and Text Editor Cloud Sync ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
+        // Use environment variables for Firebase configuration
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let app, db, auth;
         let userId = 'anonymous';
+        let isAuthReady = false;
 
-        if (firebaseConfig) {
+        // Enable debug logging for Firestore
+        setLogLevel('Debug');
+
+        const initializeFirebase = async () => {
+            if (!firebaseConfig) {
+                 console.error("Firebase config is missing.");
+                 return;
+            }
+
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
+                db = getFirestore(app);
 
                 const setupAuth = async () => {
                     if (initialAuthToken) {
@@ -412,15 +507,26 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
+                        if (!isAuthReady) {
+                            isAuthReady = true;
+                            // Start listening to the cloud scratchpad once auth is ready
+                            textTool.loadTextFromFirestore();
+                        }
                     } else {
-                        setupAuth().catch(e => console.error("Anonymous sign-in failed:", e));
+                        // Attempt sign-in if not authenticated (or if token was invalid)
+                        setupAuth().catch(e => console.error("Anonymous/Custom sign-in failed:", e));
                     }
+                    textTool.updateStatus(`Authenticated (User ID: ${userId.substring(0, 8)}...)`);
                 });
+
+                // Initial auth attempt
+                setupAuth(); 
+
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
+                textTool.updateStatus('Cloud Sync Failed', true);
             }
-        }
-        // --- End Firebase Placeholder ---
+        };
 
         // --- Global Utilities ---
         const messageBox = document.getElementById('messageBox');
@@ -473,10 +579,13 @@
             currentTool: 'cropper',
             
             init: function() {
+                // Initialize Firebase/Auth for cloud features first
+                initializeFirebase(); 
+                
                 // Initialize modules and set initial tool view
                 cropperTool.init();
                 videoTool.init();
-                textTool.init(); // Initialize the new text tool
+                textTool.init(); 
                 this.switchTool(this.currentTool);
             },
 
@@ -498,55 +607,177 @@
                 } else if (toolId === 'video') {
                     document.title = 'Video Frame Capture | Digital Asset Tools';
                 } else if (toolId === 'text') {
-                    document.title = 'Document Pad | Digital Asset Tools';
+                    document.title = 'Text Editor | Digital Asset Tools';
                 }
             }
         };
 
+        // --- Utility for throttling auto-save ---
+        const throttle = (func, delay) => {
+            let timeoutId;
+            return (...args) => {
+                if (timeoutId) return;
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                    timeoutId = null;
+                }, delay);
+            };
+        };
 
         // =========================================================================
-        // === TEXT EDITOR TOOL LOGIC (SIMPLE DOCUMENT PAD) ===
+        // === TEXT EDITOR TOOL LOGIC (FIRESTORE CLOUD SCRATCHPAD) ===
         // =========================================================================
-
+        
         const textTool = {
-            input: document.getElementById('text-input'), // Now a contenteditable div
+            // Updated reference to target the contenteditable div
+            contentDiv: document.getElementById('text-editor-content'),
             downloadBtn: document.getElementById('download-text-btn'),
             clearBtn: document.getElementById('clear-text-btn'),
             filenameInput: document.getElementById('filename-input'),
             wordCountDisplay: document.getElementById('word-count'),
             charCountDisplay: document.getElementById('char-count'),
+            statusDisplay: document.getElementById('text-editor-status'),
             
-            // New format buttons
-            boldBtn: document.getElementById('format-bold-btn'),
-            italicBtn: document.getElementById('format-italic-btn'),
-            underlineBtn: document.getElementById('format-underline-btn'),
-
-
+            // New state for multi-notebook feature
+            currentNotebook: 'notebook1',
+            unsubscribeListener: null,
+            
             init: function() {
-                // Use input/keyup/mouseup for document editing
-                ['input', 'keyup', 'mouseup', 'focus', 'blur'].forEach(eventName => {
-                    this.input.addEventListener(eventName, () => this.updateStats());
-                });
-                
+                this.contentDiv.addEventListener('input', () => this.updateStatsAndSave());
                 this.clearBtn.addEventListener('click', () => this.clearEditor());
                 this.downloadBtn.addEventListener('click', () => this.downloadText());
 
-                // Rich text command listeners
-                this.boldBtn.addEventListener('click', () => this.formatText('bold'));
-                this.italicBtn.addEventListener('click', () => this.formatText('italic'));
-                this.underlineBtn.addEventListener('click', () => this.formatText('underline'));
+                // Attach rich text formatting listeners
+                document.querySelectorAll('#text-transform-controls .rich-text-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleRichTextCommand(
+                        e.currentTarget.dataset.command,
+                        e.currentTarget.dataset.value
+                    ));
+                });
+                
+                // Initial notebook setup for UI
+                document.querySelectorAll('.notebook-tab-btn').forEach(btn => {
+                    btn.classList.remove('active-tool');
+                });
+                document.getElementById(`notebook-tab-1`).classList.add('active-tool');
 
-
-                // Initial setup and placeholder
-                this.input.innerHTML = `<p>Start writing your document here...</p>`;
+                // Initial setup of display only
                 this.updateStats();
+                this.updateStatus('Waiting for Authentication...');
+            },
+            
+            /**
+             * Switches the active notebook and re-establishes the Firestore listener.
+             */
+            switchNotebook: function(notebookId) {
+                if (this.currentNotebook === notebookId) return;
+
+                // Update state
+                this.currentNotebook = notebookId;
+                showMessage(`Switched to ${notebookId.replace('notebook', 'Notebook ')}.`);
+                
+                // Update button styling
+                document.querySelectorAll('.notebook-tab-btn').forEach(btn => {
+                    btn.classList.remove('active-tool');
+                });
+                document.querySelector(`#notebook-tab-${notebookId.replace('notebook', '')}`).classList.add('active-tool');
+
+                // Load content from the new document
+                this.updateStatus('Loading notebook data...');
+                this.loadTextFromFirestore();
+            },
+
+            updateStatus: function(text, isError = false) {
+                 this.statusDisplay.textContent = text;
+                 this.statusDisplay.classList.remove('text-green-400', 'text-red-400', 'text-yellow-400');
+                 if (isError) {
+                     this.statusDisplay.classList.add('text-red-400');
+                 } else if (text.includes('Authenticated')) {
+                     this.statusDisplay.classList.add('text-green-400');
+                 } else {
+                     this.statusDisplay.classList.add('text-yellow-400');
+                 }
+            },
+
+            getDocRef: function() {
+                if (!db || !userId || !isAuthReady) return null;
+                // Path uses the currentNotebook state
+                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/${textTool.currentNotebook}`;
+                return doc(db, docPath);
+            },
+
+            // Throttled function to save to Firestore
+            saveTextToFirestore: throttle(async function() {
+                const docRef = textTool.getDocRef();
+                if (!docRef) return;
+
+                // Save HTML content to preserve rich text formatting
+                const contentHtml = textTool.contentDiv.innerHTML;
+
+                try {
+                    await setDoc(docRef, {
+                        content: contentHtml,
+                        updatedAt: new Date().toISOString()
+                    });
+                } catch(e) {
+                    console.error("Firestore save failed:", e);
+                    textTool.updateStatus('SAVE FAILED!', true);
+                }
+            }, 2000), // Save every 2 seconds
+
+            // Loads text using a real-time listener (onSnapshot)
+            loadTextFromFirestore: function() {
+                // 1. Stop any existing listener
+                if (textTool.unsubscribeListener) {
+                    textTool.unsubscribeListener();
+                    textTool.unsubscribeListener = null;
+                }
+                
+                const docRef = textTool.getDocRef();
+                if (!docRef) {
+                    textTool.updateStatus('Cannot load text: Auth not ready.', true);
+                    return;
+                }
+                
+                // 2. Attach a new real-time listener to the current notebook document
+                textTool.unsubscribeListener = onSnapshot(docRef, (docSnap) => {
+                    if (!isAuthReady) return; // Ignore updates until initial auth is confirmed
+
+                    if (docSnap.exists() && docSnap.data() && docSnap.data().content !== undefined) {
+                        const loadedHtml = docSnap.data().content;
+                        if (textTool.contentDiv.innerHTML !== loadedHtml) { // Prevent overwriting self-updates
+                            textTool.contentDiv.innerHTML = loadedHtml;
+                            textTool.updateStats();
+                            textTool.updateStatus(`Ready (Notebook ${textTool.currentNotebook.replace('notebook','')}).`, false);
+                        }
+                    } else {
+                        // Document doesn't exist or is empty. Use default placeholder.
+                        const defaultContent = '<p>Welcome to your minimal cloud scratchpad! Start typing here.</p>';
+                        if (textTool.contentDiv.innerHTML.trim() !== defaultContent) {
+                             textTool.contentDiv.innerHTML = defaultContent;
+                        }
+                        textTool.updateStats();
+                        textTool.updateStatus(`Ready (Notebook ${textTool.currentNotebook.replace('notebook','')}).`, false);
+                        // Immediately save the default content to ensure the document exists for future syncs
+                        textTool.saveTextToFirestore(); 
+                    }
+                }, (error) => {
+                    console.error("Error listening to scratchpad:", error);
+                    textTool.updateStatus('Error reading cloud data.', true);
+                });
+            },
+
+            updateStatsAndSave: function() {
+                this.updateStats();
+                this.saveTextToFirestore();
             },
 
             updateStats: function() {
-                // Get plaintext content from the contenteditable div
-                const text = this.input.textContent; 
+                // Use textContent for statistics
+                const text = this.contentDiv.textContent; 
                 const charCount = text.length;
                 
+                // Simple word count logic
                 const words = text.trim().split(/\s+/).filter(word => word.length > 0);
                 const wordCount = words.length;
 
@@ -554,66 +785,96 @@
                 this.wordCountDisplay.textContent = wordCount;
                 this.downloadBtn.disabled = charCount === 0;
             },
-            
-            /**
-             * Applies simple rich text formatting using document.execCommand().
-             * @param {string} command - 'bold', 'italic', or 'underline'.
-             */
-            formatText: function(command) {
+
+            clearEditor: async function() {
+                const docRef = this.getDocRef();
+                if (!docRef) return;
+
+                // Clear content, leaving a minimal empty element
+                this.contentDiv.innerHTML = '<p><br></p>'; 
+                this.updateStats();
+
                 try {
-                    // document.execCommand applies formatting to the current selection
-                    document.execCommand(command, false, null);
-                    // Force the editor to regain focus after command (optional, improves UX)
-                    this.input.focus();
+                    await deleteDoc(docRef);
+                    showMessage(`Notebook ${this.currentNotebook.replace('notebook', '')} cleared and cloud save deleted.`, false);
+                    this.updateStatus(`Cleared notebook ${this.currentNotebook.replace('notebook', '')} and deleted from cloud.`, false);
                 } catch (e) {
-                    console.error("Failed to execute format command:", e);
+                    // If the document didn't exist, this might fail, but that's okay.
+                    console.warn("Firestore delete attempt finished with warning:", e);
+                    showMessage(`Notebook ${this.currentNotebook.replace('notebook', '')} cleared locally.`, false);
+                    this.updateStatus(`Cleared notebook ${this.currentNotebook.replace('notebook', '')} locally.`, false);
                 }
             },
-
-            clearEditor: function() {
-                this.input.innerHTML = `<p>Start writing your document here...</p>`;
-                this.updateStats();
-                showMessage("Document editor cleared.");
-            },
-
+            
             downloadText: function() {
-                const htmlContent = this.input.innerHTML; // Get formatted HTML
-                const plainTextContent = this.input.textContent; 
-
-                if (plainTextContent.length === 0) {
+                // Now downloads HTML content wrapped in a minimal HTML file
+                const content = this.contentDiv.innerHTML;
+                const plainText = this.contentDiv.textContent;
+                
+                if (plainText.length === 0) {
                     showMessage("Editor is empty. Nothing to download.", true);
                     return;
                 }
 
-                let filename = this.filenameInput.value.trim() || 'document_scratchpad';
+                let filename = this.filenameInput.value.trim() || 'rich_text_document';
                 
-                // Ensure filename ends with .html to preserve formatting
-                filename = filename.replace(/\.(txt|html|json)$/i, '') + '.html';
+                // Ensure filename ends with .html for rich text download
+                if (!filename.toLowerCase().endsWith('.html')) {
+                    filename = filename.replace(/\.(txt|md)$/i, '') + '.html'; // Replace old extensions if present
+                }
 
-                try {
-                    // Create a minimal HTML document wrapper for the content, ensuring dark theme colors are NOT applied
-                    const fullHtml = `<!DOCTYPE html>
+                // Wrap content in a basic HTML document structure to ensure styles apply
+                const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>${filename}</title>
-    <!-- Use standard black text on white background for the downloaded file -->
-    <style>body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #1f2937; background-color: #ffffff; }</style>
+    <meta charset="UTF-8">
+    <title>${filename.replace('.html', '')}</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #1f2937; padding: 20px;}
+        h3 { font-size: 1.5rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: #818cf8; }
+        ul, ol { list-style-position: inside; margin-left: 1.5rem; padding-left: 0.5rem; }
+    </style>
 </head>
 <body>
-${htmlContent}
+${content}
 </body>
 </html>`;
-                    const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+
+                try {
+                    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
                     saveAs(blob, filename);
-                    showMessage(`Downloaded document as "${filename}".`);
+                    showMessage(`Downloaded rich text as "${filename}".`);
                 } catch (e) {
-                    console.error("Error downloading document:", e);
-                    showMessage("Failed to download document file.", true);
+                    console.error("Error downloading text:", e);
+                    showMessage("Failed to download HTML file.", true);
                 }
-            }
+            },
+
+            /**
+             * Handles rich text formatting commands using document.execCommand.
+             * @param {string} command - The command to execute (e.g., 'bold', 'insertUnorderedList').
+             * @param {string|null} value - Optional value for the command (e.g., 'H3' for formatBlock).
+             */
+            handleRichTextCommand: function(command, value = null) {
+                // Focus the editable div first so the command applies to the cursor position
+                this.contentDiv.focus();
+
+                try {
+                    document.execCommand(command, false, value);
+                    // Ensure the content is saved immediately after a command
+                    this.updateStatsAndSave(); 
+                    showMessage(`Applied format: ${command}.`);
+                } catch (e) {
+                    console.error("ExecCommand failed:", e);
+                    showMessage(`Failed to apply format: ${command}.`, true);
+                }
+            },
         };
 
+        // --- EXPOSE GLOBAL REFERENCES ---
+        // This fixes the 'textTool is not defined' error in inline HTML onclick attributes
+        window.textTool = textTool; 
+        
         // =========================================================================
         // === VIDEO FRAME CAPTURE TOOL LOGIC (EXISTING) ===
         // =========================================================================
@@ -1193,7 +1454,7 @@ ${htmlContent}
 
                     const resetBtn = card.querySelector('.reset-crop-btn');
                     if(resetBtn) resetBtn.dataset.index = newIndex;
-                    
+
                     const regenBtn = card.querySelector('.regenerate-id-btn');
                     if(regenBtn) regenBtn.dataset.index = newIndex;
                     

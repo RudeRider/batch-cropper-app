@@ -1,69 +1,82 @@
-🎬 Digital Asset Tools (Self-Contained Browser Utility)
-This is a single-file, three-in-one web application designed for fast, client-side manipulation and management of digital assets. Since the application runs entirely in your browser after initial loading, all processing is instant and secure.
+🎬 Digital Asset Management Suite (Single File HTML)
+This is a powerful, integrated web application built entirely within a single HTML file. It combines three essential tools for digital asset management: a Batch Image Cropper, a Video Frame Capture utility, and a Cloud-Synced Rich Text Editor using Firebase Firestore.
+
+✨ Features
+The application is split into three main tabs, accessible via the navigation bar:
 
 1. Batch Cropper
-The Batch Cropper allows you to upload multiple PNG or JPEG images and apply consistent or customized cropping settings across the entire set, then download the results as a single ZIP file.
+Drag-and-Drop Support: Easily upload multiple PNG or JPEG files.
 
-Key Features:
-Global Aspect Ratio: Set a single ratio (e.g., 16:9, 1:1, 9:16) that applies to all images, ensuring visual consistency across a batch of assets.
+Global Aspect Ratio Control: Set a single, consistent aspect ratio (e.g., 16:9, 1:1, 9:16) for all images in the batch.
 
-Custom Ratios & Free Crop: Define precise custom ratios or select "Free Crop" for flexible selection.
+Customization: Per-image controls to override the global ratio, set custom fill colors for non-cropped areas, and define fixed output resolutions.
 
-Global Output Resolution: Define a specific pixel width and height (e.g., 1920x1080) to force all cropped images to conform to a standard size.
+Transformations: Quick buttons for rotating and flipping images before cropping.
 
-Image Manipulation: Tools for rotating (90° clockwise) and flipping (horizontal) individual images within their cards.
-
-Fill Empty Area: If the crop area is constrained by a required aspect ratio, you can choose a solid color to fill the background instead of allowing transparency.
-
-Batch Download: Export all cropped and resized images into a single .zip file for efficient downloading.
-
-How to Use:
-Upload one or more images using the file input or drag-and-drop onto the upload zone.
-
-In the Global Crop Settings sidebar, select your preferred default Aspect Ratio and Output Resolution.
-
-For each image displayed in the Crop Gallery, drag the crop box to position it. You can override the global aspect ratio, output resolution, or fill color directly on the card if needed.
-
-Click the "Download All Cropped Images (ZIP)" button to compile and download your batch.
+Batch Download: Compiles all processed, cropped images into a single .zip file for efficient downloading.
 
 2. Video Frame Capture
-This tool lets you upload a video file and precisely capture still frames at any point, either manually or through an automated process.
+Local Video Processing: Upload video files (MP4, MOV, etc.) directly in the browser.
 
-Key Features:
-Precise Seeking: Use the video player controls to move to the exact frame you wish to capture. The current time is displayed for reference.
+Precise Frame Extraction: Capture individual frames at the video's current time.
 
-Single Frame Capture: Capture the current frame as a PNG file instantly.
+Batch Frame Extraction: Automatically capture a defined number of frames at a specified time interval (in seconds).
 
-Auto-Capture Sequence: Specify a number of frames and an interval (in seconds) to automatically capture a sequence of images starting from the current video time.
+Gallery Management: Preview, delete, and download captured frames.
 
-Frame Management: Review captured frames in a gallery and delete any unwanted images.
+Batch Download: Downloads all captured frames as high-quality PNGs in a .zip archive.
 
-Batch Download: Compile all captured PNG frames into a single .zip file.
+3. Cloud Editor (Minimal Word)
+Real-time Cloud Sync: Uses Firebase Firestore to save your content in real-time, persisting it across sessions and devices.
 
-How to Use:
-Upload a video file (MP4, MOV, etc.) using the file input.
+Multi-Notebook System: Features two separate, dedicated storage documents (Notebook 1 and Scratchpad 2) for organizing different types of content.
 
-Use the video player controls to pause the video at the desired start time.
+Rich Text Formatting: Supports basic formatting like bold, italic, and headings (H3) using a simple toolbar.
 
-Click "Capture Frame" for a single image, or configure the inputs and click "Capture [X] Frames (Auto)" for a batch sequence.
+Document Statistics: Displays live word and character counts.
 
-Click "Download All Frames (ZIP)" to save your captured assets.
+Download: Exports the content as a fully styled .html file.
 
-3. Simple Document Pad
-The Document Pad is a simple, dark-themed rich text editor for writing notes, drafting content, or brainstorming, complete with basic formatting and character counting.
+🛠️ Technical Stack
+The "Digital Asset Management Suite" is designed as a single, portable file:
 
-Key Features:
-Rich Text Formatting: Apply Bold, Italic, and Underline formatting to your text using the toolbar buttons.
+Component
 
-Live Metrics: Real-time word and character counts help track your progress.
+Technology
 
-Dark Theme: The editor pad uses a dark background and light text for comfortable long-duration writing.
+Usage
 
-HTML Export: Download your formatted content as a clean .html file, ensuring all text formatting is preserved when opening the document in any web browser or rich text application.
+Structure/UI
 
-How to Use:
-Click the formatting buttons (B, I, U) to apply styles to selected text.
+HTML5 / Vanilla JavaScript / Tailwind CSS (CDN)
 
-Type directly into the pad area.
+Core layout, logic, and modern, responsive dark-mode styling.
 
-When ready, enter a desired file name (or use the default) and click "Download HTML" to save your document.
+Image Cropping
+
+Cropper.js (CDN)
+
+Provides the interactive cropping interface and canvas manipulation.
+
+File Handling
+
+JSZip (CDN) & FileSaver.js (CDN)
+
+Handles client-side compression (.zip creation) and cross-browser file downloads.
+
+Data Persistence
+
+Firebase Firestore (CDN)
+
+Stores rich text content for the Cloud Editor, ensuring data synchronization.
+
+🚀 Setup and Running
+Since this is a single file using CDNs, setup is minimal:
+
+Save the file: Save the entire content as index.html.
+
+Modern Browser: Open index.html in any modern web browser (Chrome, Firefox, Edge, Safari).
+
+Cloud Editor Note: The Cloud Editor relies on environment variables (__app_id, __firebase_config, __initial_auth_token) provided by the host environment (like Google Canvas) for secure Firebase authentication and connectivity. If run locally outside of this environment, the Firebase features will not function, but the Cropper and Video tools will remain fully operational.
+
+README.md
