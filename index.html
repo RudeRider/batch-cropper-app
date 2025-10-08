@@ -387,81 +387,58 @@
     <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
         
-        <!-- NEW FLEX CONTAINER: Sidebar and Main Content -->
-        <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
-
-            <!-- NOTEBOOK TABS SIDEBAR (Right side on desktop) -->
-            <aside id="text-notebook-sidebar" class="lg:w-60 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start z-10">
-                <div class="p-4 sm:p-6 bg-gray-800 shadow-xl rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold text-gray-100 mb-4 border-b border-gray-700 pb-2">Cloud Notebooks</h3>
-                    <div class="flex flex-row flex-wrap md:flex-col gap-3">
-                        <button id="notebook-tab-1" data-notebook="notebook1" onclick="textTool.switchNotebook('notebook1')" class="notebook-tab-btn tool-menu-btn active-tool">
-                            📝 Notebook 1
-                        </button>
-                        <button id="notebook-tab-2" data-notebook="notebook2" onclick="textTool.switchNotebook('notebook2')" class="notebook-tab-btn tool-menu-btn">
-                            🧠 Scratchpad 2
-                        </button>
-                    </div>
-                    <p class="mt-4 text-xs text-gray-500">Each notebook syncs to a separate cloud document.</p>
+        <!-- Simplified Structure: Removed flex-row wrapper for notebooks -->
+        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
+            <!-- HEADER ROW 1: Stats and Download/Clear Buttons -->
+            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
+                <div class="flex flex-col space-y-1 text-sm text-gray-300">
+                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
+                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
+                    <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Loading Cloud Data...</span></p>
                 </div>
-            </aside>
-        
-            <!-- Main Editor Content (Left side, takes remaining space) -->
-            <div id="text-main-editor-area" class="flex-grow w-full">
-                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
-                    <!-- HEADER ROW 1: Stats and Download/Clear Buttons -->
-                    <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
-                        <div class="flex flex-col space-y-1 text-sm text-gray-300">
-                            <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
-                            <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
-                            <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Loading Cloud Data...</span></p>
-                        </div>
-                        <div class="flex space-x-3">
-                            <input type="text" id="filename-input" placeholder="filename.html (optional)" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
+                <div class="flex space-x-3">
+                    <input type="text" id="filename-input" placeholder="filename.html (optional)" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
 
-                            <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                                Download HTML
-                            </button>
-                            <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                                Clear
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- NEW FLEX CONTAINER: Toolbar and Editor -->
-                    <div class="flex flex-col md:flex-row gap-4">
-                        
-                        <!-- 2. SIDE TOOLBAR (Vertical on desktop, Horizontal on mobile) -->
-                        <div id="text-transform-controls" class="flex-shrink-0 flex flex-row flex-wrap md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700 justify-start">
-                            <!-- Formatting Buttons using document.execCommand -->
-                            <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-extrabold" type="button" title="Bold (Ctrl/Cmd+B)">B</button>
-                            <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold italic" type="button" title="Italic (Ctrl/Cmd+I)">I</button>
-                            <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold underline" type="button" title="Underline (Ctrl/Cmd+U)">U</button>
-                            
-                            <span class="border-l border-gray-600 mx-2 hidden md:block"></span> <!-- Vertical separator on desktop -->
-                            <span class="border-t border-gray-600 mt-2 block md:hidden w-full"></span> <!-- Horizontal separator on mobile -->
-
-                            <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Unordered List">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
-                            </button>
-                            <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Heading">
-                                H3
-                            </button>
-                        </div>
-                        
-                        <!-- Editor Container (Flex-grow ensures it takes the remaining width) -->
-                        <div class="editor-container flex-grow">
-                            <!-- Content Editable Div for Rich Text Editing -->
-                            <div id="text-editor-content" contenteditable="true" class="rich-text-content">
-                                <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- END OF NEW FLEX CONTAINER: Toolbar and Editor -->
+                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                        Download HTML
+                    </button>
+                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                        Clear
+                    </button>
                 </div>
             </div>
+
+            <!-- NEW FLEX CONTAINER: Toolbar and Editor -->
+            <div class="flex flex-col md:flex-row gap-4">
+                
+                <!-- 2. SIDE TOOLBAR (Vertical on desktop, Horizontal on mobile) -->
+                <div id="text-transform-controls" class="flex-shrink-0 flex flex-row flex-wrap md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700 justify-start">
+                    <!-- Formatting Buttons using document.execCommand -->
+                    <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-extrabold" type="button" title="Bold (Ctrl/Cmd+B)">B</button>
+                    <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold italic" type="button" title="Italic (Ctrl/Cmd+I)">I</button>
+                    <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold underline" type="button" title="Underline (Ctrl/Cmd+U)">U</button>
+                    
+                    <span class="border-l border-gray-600 mx-2 hidden md:block"></span> <!-- Vertical separator on desktop -->
+                    <span class="border-t border-gray-600 mt-2 block md:hidden w-full"></span> <!-- Horizontal separator on mobile -->
+
+                    <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Unordered List">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                    </button>
+                    <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Heading">
+                        H3
+                    </button>
+                </div>
+                
+                <!-- Editor Container (Flex-grow ensures it takes the remaining width) -->
+                <div class="editor-container flex-grow">
+                    <!-- Content Editable Div for Rich Text Editing -->
+                    <div id="text-editor-content" contenteditable="true" class="rich-text-content">
+                        <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- END OF NEW FLEX CONTAINER: Toolbar and Editor -->
         </div>
-        <!-- END OF NEW FLEX CONTAINER: Sidebar and Main Content -->
     </div>
     
     <!-- Load Cropper.js -->
@@ -614,11 +591,18 @@
 
         // --- Utility for throttling auto-save ---
         const throttle = (func, delay) => {
-            let timeoutId;
-            return (...args) => {
+            let timeoutId = null;
+            
+            return function(...args) {
+                // 1. Capture the 'this' context (which should be 'textTool' when called as a method)
+                const context = this; 
+                
                 if (timeoutId) return;
+                
+                // 2. Schedule the execution
                 timeoutId = setTimeout(() => {
-                    func.apply(this, args);
+                    // 3. Execute the original function (func) with the captured context
+                    func.apply(context, args); 
                     timeoutId = null;
                 }, delay);
             };
@@ -638,8 +622,7 @@
             charCountDisplay: document.getElementById('char-count'),
             statusDisplay: document.getElementById('text-editor-status'),
             
-            // New state for multi-notebook feature
-            currentNotebook: 'notebook1',
+            // REMOVED: currentNotebook state
             unsubscribeListener: null,
             
             init: function() {
@@ -655,38 +638,15 @@
                     ));
                 });
                 
-                // Initial notebook setup for UI
-                document.querySelectorAll('.notebook-tab-btn').forEach(btn => {
-                    btn.classList.remove('active-tool');
-                });
-                document.getElementById(`notebook-tab-1`).classList.add('active-tool');
-
+                // Removed notebook tab styling logic
+                
                 // Initial setup of display only
                 this.updateStats();
                 this.updateStatus('Waiting for Authentication...');
             },
             
-            /**
-             * Switches the active notebook and re-establishes the Firestore listener.
-             */
-            switchNotebook: function(notebookId) {
-                if (this.currentNotebook === notebookId) return;
-
-                // Update state
-                this.currentNotebook = notebookId;
-                showMessage(`Switched to ${notebookId.replace('notebook', 'Notebook ')}.`);
-                
-                // Update button styling
-                document.querySelectorAll('.notebook-tab-btn').forEach(btn => {
-                    btn.classList.remove('active-tool');
-                });
-                document.querySelector(`#notebook-tab-${notebookId.replace('notebook', '')}`).classList.add('active-tool');
-
-                // Load content from the new document
-                this.updateStatus('Loading notebook data...');
-                this.loadTextFromFirestore();
-            },
-
+            // REMOVED: switchNotebook function
+            
             updateStatus: function(text, isError = false) {
                  this.statusDisplay.textContent = text;
                  this.statusDisplay.classList.remove('text-green-400', 'text-red-400', 'text-yellow-400');
@@ -701,18 +661,18 @@
 
             getDocRef: function() {
                 if (!db || !userId || !isAuthReady) return null;
-                // Path uses the currentNotebook state
-                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/${textTool.currentNotebook}`;
+                // Simplified path to single document:
+                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/document`;
                 return doc(db, docPath);
             },
 
             // Throttled function to save to Firestore
             saveTextToFirestore: throttle(async function() {
-                const docRef = textTool.getDocRef();
+                const docRef = this.getDocRef();
                 if (!docRef) return;
 
                 // Save HTML content to preserve rich text formatting
-                const contentHtml = textTool.contentDiv.innerHTML;
+                const contentHtml = this.contentDiv.innerHTML;
 
                 try {
                     await setDoc(docRef, {
@@ -721,49 +681,49 @@
                     });
                 } catch(e) {
                     console.error("Firestore save failed:", e);
-                    textTool.updateStatus('SAVE FAILED!', true);
+                    this.updateStatus('SAVE FAILED!', true);
                 }
             }, 2000), // Save every 2 seconds
 
             // Loads text using a real-time listener (onSnapshot)
             loadTextFromFirestore: function() {
                 // 1. Stop any existing listener
-                if (textTool.unsubscribeListener) {
-                    textTool.unsubscribeListener();
-                    textTool.unsubscribeListener = null;
+                if (this.unsubscribeListener) {
+                    this.unsubscribeListener();
+                    this.unsubscribeListener = null;
                 }
                 
-                const docRef = textTool.getDocRef();
+                const docRef = this.getDocRef();
                 if (!docRef) {
-                    textTool.updateStatus('Cannot load text: Auth not ready.', true);
+                    this.updateStatus('Cannot load text: Auth not ready.', true);
                     return;
                 }
                 
-                // 2. Attach a new real-time listener to the current notebook document
-                textTool.unsubscribeListener = onSnapshot(docRef, (docSnap) => {
+                // 2. Attach a new real-time listener to the single document
+                this.unsubscribeListener = onSnapshot(docRef, (docSnap) => {
                     if (!isAuthReady) return; // Ignore updates until initial auth is confirmed
 
                     if (docSnap.exists() && docSnap.data() && docSnap.data().content !== undefined) {
                         const loadedHtml = docSnap.data().content;
-                        if (textTool.contentDiv.innerHTML !== loadedHtml) { // Prevent overwriting self-updates
-                            textTool.contentDiv.innerHTML = loadedHtml;
-                            textTool.updateStats();
-                            textTool.updateStatus(`Ready (Notebook ${textTool.currentNotebook.replace('notebook','')}).`, false);
+                        if (this.contentDiv.innerHTML !== loadedHtml) { // Prevent overwriting self-updates
+                            this.contentDiv.innerHTML = loadedHtml;
+                            this.updateStats();
+                            this.updateStatus(`Ready (Minimal Editor).`, false); // Simplified status
                         }
                     } else {
                         // Document doesn't exist or is empty. Use default placeholder.
                         const defaultContent = '<p>Welcome to your minimal cloud scratchpad! Start typing here.</p>';
-                        if (textTool.contentDiv.innerHTML.trim() !== defaultContent) {
-                             textTool.contentDiv.innerHTML = defaultContent;
+                        if (this.contentDiv.innerHTML.trim() !== defaultContent) {
+                             this.contentDiv.innerHTML = defaultContent;
                         }
-                        textTool.updateStats();
-                        textTool.updateStatus(`Ready (Notebook ${textTool.currentNotebook.replace('notebook','')}).`, false);
+                        this.updateStats();
+                        this.updateStatus(`Ready (Minimal Editor).`, false); // Simplified status
                         // Immediately save the default content to ensure the document exists for future syncs
-                        textTool.saveTextToFirestore(); 
+                        this.saveTextToFirestore(); 
                     }
                 }, (error) => {
                     console.error("Error listening to scratchpad:", error);
-                    textTool.updateStatus('Error reading cloud data.', true);
+                    this.updateStatus('Error reading cloud data.', true);
                 });
             },
 
@@ -796,13 +756,13 @@
 
                 try {
                     await deleteDoc(docRef);
-                    showMessage(`Notebook ${this.currentNotebook.replace('notebook', '')} cleared and cloud save deleted.`, false);
-                    this.updateStatus(`Cleared notebook ${this.currentNotebook.replace('notebook', '')} and deleted from cloud.`, false);
+                    showMessage("Editor cleared and cloud save deleted.", false);
+                    this.updateStatus('Cleared and deleted from cloud.', false);
                 } catch (e) {
                     // If the document didn't exist, this might fail, but that's okay.
                     console.warn("Firestore delete attempt finished with warning:", e);
-                    showMessage(`Notebook ${this.currentNotebook.replace('notebook', '')} cleared locally.`, false);
-                    this.updateStatus(`Cleared notebook ${this.currentNotebook.replace('notebook', '')} locally.`, false);
+                    showMessage("Editor cleared locally.", false);
+                    this.updateStatus('Cleared locally.', false);
                 }
             },
             
@@ -872,7 +832,7 @@ ${content}
         };
 
         // --- EXPOSE GLOBAL REFERENCES ---
-        // This fixes the 'textTool is not defined' error in inline HTML onclick attributes
+        // This is necessary for the external HTML onclick attributes
         window.textTool = textTool; 
         
         // =========================================================================
