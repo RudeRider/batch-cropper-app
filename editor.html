@@ -37,7 +37,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
         .floating-panel {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            border: 1px solid #1a1a1a;
+            border: 1px solid #1e1e1e;
         }
         .menu-dropdown { display: none; }
         .menu-item-group:hover .menu-dropdown { display: block; }
@@ -45,15 +45,28 @@
 </head>
 <body class="bg-photoshop-bg text-gray-200 h-full flex flex-col overflow-hidden text-xs">
 
+    <!-- SHARED NAVIGATION BAR -->
+    <header class="bg-[#2c2c2c] border-b border-[#1c1c1c] px-4 py-2 flex items-center justify-between shrink-0 z-40 text-gray-300">
+        <div class="flex items-center space-x-3">
+            <a href="index.html" class="text-base font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
+                <span>🧰 Digital Asset Tools</span>
+            </a>
+            <div class="flex items-center space-x-1.5 px-2 py-0.5 bg-[#0058d0] text-white rounded font-bold tracking-wider">
+                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                <span>PixelCraft Pro</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="index.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-house"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </header>
+
     <!-- Photoshop Top Menu Bar -->
     <div class="bg-[#2c2c2c] border-b border-[#1c1c1c] px-2 py-1 flex items-center justify-between shrink-0 z-40 text-gray-300">
         <div class="flex items-center space-x-1">
-            <div class="flex items-center space-x-2 px-2 py-1 bg-[#0058d0] text-white rounded font-bold tracking-wider mr-2">
-                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-                <span>Ps</span>
-            </div>
-            
-            <!-- File Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">File</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -63,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- Edit Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Edit</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -74,7 +86,6 @@
                 </div>
             </div>
 
-            <!-- Image Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Image</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -82,16 +93,15 @@
                 </div>
             </div>
 
-            <!-- Layer Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Layer</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-new-layer" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>New Layer</span><span class="text-[10px] text-gray-400">Ctrl+Shift+N</span></button>
+                    <button id="menu-merge-down" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Merge Down</span><span class="text-[10px] text-gray-400">Ctrl+E</span></button>
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="layers-panel"><span>Layers Panel</span><span class="text-[10px] text-gray-400">F7</span></button>
                 </div>
             </div>
 
-            <!-- Filter Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Filter</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -99,7 +109,6 @@
                 </div>
             </div>
 
-            <!-- Window Menu -->
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Window</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -139,15 +148,9 @@
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <button id="fill-fg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+Backspace">
-                Fill FG
-            </button>
-            <button id="fill-bg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Alt+Backspace">
-                Fill BG
-            </button>
-            <button id="clear-selection-btn" class="px-3 py-1 bg-[#333] hover:bg-[#444] text-gray-300 rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+D">
-                Deselect (Ctrl+D)
-            </button>
+            <button id="fill-fg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+Backspace">Fill FG</button>
+            <button id="fill-bg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Alt+Backspace">Fill BG</button>
+            <button id="clear-selection-btn" class="px-3 py-1 bg-[#333] hover:bg-[#444] text-gray-300 rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+D">Deselect (Ctrl+D)</button>
         </div>
     </div>
 
@@ -163,7 +166,6 @@
                     <h3 class="text-sm font-bold text-white">Create New Document or Open Image</h3>
                 </div>
 
-                <!-- Size Presets -->
                 <div class="space-y-2">
                     <label class="block text-[11px] text-gray-400 font-medium">Canvas Size Presets</label>
                     <div class="grid grid-cols-2 gap-2">
@@ -174,7 +176,6 @@
                     </div>
                 </div>
 
-                <!-- Custom Dimensions -->
                 <div class="grid grid-cols-2 gap-3 pt-2 border-t border-[#333]">
                     <div>
                         <label class="block text-[10px] text-gray-400 mb-1">Custom Width (px)</label>
@@ -201,54 +202,20 @@
 
         <!-- Left Vertical Photoshop Toolbar Dock -->
         <aside id="left-dock" class="w-12 bg-[#323232] border-r border-[#1c1c1c] flex flex-col items-center py-2 space-y-1 shrink-0 z-20 shadow-lg">
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)">
-                <i class="fa-solid fa-arrow-pointer text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Move (V)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="rect-select" title="Rectangular Marquee (F)">
-                <i class="fa-regular fa-square text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Rectangular Marquee (F)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee (Shift+F)">
-                <i class="fa-regular fa-circle text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Elliptical Marquee (Shift+F)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (L)">
-                <i class="fa-solid fa-lasso text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Lasso Tool (L)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="magic-wand" title="Magic Wand Tool (W)">
-                <i class="fa-solid fa-wand-magic text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Magic Wand (W)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eyedropper" title="Eyedropper Tool (I)">
-                <i class="fa-solid fa-eye-dropper text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Eyedropper (I)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="bucket" title="Paint Bucket Tool (G)">
-                <i class="fa-solid fa-fill-drip text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Paint Bucket (G)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (B)">
-                <i class="fa-solid fa-paintbrush text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Brush (B)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (J)">
-                <i class="fa-solid fa-palette text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Mixer Brush (J)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (R)">
-                <i class="fa-solid fa-fingerprint text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Smudge (R)</span>
-            </button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eraser" title="Eraser Tool (E)">
-                <i class="fa-solid fa-eraser text-xs"></i>
-                <span class="absolute left-full ml-1 px-1.5 py-0.5 bg-black text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">Eraser (E)</span>
-            </button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)"><i class="fa-solid fa-arrow-pointer text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="rect-select" title="Rectangular Marquee (F)"><i class="fa-regular fa-square text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee (Shift+F)"><i class="fa-regular fa-circle text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (L)"><i class="fa-solid fa-lasso text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="magic-wand" title="Magic Wand Tool (W)"><i class="fa-solid fa-wand-magic text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eyedropper" title="Eyedropper Tool (I)"><i class="fa-solid fa-eye-dropper text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="bucket" title="Paint Bucket Tool (G)"><i class="fa-solid fa-fill-drip text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (B)"><i class="fa-solid fa-paintbrush text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (J)"><i class="fa-solid fa-palette text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (R)"><i class="fa-solid fa-fingerprint text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eraser" title="Eraser Tool (E)"><i class="fa-solid fa-eraser text-xs"></i></button>
 
             <div class="w-8 h-[1px] bg-[#444] my-2"></div>
 
-            <!-- Foreground / Background Color Pickers swatch -->
             <div id="swatch-container" class="relative w-8 h-8 my-1 cursor-pointer" title="Foreground / Background Swatches (Press X to Swap, Q for Picker)">
                 <div id="swatch-bg" class="absolute bottom-0 right-0 w-5 h-5 bg-white border border-black rounded-sm"></div>
                 <input type="color" id="bg-color-picker" value="#ffffff" class="absolute bottom-0 right-0 w-5 h-5 opacity-0 cursor-pointer">
@@ -264,18 +231,15 @@
                     <div id="canvas-wrapper" class="relative shadow-2xl border border-black/80 bg-[#2b2b2b] p-0 m-0 leading-none">
                         <canvas id="image-canvas" class="block shadow-inner"></canvas>
                         <canvas id="selection-canvas" class="absolute inset-0 pointer-events-none"></canvas>
-                        <!-- High-Contrast Dual-Stroke Brush Cursor Ring -->
                         <div id="brush-cursor" class="absolute pointer-events-none border border-white rounded-full hidden -translate-x-1/2 -translate-y-1/2 z-30" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(0,0,0,0.9);"></div>
                     </div>
                 </div>
             </div>
             
-            <!-- Floating Brush Size Notification Badge -->
             <div id="size-badge" class="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-md text-xs font-mono shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-40">
                 Brush: <span id="badge-size-val">15</span>px
             </div>
 
-            <!-- Viewport Controls & Zoom Info -->
             <div class="absolute bottom-3 right-3 bg-[#262626]/90 backdrop-blur px-2.5 py-1.5 rounded border border-[#1e1e1e] text-[11px] text-gray-300 flex items-center space-x-2 z-10 shadow">
                 <button id="zoom-out" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-minus text-[9px]"></i></button>
                 <span id="zoom-val" class="font-mono text-indigo-400 w-10 text-center">100%</span>
@@ -284,7 +248,6 @@
                 <button id="reset-view" class="hover:text-white flex items-center space-x-1"><span>Fit Screen (Ctrl+0)</span></button>
             </div>
 
-            <!-- Quick Image Info Bar -->
             <div id="image-info" class="absolute bottom-3 left-3 bg-[#262626]/90 backdrop-blur px-2.5 py-1 rounded border border-[#1e1e1e] text-[11px] text-gray-400 flex items-center space-x-2 hidden z-10">
                 <span id="info-name">document.png</span>
                 <span>•</span>
@@ -299,9 +262,7 @@
             <div id="layers-panel" class="floating-panel pointer-events-auto absolute top-4 right-4 w-72 bg-[#262626] border border-[#1a1a1a] rounded flex flex-col shadow-2xl overflow-hidden">
                 <div class="panel-header bg-[#323232] px-3 py-2 flex items-center justify-between cursor-move border-b border-[#1c1c1c]">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center space-x-1.5"><i class="fa-solid fa-layer-group text-indigo-400"></i><span>Layers (F7)</span></span>
-                    <div class="flex items-center space-x-2">
-                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
+                    <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="p-3 space-y-2">
                     <div class="flex items-center justify-between">
@@ -355,18 +316,10 @@
                 </div>
                 <div class="p-3 max-h-60 overflow-y-auto">
                     <div class="grid grid-cols-2 gap-2">
-                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="grayscale">
-                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Grayscale</span>
-                        </button>
-                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="sepia">
-                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span>
-                        </button>
-                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="invert">
-                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Invert</span>
-                        </button>
-                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="kodak">
-                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span>
-                        </button>
+                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="grayscale"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Grayscale</span></button>
+                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="sepia"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span></button>
+                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="invert"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Invert</span></button>
+                        <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="kodak"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span></button>
                     </div>
                 </div>
             </div>
@@ -401,7 +354,6 @@
 
     </main>
 
-    <!-- Dynamic popup color picker input positioned right at mouse pointer when 'Q' is pressed -->
     <input type="color" id="popup-color-picker" class="fixed opacity-0 pointer-events-none z-[99999]" value="#6366f1">
 
     <script>
@@ -420,7 +372,6 @@
         const badgeSizeVal = document.getElementById('badge-size-val');
         const popupColorPicker = document.getElementById('popup-color-picker');
 
-        // Viewport Pan, Zoom state
         const viewportContainer = document.getElementById('viewport-container');
         const transformContainer = document.getElementById('canvas-viewport-transform');
         const canvasWrapper = document.getElementById('canvas-wrapper');
@@ -433,12 +384,13 @@
         let startZoomX = 0;
         let isSpacePressed = false;
         let isCtrlPressed = false;
+        let isShiftPressed = false;
+        let isAltPressed = false;
         let lastMouseScreenX = window.innerWidth / 2;
         let lastMouseScreenY = window.innerHeight / 2;
         let badgeTimeout = null;
         let dashOffset = 0;
 
-        // Adjustments Controls
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
         const saturationInput = document.getElementById('saturation');
@@ -454,7 +406,6 @@
         const lockAspectCheckbox = document.getElementById('lock-aspect');
         const applyResizeBtn = document.getElementById('apply-resize');
 
-        // Options bar elements
         const dynamicOptionsContainer = document.getElementById('dynamic-options-container');
         const optionsTitle = document.getElementById('options-title');
 
@@ -487,15 +438,26 @@
         let brushWetness = 30;
         let wandTolerance = 32;
 
+        // Marquee Advanced Options State
+        let marqueeMode = 'new'; // 'new', 'add', 'subtract', 'intersect'
+        let marqueeFeather = 0;
+        let marqueeAntialias = true;
+        let marqueeStyle = 'normal'; // 'normal', 'aspect', 'fixed'
+        let marqueeAspectW = 1;
+        let marqueeAspectH = 1;
+        let marqueeFixedW = 100;
+        let marqueeFixedH = 100;
+
         let layers = [];
         let activeLayerId = null;
 
-        // Selection & History State
-        let selectionType = null;
-        let selectionBounds = null;
-        let magicWandMask = null;
+        let selectionRegions = []; // Stores combined selection regions (paths/bounds/types)
         let activeAction = null;
         let startSelX = 0, startSelY = 0;
+        let currentDragSelection = null;
+        let dragOffsetSpaceX = 0, dragOffsetSpaceY = 0;
+        let isSpaceDraggingSelection = false;
+
         let lastX = 0, lastY = 0;
         let lassoPoints = [];
         let historyStack = [];
@@ -515,6 +477,7 @@
                     isBase: l.isBase,
                     opacity: l.opacity ?? 1,
                     blendMode: l.blendMode ?? 'source-over',
+                    lockTransparency: l.lockTransparency ?? false,
                     brightness: l.brightness,
                     contrast: l.contrast,
                     saturation: l.saturation,
@@ -548,6 +511,7 @@
                     isBase: s.isBase, 
                     opacity: s.opacity ?? 1,
                     blendMode: s.blendMode ?? 'source-over',
+                    lockTransparency: s.lockTransparency ?? false,
                     brightness: s.brightness ?? 100,
                     contrast: s.contrast ?? 100,
                     saturation: s.saturation ?? 100,
@@ -656,7 +620,7 @@
         });
 
         function animateMarchingAnts() {
-            if (selectionBounds || (selectionType === 'lasso' && lassoPoints.length > 0) || selectionType === 'magic-wand') {
+            if (selectionRegions.length > 0 || currentDragSelection) {
                 dashOffset = (dashOffset - 0.5) % 10;
                 redrawSelectionOverlay();
             }
@@ -666,43 +630,42 @@
 
         function redrawSelectionOverlay() {
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-            if (!selectionBounds && lassoPoints.length === 0 && !magicWandMask) return;
+            if (selectionRegions.length === 0 && !currentDragSelection) return;
 
             selectionCtx.lineWidth = 1;
             selectionCtx.setLineDash([4, 4]);
             selectionCtx.lineDashOffset = dashOffset;
 
-            if (selectionType === 'magic-wand' && magicWandMask) {
-                selectionCtx.fillStyle = 'rgba(0, 88, 208, 0.2)';
-                selectionCtx.fillRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-                return;
-            }
-
+            // Render all committed regions
             selectionCtx.strokeStyle = '#000000';
-            if (selectionType === 'rect') {
-                selectionCtx.strokeRect(selectionBounds.x, selectionBounds.y, selectionBounds.w, selectionBounds.h);
-            } else if (selectionType === 'circle') {
-                selectionCtx.beginPath();
-                selectionCtx.ellipse(selectionBounds.cx, selectionBounds.cy, selectionBounds.rx, selectionBounds.ry, 0, 0, Math.PI * 2);
-                selectionCtx.stroke();
-            } else if (selectionType === 'lasso' && lassoPoints.length > 0) {
-                selectionCtx.beginPath();
-                lassoPoints.forEach((p, idx) => idx === 0 ? selectionCtx.moveTo(p.x, p.y) : selectionCtx.lineTo(p.x, p.y));
-                selectionCtx.stroke();
+            selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
+
+            if (currentDragSelection) {
+                drawRegionOutline(selectionCtx, currentDragSelection);
             }
 
             selectionCtx.strokeStyle = '#ffffff';
             selectionCtx.lineDashOffset = dashOffset + 4;
-            if (selectionType === 'rect') {
-                selectionCtx.strokeRect(selectionBounds.x, selectionBounds.y, selectionBounds.w, selectionBounds.h);
-            } else if (selectionType === 'circle') {
-                selectionCtx.beginPath();
-                selectionCtx.ellipse(selectionBounds.cx, selectionBounds.cy, selectionBounds.rx, selectionBounds.ry, 0, 0, Math.PI * 2);
-                selectionCtx.stroke();
-            } else if (selectionType === 'lasso' && lassoPoints.length > 0) {
-                selectionCtx.beginPath();
-                lassoPoints.forEach((p, idx) => idx === 0 ? selectionCtx.moveTo(p.x, p.y) : selectionCtx.lineTo(p.x, p.y));
-                selectionCtx.stroke();
+            selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
+            if (currentDragSelection) {
+                drawRegionOutline(selectionCtx, currentDragSelection);
+            }
+        }
+
+        function drawRegionOutline(sCtx, reg) {
+            if (reg.type === 'rect') {
+                sCtx.strokeRect(reg.x, reg.y, reg.w, reg.h);
+            } else if (reg.type === 'circle') {
+                sCtx.beginPath();
+                sCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
+                sCtx.stroke();
+            } else if (reg.type === 'lasso' && reg.points && reg.points.length > 0) {
+                sCtx.beginPath();
+                reg.points.forEach((p, idx) => idx === 0 ? sCtx.moveTo(p.x, p.y) : sCtx.lineTo(p.x, p.y));
+                sCtx.stroke();
+            } else if (reg.type === 'magic-wand') {
+                sCtx.fillStyle = 'rgba(0, 88, 208, 0.25)';
+                sCtx.fillRect(0, 0, selectionCanvas.width, selectionCanvas.height);
             }
         }
 
@@ -746,7 +709,98 @@
         });
 
         function updateOptionsBarForTool(toolName) {
-            if (toolName === 'mixer-brush') {
+            if (toolName === 'rect-select' || toolName === 'circle-select') {
+                const isEllipse = toolName === 'circle-select';
+                optionsTitle.textContent = `${isEllipse ? 'Elliptical' : 'Rectangular'} Marquee Options:`;
+                dynamicOptionsContainer.innerHTML = `
+                    <div class="flex items-center space-x-1" title="New Selection">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'new' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="new"><i class="fa-solid fa-square text-[10px]"></i></button>
+                    </div>
+                    <div class="flex items-center space-x-1" title="Add to Selection (Shift)">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'add' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="add"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                    </div>
+                    <div class="flex items-center space-x-1" title="Subtract from Selection (Alt)">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'subtract' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="subtract"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                    </div>
+                    <div class="flex items-center space-x-1" title="Intersect with Selection (Shift+Alt)">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'intersect' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="intersect"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>
+                    <div class="w-[1px] h-4 bg-[#555]"></div>
+                    <div class="flex items-center space-x-1.5">
+                        <span>Style:</span>
+                        <select id="opt-marquee-style" class="bg-[#222] text-gray-200 rounded border border-[#555] px-1 py-0.5 text-[11px]">
+                            <option value="normal" ${marqueeStyle === 'normal' ? 'selected' : ''}>Normal</option>
+                            <option value="aspect" ${marqueeStyle === 'aspect' ? 'selected' : ''}>Fixed Aspect Ratio</option>
+                            <option value="fixed" ${marqueeStyle === 'fixed' ? 'selected' : ''}>Fixed Size</option>
+                        </select>
+                    </div>
+                    <div id="marquee-style-params" class="flex items-center space-x-2 ${marqueeStyle === 'normal' ? 'hidden' : ''}">
+                        <div id="aspect-params" class="flex items-center space-x-1 ${marqueeStyle === 'aspect' ? '' : 'hidden'}">
+                            <span>W:</span><input type="number" id="opt-aspect-w" value="${marqueeAspectW}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                            <span>H:</span><input type="number" id="opt-aspect-h" value="${marqueeAspectH}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        </div>
+                        <div id="fixed-params" class="flex items-center space-x-1 ${marqueeStyle === 'fixed' ? '' : 'hidden'}">
+                            <span>W(px):</span><input type="number" id="opt-fixed-w" value="${marqueeFixedW}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                            <span>H(px):</span><input type="number" id="opt-fixed-h" value="${marqueeFixedH}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        </div>
+                    </div>
+                    <div class="w-[1px] h-4 bg-[#555]"></div>
+                    <div class="flex items-center space-x-1.5">
+                        <span>Feather:</span>
+                        <input type="number" id="opt-feather" value="${marqueeFeather}" min="0" max="250" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        <span>px</span>
+                    </div>
+                    ${isEllipse ? `
+                    <div class="flex items-center space-x-1">
+                        <label class="flex items-center space-x-1 cursor-pointer text-[11px]">
+                            <input type="checkbox" id="opt-antialias" ${marqueeAntialias ? 'checked' : ''} class="rounded bg-[#222] border-[#555] text-[#0058d0]">
+                            <span>Anti-alias</span>
+                        </label>
+                    </div>
+                    ` : ''}
+                `;
+
+                // Hook up marquee options events
+                document.querySelectorAll('.marquee-mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        marqueeMode = btn.getAttribute('data-mode');
+                        updateOptionsBarForTool(currentTool);
+                    });
+                });
+
+                const styleSelect = document.getElementById('opt-marquee-style');
+                if (styleSelect) {
+                    styleSelect.addEventListener('change', (e) => {
+                        marqueeStyle = e.target.value;
+                        updateOptionsBarForTool(currentTool);
+                    });
+                }
+
+                const aspectW = document.getElementById('opt-aspect-w');
+                const aspectH = document.getElementById('opt-aspect-h');
+                if (aspectW && aspectH) {
+                    aspectW.addEventListener('input', (e) => marqueeAspectW = Math.max(1, parseInt(e.target.value) || 1));
+                    aspectH.addEventListener('input', (e) => marqueeAspectH = Math.max(1, parseInt(e.target.value) || 1));
+                }
+
+                const fixedW = document.getElementById('opt-fixed-w');
+                const fixedH = document.getElementById('opt-fixed-h');
+                if (fixedW && fixedH) {
+                    fixedW.addEventListener('input', (e) => marqueeFixedW = Math.max(1, parseInt(e.target.value) || 1));
+                    fixedH.addEventListener('input', (e) => marqueeFixedH = Math.max(1, parseInt(e.target.value) || 1));
+                }
+
+                const featherInput = document.getElementById('opt-feather');
+                if (featherInput) {
+                    featherInput.addEventListener('input', (e) => marqueeFeather = Math.max(0, parseInt(e.target.value) || 0));
+                }
+
+                const antialiasCheck = document.getElementById('opt-antialias');
+                if (antialiasCheck) {
+                    antialiasCheck.addEventListener('change', (e) => marqueeAntialias = e.target.checked);
+                }
+
+            } else if (toolName === 'mixer-brush') {
                 optionsTitle.textContent = "Mixer Brush Options:";
                 dynamicOptionsContainer.innerHTML = `
                     <div class="flex items-center space-x-2">
@@ -911,6 +965,8 @@
             const key = e.key.toLowerCase();
             if (e.code === 'Space') isSpacePressed = true;
             if (e.key === 'Control' || e.metaKey) isCtrlPressed = true;
+            if (e.key === 'Shift') isShiftPressed = true;
+            if (e.key === 'Alt') isAltPressed = true;
 
             if (e.ctrlKey || e.metaKey || e.key === 'F5' || e.key === 'F11' || e.key === 'F12') {
                 e.preventDefault();
@@ -925,9 +981,10 @@
                         else uploadOverlay.classList.remove('opacity-0', 'pointer-events-none');
                     } else if (key === 's') { downloadBtn.click(); }
                     else if (key === 't') { document.getElementById('transform-panel').classList.toggle('hidden'); }
+                    else if (key === 'e') { mergeLayerDown(activeLayerId); }
                     else if (key === '0') { document.getElementById('reset-view').click(); }
                     else if (key === 'd') {
-                        selectionBounds = null; selectionType = null; magicWandMask = null; lassoPoints = [];
+                        selectionRegions = []; currentDragSelection = null;
                         selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
                     }
                     else if (e.code === 'Backspace') { performSelectionFill(fgColor); }
@@ -942,8 +999,6 @@
             }
 
             if (key === 'x') { e.preventDefault(); swapColors(); return; }
-            if (key === 'd') { e.preventDefault(); changeBrushSize(3); return; }
-            if (key === 'a') { e.preventDefault(); changeBrushSize(-3); return; }
             if (key === 'q') {
                 e.preventDefault();
                 popupColorPicker.style.left = `${lastMouseScreenX}px`;
@@ -957,13 +1012,13 @@
                 return;
             }
 
-            if (key === '[') { e.preventDefault(); changeBrushSize(-3); return; }
-            if (key === ']') { e.preventDefault(); changeBrushSize(3); return; }
+            if (key === 'd' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); changeBrushSize(3); return; }
+            if (key === 'a' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); changeBrushSize(-3); return; }
 
             if (key === 'f') {
                 e.preventDefault();
-                if (e.shiftKey) {
-                    setTool('circle-select');
+                if (e.shiftKey || currentTool === 'rect-select') {
+                    setTool(currentTool === 'rect-select' ? 'circle-select' : 'rect-select');
                 } else {
                     setTool('rect-select');
                 }
@@ -985,12 +1040,14 @@
         window.addEventListener('keyup', (e) => {
             if (e.code === 'Space') isSpacePressed = false;
             if (e.key === 'Control' || e.key === 'Meta') isCtrlPressed = false;
+            if (e.key === 'Shift') isShiftPressed = false;
+            if (e.key === 'Alt') isAltPressed = false;
         }, { capture: true });
 
         function initLayers(w, h) {
             layers = [
-                { id: 'layer-base', name: 'Background', visible: true, canvas: createOffscreenCanvas(w, h), isBase: true, opacity: 1, blendMode: 'source-over', brightness: 100, contrast: 100, saturation: 100, blur: 0 },
-                { id: 'layer-1', name: 'Layer 1', visible: true, canvas: createOffscreenCanvas(w, h), isBase: false, opacity: 1, blendMode: 'source-over', brightness: 100, contrast: 100, saturation: 100, blur: 0 }
+                { id: 'layer-base', name: 'Background', visible: true, canvas: createOffscreenCanvas(w, h), isBase: true, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 },
+                { id: 'layer-1', name: 'Layer 1', visible: true, canvas: createOffscreenCanvas(w, h), isBase: false, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 }
             ];
             const bCtx = layers[0].canvas.getContext('2d');
             bCtx.fillStyle = '#ffffff';
@@ -1035,6 +1092,12 @@
                             <span class="text-xs font-medium text-gray-200 truncate">${layer.name}</span>
                         </div>
                         <div class="flex items-center space-x-1">
+                            <button class="p-1 ${layer.lockTransparency ? 'text-indigo-400 bg-[#333]' : 'text-gray-500 hover:text-gray-300'} rounded" title="Lock Transparent Pixels" onclick="event.stopPropagation(); toggleLockTransparency('${layer.id}')">
+                                <i class="fa-solid fa-chess-board text-[10px]"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-white rounded" title="Merge Down (Ctrl+E)" onclick="event.stopPropagation(); mergeLayerDown('${layer.id}')">
+                                <i class="fa-solid fa-down-long text-[9px]"></i>
+                            </button>
                             <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', 1)"><i class="fa-solid fa-chevron-up text-[9px]"></i></button>
                             <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', -1)"><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
                             ${!layer.isBase && layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="deleteLayer('${layer.id}')"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
@@ -1059,8 +1122,43 @@
 
         window.setActiveLayer = (id) => { activeLayerId = id; renderLayersUI(); syncAdjustmentsUI(); };
         window.toggleLayerVisibility = (id) => { const l = layers.find(x => x.id === id); if (l) { l.visible = !l.visible; renderLayersUI(); compositeCanvas(); saveHistoryState("Toggle Visibility"); } };
+        window.toggleLockTransparency = (id) => { const l = layers.find(x => x.id === id); if (l) { l.lockTransparency = !l.lockTransparency; renderLayersUI(); saveHistoryState("Toggle Pixel Lock"); } };
         window.updateLayerOpacity = (id, val) => { const l = layers.find(x => x.id === id); if (l) { l.opacity = parseFloat(val); compositeCanvas(); } };
         window.updateLayerBlendMode = (id, mode) => { const l = layers.find(x => x.id === id); if (l) { l.blendMode = mode; compositeCanvas(); saveHistoryState("Blend Mode Change"); } };
+        
+        window.mergeLayerDown = (id) => {
+            const idx = layers.findIndex(x => x.id === id);
+            if (idx <= 0) return;
+
+            const upperLayer = layers[idx];
+            const lowerLayer = layers[idx - 1];
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+
+            tCtx.globalAlpha = lowerLayer.opacity ?? 1;
+            tCtx.globalCompositeOperation = lowerLayer.blendMode ?? 'source-over';
+            tCtx.drawImage(lowerLayer.canvas, 0, 0);
+
+            tCtx.globalAlpha = upperLayer.opacity ?? 1;
+            tCtx.globalCompositeOperation = upperLayer.blendMode ?? 'source-over';
+            tCtx.drawImage(upperLayer.canvas, 0, 0);
+
+            const lowerCtx = lowerLayer.canvas.getContext('2d');
+            lowerCtx.clearRect(0, 0, canvas.width, canvas.height);
+            lowerCtx.drawImage(tempCanvas, 0, 0);
+
+            layers.splice(idx, 1);
+            activeLayerId = lowerLayer.id;
+
+            renderLayersUI();
+            syncAdjustmentsUI();
+            compositeCanvas();
+            saveHistoryState("Merge Down");
+        };
+
         window.deleteLayer = (id) => {
             if (layers.length <= 1) return;
             layers = layers.filter(x => x.id !== id);
@@ -1085,6 +1183,7 @@
                 isBase: false,
                 opacity: 1,
                 blendMode: 'source-over',
+                lockTransparency: false,
                 brightness: 100, contrast: 100, saturation: 100, blur: 0
             });
             activeLayerId = newId; 
@@ -1138,8 +1237,8 @@
                 selectionCanvas.width = originalWidth; selectionCanvas.height = originalHeight;
                 
                 layers = [
-                    { id: 'layer-base', name: 'Background Image', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: true, opacity: 1, blendMode: 'source-over', brightness: 100, contrast: 100, saturation: 100, blur: 0 },
-                    { id: 'layer-1', name: 'Layer 1', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: false, opacity: 1, blendMode: 'source-over', brightness: 100, contrast: 100, saturation: 100, blur: 0 }
+                    { id: 'layer-base', name: 'Background Image', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: true, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 },
+                    { id: 'layer-1', name: 'Layer 1', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: false, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 }
                 ];
                 activeLayerId = 'layer-1';
                 renderLayersUI();
@@ -1158,6 +1257,7 @@
         document.getElementById('menu-open').addEventListener('click', () => document.getElementById('image-upload').click());
         document.getElementById('menu-new').addEventListener('click', () => uploadOverlay.classList.remove('opacity-0', 'pointer-events-none'));
         document.getElementById('menu-new-layer').addEventListener('click', () => addLayerBtn.click());
+        document.getElementById('menu-merge-down').addEventListener('click', () => mergeLayerDown(activeLayerId));
         document.getElementById('menu-undo').addEventListener('click', () => undoLastAction());
         document.getElementById('menu-fill-fg').addEventListener('click', () => performSelectionFill(fgColor));
         document.getElementById('menu-fill-bg').addEventListener('click', () => performSelectionFill(bgColor));
@@ -1360,7 +1460,7 @@
 
             const queue = [[sx, sy]];
             const visited = new Uint8Array(w * h);
-            magicWandMask = new Uint8Array(w * h);
+            const wandMask = new Uint8Array(w * h);
 
             while (queue.length > 0) {
                 const [x, y] = queue.pop();
@@ -1375,7 +1475,7 @@
                 const da = Math.abs(data[pIdx+3] - sa);
 
                 if (dr <= wandTolerance && dg <= wandTolerance && db <= wandTolerance && da <= wandTolerance) {
-                    magicWandMask[idx] = 1;
+                    wandMask[idx] = 1;
                     if (x > 0) queue.push([x - 1, y]);
                     if (x < w - 1) queue.push([x + 1, y]);
                     if (y > 0) queue.push([x, y - 1]);
@@ -1383,9 +1483,21 @@
                 }
             }
 
-            selectionType = 'magic-wand';
-            selectionBounds = null;
+            const newReg = { type: 'magic-wand', mask: wandMask };
+            applySelectionCombination(newReg);
             redrawSelectionOverlay();
+        }
+
+        function applySelectionCombination(newReg) {
+            if (marqueeMode === 'new') {
+                selectionRegions = [newReg];
+            } else if (marqueeMode === 'add') {
+                selectionRegions.push(newReg);
+            } else if (marqueeMode === 'subtract') {
+                selectionRegions.push(newReg);
+            } else if (marqueeMode === 'intersect') {
+                selectionRegions = [newReg];
+            }
         }
 
         function applyMixerBrush(cx, cy) {
@@ -1414,6 +1526,9 @@
             const fb = parseInt(hex.substring(4, 6), 16);
             const wetFactor = (brushWetness / 100) * 0.25;
 
+            lCtx.save();
+            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
+
             for (let py = 0; py < rh; py++) {
                 for (let px = 0; px < rw; px++) {
                     const absX = x0 + px;
@@ -1435,11 +1550,9 @@
                 }
             }
             lCtx.putImageData(targetImgData, x0, y0);
+            lCtx.restore();
             compositeCanvas();
         }
-
-        // Fully corrected Smudge engine with fresh stroke anchor sampling
-        let smudgeSourceBuffer = null;
 
         function applySmudge(x1, y1, x2, y2) {
             const active = layers.find(l => l.id === activeLayerId);
@@ -1450,6 +1563,9 @@
 
             const dist = Math.hypot(x2 - x1, y2 - y1);
             const steps = Math.max(1, Math.floor(dist / (radius * 0.4)));
+
+            lCtx.save();
+            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
 
             for (let s = 0; s <= steps; s++) {
                 const t = s / steps;
@@ -1493,15 +1609,14 @@
                 }
                 lCtx.putImageData(layerImgData, x0, y0);
             }
+            lCtx.restore();
             compositeCanvas();
         }
 
         canvasWrapper.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            selectionBounds = null;
-            selectionType = null;
-            magicWandMask = null;
-            lassoPoints = [];
+            selectionRegions = [];
+            currentDragSelection = null;
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
         });
 
@@ -1535,18 +1650,35 @@
                 if (colorInput) colorInput.value = fgColor;
                 return;
             } else if (currentTool === 'bucket') {
-                const active = layers.find(l => l.id === activeLayerId);
-                if (!active) return;
                 floodFill(pos.x, pos.y, fgColor);
                 return;
             } else if (currentTool === 'magic-wand') {
                 magicWandSelect(pos.x, pos.y);
                 return;
-            } else if (['rect-select', 'circle-select', 'lasso-select'].includes(currentTool)) {
+            } else if (currentTool === 'rect-select' || currentTool === 'circle-select') {
+                const isEllipse = currentTool === 'circle-select';
+                
+                if (marqueeStyle === 'fixed') {
+                    const fw = marqueeFixedW;
+                    const fh = marqueeFixedH;
+                    const newReg = isEllipse ? {
+                        type: 'circle', cx: pos.x, cy: pos.y, rx: fw / 2, ry: fh / 2, x: pos.x - fw/2, y: pos.y - fh/2, w: fw, h: fh
+                    } : {
+                        type: 'rect', x: pos.x, y: pos.y, w: fw, h: fh
+                    };
+                    applySelectionCombination(newReg);
+                    redrawSelectionOverlay();
+                    return;
+                }
+
                 activeAction = 'select';
-                startSelX = pos.x; startSelY = pos.y;
-                if (currentTool === 'lasso-select') lassoPoints = [pos];
-                selectionType = currentTool === 'rect-select' ? 'rect' : (currentTool === 'circle-select' ? 'circle' : 'lasso');
+                startSelX = pos.x; 
+                startSelY = pos.y;
+            } else if (currentTool === 'lasso-select') {
+                activeAction = 'select';
+                startSelX = pos.x; 
+                startSelY = pos.y;
+                lassoPoints = [pos];
             } else if (['brush', 'eraser', 'mixer-brush', 'smudge'].includes(currentTool)) {
                 const active = layers.find(l => l.id === activeLayerId);
                 if (!active) return;
@@ -1557,15 +1689,20 @@
                     const lCtx = active.canvas.getContext('2d');
                     lCtx.save();
                     lCtx.lineWidth = brushSize; lCtx.lineCap = 'round'; lCtx.lineJoin = 'round';
-                    if (currentTool === 'eraser') { lCtx.globalCompositeOperation = 'destination-out'; lCtx.strokeStyle = 'rgba(0,0,0,1)'; }
-                    else { lCtx.globalCompositeOperation = 'source-over'; lCtx.strokeStyle = fgColor; lCtx.fillStyle = fgColor; }
+                    if (currentTool === 'eraser') { 
+                        lCtx.globalCompositeOperation = 'destination-out'; 
+                        lCtx.strokeStyle = 'rgba(0,0,0,1)'; 
+                    } else { 
+                        lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over'; 
+                        lCtx.strokeStyle = fgColor; 
+                        lCtx.fillStyle = fgColor; 
+                    }
                     lCtx.beginPath(); lCtx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2); lCtx.fill();
                     lCtx.restore();
                     compositeCanvas();
                 } else if (currentTool === 'mixer-brush') {
                     applyMixerBrush(pos.x, pos.y);
                 } else if (currentTool === 'smudge') {
-                    // Initialize fresh smudge sample region at pointer down
                     applySmudge(pos.x, pos.y, pos.x, pos.y);
                 }
             }
@@ -1576,15 +1713,69 @@
             const pos = getCanvasPointerPos(e);
 
             if (activeAction === 'select') {
-                if (selectionType === 'rect') {
-                    const w = pos.x - startSelX, h = pos.y - startSelY;
-                    selectionBounds = { x: w < 0 ? pos.x : startSelX, y: h < 0 ? pos.y : startSelY, w: Math.abs(w), h: Math.abs(h) };
-                } else if (selectionType === 'circle') {
-                    const rx = Math.abs(pos.x - startSelX) / 2, ry = Math.abs(pos.y - startSelY) / 2;
-                    const cx = startSelX + (pos.x > startSelX ? rx : -rx), cy = startSelY + (pos.y > startSelY ? ry : -ry);
-                    selectionBounds = { x: cx - rx, y: cy - ry, w: rx * 2, h: ry * 2, cx, cy, rx, ry };
-                } else if (selectionType === 'lasso') {
+                const isEllipse = currentTool === 'circle-select';
+                const isRect = currentTool === 'rect-select';
+
+                if (isSpacePressed) {
+                    if (!isSpaceDraggingSelection) {
+                        isSpaceDraggingSelection = true;
+                        dragOffsetSpaceX = pos.x - startSelX;
+                        dragOffsetSpaceY = pos.y - startSelY;
+                    }
+                    startSelX = pos.x - dragOffsetSpaceX;
+                    startSelY = pos.y - dragOffsetSpaceY;
+                } else {
+                    isSpaceDraggingSelection = false;
+                }
+
+                let x1 = startSelX;
+                let y1 = startSelY;
+                let x2 = pos.x;
+                let y2 = pos.y;
+
+                if (isAltPressed && !isSpacePressed) {
+                    const dx = Math.abs(x2 - x1);
+                    const dy = Math.abs(y2 - y1);
+                    x1 = startSelX - dx;
+                    x2 = startSelX + dx;
+                    y1 = startSelY - dy;
+                    y2 = startSelY + dy;
+                }
+
+                let w = x2 - x1;
+                let h = y2 - y1;
+
+                if (isShiftPressed || marqueeStyle === 'aspect') {
+                    if (marqueeStyle === 'aspect') {
+                        const ratio = marqueeAspectW / marqueeAspectH;
+                        if (Math.abs(w) / Math.abs(h) > ratio) {
+                            w = h * ratio * Math.sign(w);
+                        } else {
+                            h = w / ratio * Math.sign(h);
+                        }
+                    } else if (isRect || isEllipse) {
+                        const maxDim = Math.max(Math.abs(w), Math.abs(h));
+                        w = maxDim * Math.sign(w || 1);
+                        h = maxDim * Math.sign(h || 1);
+                    }
+                }
+
+                const finalX = w < 0 ? x1 + w : x1;
+                const finalY = h < 0 ? y1 + h : y1;
+                const finalW = Math.abs(w);
+                const finalH = Math.abs(h);
+
+                if (isRect) {
+                    currentDragSelection = { type: 'rect', x: finalX, y: finalY, w: finalW, h: finalH };
+                } else if (isEllipse) {
+                    const rx = finalW / 2;
+                    const ry = finalH / 2;
+                    const cx = finalX + rx;
+                    const cy = finalY + ry;
+                    currentDragSelection = { type: 'circle', cx, cy, rx, ry, x: finalX, y: finalY, w: finalW, h: finalH };
+                } else if (currentTool === 'lasso-select') {
                     lassoPoints.push(pos);
+                    currentDragSelection = { type: 'lasso', points: lassoPoints };
                 }
                 redrawSelectionOverlay();
             } else if (activeAction === 'draw') {
@@ -1602,7 +1793,7 @@
                         lCtx.globalCompositeOperation = 'destination-out'; 
                         lCtx.strokeStyle = 'rgba(0,0,0,1)'; 
                     } else { 
-                        lCtx.globalCompositeOperation = 'source-over'; 
+                        lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over'; 
                         lCtx.strokeStyle = fgColor; 
                     }
 
@@ -1623,12 +1814,15 @@
         });
 
         window.addEventListener('pointerup', () => {
-            if (activeAction === 'draw') {
+            if (activeAction === 'select' && currentDragSelection) {
+                applySelectionCombination(currentDragSelection);
+                currentDragSelection = null;
+            } else if (activeAction === 'draw') {
                 saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : 'Brush'} Stroke`);
             }
             activeAction = null;
         });
-        window.addEventListener('pointercancel', () => { activeAction = null; });
+        window.addEventListener('pointercancel', () => { activeAction = null; currentDragSelection = null; });
 
         function performSelectionFill(colorToFill) {
             const active = layers.find(l => l.id === activeLayerId);
@@ -1636,36 +1830,41 @@
             const lCtx = active.canvas.getContext('2d');
             lCtx.save();
             lCtx.fillStyle = colorToFill;
-            lCtx.globalCompositeOperation = 'source-over';
+            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
 
-            if (selectionType === 'magic-wand' && magicWandMask) {
-                const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
-                const data = imgData.data;
-                const hex = colorToFill.replace('#', '');
-                const tr = parseInt(hex.substring(0, 2), 16);
-                const tg = parseInt(hex.substring(2, 4), 16);
-                const tb = parseInt(hex.substring(4, 6), 16);
+            if (selectionRegions.length > 0) {
+                selectionRegions.forEach(reg => {
+                    if (reg.type === 'rect') {
+                        lCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
+                    } else if (reg.type === 'circle') {
+                        lCtx.beginPath(); 
+                        lCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2); 
+                        lCtx.fill();
+                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
+                        lCtx.beginPath();
+                        reg.points.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
+                        lCtx.closePath(); 
+                        lCtx.fill();
+                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                        const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
+                        const data = imgData.data;
+                        const hex = colorToFill.replace('#', '');
+                        const tr = parseInt(hex.substring(0, 2), 16);
+                        const tg = parseInt(hex.substring(2, 4), 16);
+                        const tb = parseInt(hex.substring(4, 6), 16);
 
-                for (let i = 0; i < magicWandMask.length; i++) {
-                    if (magicWandMask[i]) {
-                        const idx = i * 4;
-                        data[idx] = tr;
-                        data[idx+1] = tg;
-                        data[idx+2] = tb;
-                        data[idx+3] = 255;
+                        for (let i = 0; i < reg.mask.length; i++) {
+                            if (reg.mask[i]) {
+                                const idx = i * 4;
+                                data[idx] = tr;
+                                data[idx+1] = tg;
+                                data[idx+2] = tb;
+                                data[idx+3] = 255;
+                            }
+                        }
+                        lCtx.putImageData(imgData, 0, 0);
                     }
-                }
-                lCtx.putImageData(imgData, 0, 0);
-            } else if (selectionBounds && (selectionType === 'rect' || selectionType === 'circle')) {
-                if (selectionType === 'rect') {
-                    lCtx.fillRect(selectionBounds.x, selectionBounds.y, selectionBounds.w, selectionBounds.h);
-                } else if (selectionType === 'circle') {
-                    lCtx.beginPath(); lCtx.ellipse(selectionBounds.cx, selectionBounds.cy, selectionBounds.rx, selectionBounds.ry, 0, 0, Math.PI * 2); lCtx.fill();
-                }
-            } else if (selectionType === 'lasso' && lassoPoints.length > 2) {
-                lCtx.beginPath();
-                lassoPoints.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
-                lCtx.closePath(); lCtx.fill();
+                });
             } else {
                 lCtx.fillRect(0, 0, active.canvas.width, active.canvas.height);
             }
@@ -1677,7 +1876,8 @@
         fillFgBtn.addEventListener('click', () => performSelectionFill(fgColor));
         fillBgBtn.addEventListener('click', () => performSelectionFill(bgColor));
         clearSelectionBtn.addEventListener('click', () => {
-            selectionBounds = null; selectionType = null; magicWandMask = null; lassoPoints = [];
+            selectionRegions = []; 
+            currentDragSelection = null;
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
         });
 

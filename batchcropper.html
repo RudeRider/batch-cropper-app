@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Cropper | Digital Asset Tools</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Load JSZip for client-side compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Load FileSaver for cross-browser file downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .gallery-item {
+            width: 100%;
+            min-height: 100px; 
+            overflow: hidden; 
+            background-color: #374151;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+        }
+        .gallery-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .cropper-hidden {
+            display: none !important;
+        }
+        .ratio-btn {
+            @apply bg-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition shadow-md;
+        }
+        .ratio-btn.active-ratio {
+            @apply bg-indigo-500 text-white hover:bg-indigo-600 shadow-xl;
+        }
+        .drop-active {
+            @apply border-indigo-500 bg-indigo-900/50 shadow-inner;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="App.init()">
+
+    <!-- SHARED NAVIGATION BAR (Tabs Removed) -->
+    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
+                <span>🧰 Digital Asset Tools</span>
+            </a>
+            <a href="index.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-house"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Loading Overlay (Global) -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="flex flex-col items-center text-white">
+            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="loading-text" class="mt-3 text-lg">Processing 0 files...</p>
+        </div>
+    </div>
+    
+    <!-- Non-blocking message box (Global) -->
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
+        <p id="messageText"></p>
+    </div>
+
+    <!-- --- CROPPING TOOL APP CONTAINER --- -->
+    <div id="cropper-app" class="tool-container w-full p-4 sm:p-8">
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">Batch Cropper</h2>
+        
+        <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
+            <aside id="sticky-settings" class="lg:w-80 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-20 lg:self-start z-10">
+                <div id="cropperUploadDropZone" class="mb-8 p-6 bg-gray-800 shadow-xl rounded-xl border border-gray-700 transition-all duration-300 border-dashed border-4 border-gray-600 hover:border-indigo-400">
+                    <label for="cropperFileInput" class="block text-lg font-bold text-gray-100 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
+                    <input type="file" id="cropperFileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
+                    <p id="cropper-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                </div>
+
+                <div class="p-4 sm:p-6 bg-indigo-950 rounded-xl border border-indigo-700 shadow-lg mb-8">
+                    <h2 class="text-xl font-bold text-indigo-300 mb-4">2. Global Crop Settings (Default)</h2>
+                    
+                    <div class="grid lg:grid-cols-1 gap-6">
+                        <div class="col-span-full">
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Aspect Ratios (Applies to all crops)</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button data-ratio="9/16" class="ratio-btn active-ratio" type="button">9:16 (Story)</button>
+                                <button data-ratio="16/9" class="ratio-btn" type="button">16:9 (HD)</button>
+                                <button data-ratio="1/1" class="ratio-btn" type="button">1:1 (Square)</button>
+                                <button data-ratio="4/3" class="ratio-btn" type="button">4:3</button>
+                                <button data-ratio="3/2" class="ratio-btn" type="button">3:2</button>
+                                <button data-ratio="5/4" class="ratio-btn" type="button">5:4</button>
+                                <button data-ratio="21/9" class="ratio-btn" type="button">21:9 (Cinematic)</button>
+                                <button data-ratio="NaN" class="ratio-btn" type="button">Free Crop</button>
+                            </div>
+                        </div>
+
+                        <div class="col-span-full">
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Custom Ratio (e.g., 5:2)</label>
+                            <div class="flex flex-col space-y-2">
+                                <div class="flex space-x-2 items-center">
+                                    <input type="number" id="customWidth" placeholder="Width" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
+                                    <span class="text-xl text-gray-400">:</span>
+                                    <input type="number" id="customHeight" placeholder="Height" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
+                                </div>
+                                <button id="applyCustomRatio" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition shadow-md" type="button">Apply Custom Ratio</button>
+                            </div>
+                            <p id="ratio-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        
+                        <div class="col-span-full border-t pt-4 mt-4 border-indigo-700">
+                            <h3 class="text-lg font-bold text-indigo-300 mb-3">2.5. Global Output Settings</h3>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Default Output Resolution:</label>
+                                <select id="global-resolution-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
+                                    <option value="auto" selected>Auto-size (Based on Crop Box)</option>
+                                    <option value="1920x1080">1920x1080 (HD - Default)</option>
+                                    <option value="1080x1920">1080x1920 (Story)</option>
+                                    <option value="1080x1080">1080x1080 (Square)</option>
+                                    <option value="custom">Custom Pixels...</option>
+                                </select>
+                                <div id="global-custom-res-inputs" class="flex space-x-2 items-center hidden">
+                                    <input type="number" id="globalWidth" placeholder="Width (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                    <span class="text-xl text-gray-400">:</span>
+                                    <input type="number" id="globalHeight" placeholder="Height (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                </div>
+                            </div>
+
+                            <label class="block text-sm font-semibold text-gray-300 mb-1">Output Format:</label>
+                            <select id="global-format-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
+                                <option value="png">PNG (Best Quality/Transparency)</option>
+                                <option value="jpeg" selected>JPEG (Smaller File Size)</option>
+                            </select>
+                            
+                            <div id="global-quality-control" class="hidden mt-2 p-3 bg-indigo-900 rounded-lg">
+                                <label class="block text-sm font-semibold text-indigo-300 mb-1">JPEG Quality (<span id="global-quality-display">90</span>%):</label>
+                                <input type="range" id="global-quality-slider" min="1" max="100" value="90" class="w-full h-2 bg-indigo-700/50 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="cropperDownloadSection" class="pt-6 flex flex-col items-center hidden bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
+                    <h2 class="text-xl font-bold text-gray-100 mb-4">3. Batch Download</h2>
+                    <button id="downloadAllCropperBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                        Download All Cropped Images (ZIP)
+                    </button>
+                </div>
+            </aside>
+            
+            <div id="cropper-main-content" class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700">
+                <div id="cropperGallerySection" class="hidden mb-8">
+                    <h2 class="text-xl font-bold text-gray-100 mb-4">4. Crop Gallery (<span id="cropperFileCount">0</span> Files)</h2>
+                    <div id="cropperGalleryContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cropper.js Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        const showMessage = (text, isError = false) => {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
+            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
+            clearTimeout(messageBox.timer);
+            messageBox.timer = setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        };
+
+        const toggleLoading = (isVisible, text = 'Processing...') => {
+            loadingText.textContent = text;
+            loadingOverlay.classList.toggle('hidden', !isVisible);
+        };
+
+        const getResolutionValue = (input) => {
+            const value = parseInt(input.value, 10);
+            return (isNaN(value) || value <= 0) ? null : value;
+        };
+
+        const ratioToFloat = (ratioString) => {
+            if (ratioString === 'NaN') return NaN;
+            const parts = ratioString.split('/');
+            if (parts.length === 2) {
+                const num = parseFloat(parts[0]);
+                const den = parseFloat(parts[1]);
+                if (!isNaN(num) && !isNaN(den) && den !== 0) {
+                    return num / den;
+                }
+            }
+            return NaN;
+        };
+
+        window.App = {
+            init: function() {
+                cropperTool.init();
+            }
+        };
+
+        const cropperTool = {
+            fileInput: document.getElementById('cropperFileInput'),
+            uploadDropZone: document.getElementById('cropperUploadDropZone'),
+            ratioBtns: document.querySelectorAll('#cropper-app .ratio-btn'),
+            applyCustomRatioBtn: document.getElementById('applyCustomRatio'),
+            customWidthInput: document.getElementById('customWidth'),
+            customHeightInput: document.getElementById('customHeight'),
+            uploadError: document.getElementById('cropper-upload-error'),
+            gallerySection: document.getElementById('cropperGallerySection'),
+            galleryContainer: document.getElementById('cropperGalleryContainer'),
+            fileCountDisplay: document.getElementById('cropperFileCount'),
+            downloadAllBtn: document.getElementById('downloadAllCropperBtn'),
+            downloadSection: document.getElementById('cropperDownloadSection'),
+            ratioError: document.getElementById('ratio-error'),
+            
+            globalResolutionSelect: document.getElementById('global-resolution-select'),
+            globalCustomResInputs: document.getElementById('global-custom-res-inputs'),
+            globalWidthInput: document.getElementById('globalWidth'),
+            globalHeightInput: document.getElementById('globalHeight'),
+            globalFormatSelect: document.getElementById('global-format-select'),
+            globalQualityControl: document.getElementById('global-quality-control'),
+            globalQualitySlider: document.getElementById('global-quality-slider'),
+            globalQualityDisplay: document.getElementById('global-quality-display'),
+
+            cropperInstances: [], 
+            currentAspectRatio: ratioToFloat("9/16"), 
+            currentRatioString: "9/16", 
+            
+            globalOutputFormat: 'jpeg', 
+            globalJpegQuality: 0.9,     
+            globalOutputWidth: null, 
+            globalOutputHeight: null, 
+            
+            RATIO_PRESETS: [
+                { label: "Global Default", value: "GLOBAL" },
+                { label: "9:16 (Story)", value: "9/16" },
+                { label: "16:9 (HD)", value: "16/9" },
+                { label: "1:1 (Square)", value: "1/1" },
+                { label: "4:3", value: "4/3" },
+                { label: "3:2", value: "3/2" },
+                { label: "5:4", value: "5/4" },
+                { label: "21:9 (Cinematic)", value: "21/9" },
+                { label: "Free Crop", value: "NaN" }
+            ],
+
+            RESOLUTION_PRESETS: [
+                { label: "Global Default Resolution", value: "GLOBAL" }, 
+                { label: "None (Auto-size)", value: "auto" },
+                { label: "Custom Pixels...", value: "custom" },
+                { label: "1080x1920 (Story)", value: "1080x1920" }, 
+                { label: "1920x1080 (HD)", value: "1920x1080" },
+                { label: "1080x1080 (Square)", value: "1080x1080" },
+                { label: "1280x720 (720p)", value: "1280x720" },
+                { label: "4096x2160 (4K Cinema)", value: "4096x2160" }
+            ],
+
+            init: function() {
+                this.fileInput.addEventListener('change', (e) => this.processFiles(e.target.files));
+                this.downloadAllBtn.addEventListener('click', () => this.downloadAllBatch());
+                this.setupDragDrop();
+                this.setupGlobalRatioHandlers();
+                this.setupGalleryDelegation(); 
+                
+                this.globalFormatSelect.addEventListener('change', (e) => this.setGlobalOutputFormat(e.target.value));
+                this.globalQualitySlider.addEventListener('input', (e) => this.setGlobalJpegQuality(parseInt(e.target.value, 10)));
+                this.updateGlobalFormatDisplay(); 
+
+                this.globalResolutionSelect.addEventListener('change', () => this.updateGlobalResolution());
+                this.globalWidthInput.addEventListener('input', () => this.updateGlobalResolution());
+                this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
+                this.globalCustomResInputs.classList.toggle('hidden', this.globalResolutionSelect.value !== 'custom');
+                this.globalQualityControl.classList.toggle('hidden', this.globalFormatSelect.value !== 'jpeg');
+            },
+
+            setGlobalOutputFormat: function(format) {
+                this.globalOutputFormat = format;
+                this.updateGlobalFormatDisplay();
+                showMessage(`Global output format set to ${format.toUpperCase()}.`);
+            },
+
+            setGlobalJpegQuality: function(qualityPercent) {
+                this.globalJpegQuality = qualityPercent / 100;
+                this.globalQualityDisplay.textContent = qualityPercent;
+            },
+
+            updateGlobalFormatDisplay: function() {
+                this.globalQualityControl.classList.toggle('hidden', this.globalOutputFormat !== 'jpeg');
+            },
+
+            updateGlobalResolution: function() {
+                const value = this.globalResolutionSelect.value;
+                this.globalCustomResInputs.classList.toggle('hidden', value !== 'custom');
+
+                let newWidth = null;
+                let newHeight = null;
+
+                if (value === 'auto') {
+                    newWidth = null;
+                    newHeight = null;
+                } else if (value === 'custom') {
+                    newWidth = getResolutionValue(this.globalWidthInput);
+                    newHeight = getResolutionValue(this.globalHeightInput);
+                } else {
+                    const parts = value.split('x');
+                    newWidth = parseInt(parts[0], 10);
+                    newHeight = parseInt(parts[1], 10);
+                }
+
+                this.globalOutputWidth = newWidth;
+                this.globalOutputHeight = newHeight;
+                
+                this.cropperInstances.forEach(item => {
+                    const resSelect = item.card.querySelector('.local-resolution-select');
+                    if (resSelect.value === 'GLOBAL') {
+                        this.updateLocalVisualFeedback(item.card);
+                    }
+                });
+            },
+
+            updateLocalVisualFeedback: function(card) {
+                const ratioSelect = card.querySelector('.local-ratio-select');
+                const ratioActiveClasses = ['border-indigo-500', 'ring-2', 'ring-indigo-200'];
+                const toggleClasses = (element, isActive, activeClasses) => {
+                    element.classList.remove(...activeClasses);
+                    element.classList.remove('border-gray-600'); 
+                    if (isActive) {
+                        element.classList.add(...activeClasses);
+                    } else {
+                        element.classList.add('border-gray-600'); 
+                    }
+                };
+                toggleClasses(ratioSelect, ratioSelect.value !== "GLOBAL", ratioActiveClasses);
+
+                const colorInput = card.querySelector('.local-fill-color');
+                const fillToggle = card.querySelector('.local-fill-toggle');
+                const colorActiveClasses = ['border-pink-500', 'ring-2', 'ring-pink-200']; 
+                toggleClasses(colorInput, fillToggle.checked && colorInput.value.toLowerCase() !== "#ffffff", colorActiveClasses);
+                
+                const resSelect = card.querySelector('.local-resolution-select');
+                const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                const resolutionActiveClasses = ['border-orange-500', 'ring-2', 'ring-orange-200'];
+                
+                let isResolutionActive = false;
+                if (resSelect.value === "GLOBAL") { 
+                    if (cropperTool.globalOutputWidth !== null || cropperTool.globalOutputHeight !== null) {
+                        isResolutionActive = true;
+                    }
+                } else if (resSelect.value === "custom") {
+                    isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
+                } else if (resSelect.value !== "auto") { 
+                    isResolutionActive = true;
+                }
+                
+                toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
+                card.querySelector('.custom-res-inputs').classList.toggle('hidden', resSelect.value !== 'custom');
+            },
+            
+            getOutputResolution: function(card) {
+                const resSelect = card.querySelector('.local-resolution-select');
+                const value = resSelect.value;
+
+                if (value === 'GLOBAL') { 
+                    return { width: this.globalOutputWidth, height: this.globalOutputHeight };
+                }
+                if (value === 'auto') { 
+                    return { width: null, height: null }; 
+                }
+                if (value === 'custom') {
+                    const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
+                    const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
+                    return { width: getResolutionValue(widthInput), height: getResolutionValue(heightInput) };
+                }
+                const parts = value.split('x');
+                return { width: parseInt(parts[0], 10) || null, height: parseInt(parts[1], 10) || null };
+            },
+
+            applyAutoCenter: function(cropper, ratio, imageWidth, imageHeight) {
+                let cropWidth = imageWidth;
+                let cropHeight = imageHeight;
+
+                if (!isNaN(ratio) && ratio > 0) {
+                    const imageRatio = imageWidth / imageHeight;
+                    if (imageRatio > ratio) {
+                        cropHeight = imageHeight;
+                        cropWidth = imageHeight * ratio;
+                    } else {
+                        cropWidth = imageWidth;
+                        cropHeight = imageWidth / ratio;
+                    }
+                } 
+                
+                const left = (imageWidth - cropWidth) / 2;
+                const top = (imageHeight - cropHeight) / 2;
+                cropper.setCropBoxData({ width: Math.max(1, Math.round(cropWidth)), height: Math.max(1, Math.round(cropHeight)), left, top });
+            },
+
+            setCropperRatio: function(ratioString) {
+                this.currentAspectRatio = ratioToFloat(ratioString);
+                this.currentRatioString = ratioString; 
+                
+                this.cropperInstances.forEach(item => {
+                    const select = item.card.querySelector('.local-ratio-select');
+                    if (select && select.value === "GLOBAL" && item.cropper) {
+                        item.cropper.setAspectRatio(this.currentAspectRatio);
+                        const imageElement = item.cropper.element;
+                        if (imageElement.naturalWidth && imageElement.naturalHeight) {
+                            this.applyAutoCenter(item.cropper, this.currentAspectRatio, imageElement.naturalWidth, imageElement.naturalHeight);
+                        }
+                    }
+                });
+            },
+
+            handleLocalRatioChange: function(ratioValue, item) {
+                const newRatio = ratioValue === "GLOBAL" ? this.currentAspectRatio : ratioToFloat(ratioValue);
+                if (item.cropper) {
+                    item.cropper.setAspectRatio(newRatio);
+                    const imageElement = item.cropper.element;
+                    if (imageElement.naturalWidth && imageElement.naturalHeight) {
+                        this.applyAutoCenter(item.cropper, newRatio, imageElement.naturalWidth, imageElement.naturalHeight);
+                    }
+                }
+                this.updateLocalVisualFeedback(item.card);
+            },
+            
+            updateGalleryIndexAndCount: function() {
+                const count = this.cropperInstances.length;
+                this.fileCountDisplay.textContent = count;
+                
+                this.cropperInstances.forEach((item, newIndex) => {
+                    const card = item.card;
+                    ['.delete-btn', '.reset-crop-btn', '.regenerate-id-btn', '.rotate-btn', '.flip-btn', '.local-download-btn'].forEach(selector => {
+                        const btn = card.querySelector(selector);
+                        if (btn) btn.dataset.index = newIndex;
+                    });
+                    item.index = newIndex; 
+                });
+
+                if (count === 0) {
+                    this.gallerySection.classList.add('hidden');
+                    this.downloadSection.classList.add('hidden');
+                    this.downloadAllBtn.disabled = true;
+                } else {
+                    this.gallerySection.classList.remove('hidden');
+                    this.downloadSection.classList.remove('hidden');
+                    this.downloadAllBtn.disabled = false;
+                    this.downloadAllBtn.textContent = count === 1 ? 'Download Cropped Image' : `Download All ${count} Cropped Images (ZIP)`;
+                }
+            },
+
+            createCropperCardHTML: function(file, index, uniqueId) {
+                return `
+                    <div class="bg-gray-800 shadow-xl rounded-xl flex flex-col border border-gray-700" data-unique-id="${uniqueId}">
+                        <div class="px-4 py-3 bg-gray-700 border-b border-gray-700 flex justify-between items-center text-xs text-gray-300 truncate px-4">
+                            <span class="truncate" title="${file.name}">📄 ${file.name}</span>
+                        </div>
+                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
+                            <select class="local-ratio-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none">
+                                ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
+                            <select class="local-resolution-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none mb-2">
+                                ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === 'GLOBAL' ? 'selected' : ''}>${p.label}</option>`).join('')}
+                            </select>
+                            <div class="custom-res-inputs flex space-x-2 items-center hidden">
+                                <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                <span class="text-gray-400">x</span>
+                                <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                            </div>
+                        </div>
+                        <div class="flex-grow p-1">
+                            <div class="gallery-item">
+                                <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label class="flex items-center space-x-2 text-xs font-medium text-gray-300">
+                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-500 border-gray-600 rounded focus:ring-pink-500" checked>
+                                <span class="text-xs">Fill Empty Area:</span>
+                            </label>
+                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-600 rounded-lg cursor-pointer focus:outline-none bg-gray-700">
+                        </div>
+                        <div class="px-4 py-2 border-t border-gray-700 border-b flex justify-end">
+                            <div class="flex items-center space-x-2">
+                                <button data-index="${index}" class="rotate-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Rotate 90°"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9l-3.74 3.74"/></svg></button>
+                                <button data-index="${index}" class="flip-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Flip Horizontal"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2v18h20zM7 12h10M12 7v10"/></svg></button>
+                                <button data-index="${index}" class="reset-crop-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Reset"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9L21 8"/><path d="M11 12h10M11 8h10M11 16h10"/></svg></button>
+                                <button data-index="${index}" class="delete-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="p-4 pt-0">
+                            <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full font-semibold px-4 py-2 text-sm rounded-lg hover:bg-indigo-700 transition shadow-md" type="button">Download</button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            processFiles: async function(files) {
+                this.uploadError.classList.add('hidden');
+                if (files.length === 0) return;
+
+                if (this.cropperInstances.length > 0) {
+                    this.cropperInstances.forEach(item => item.cropper?.destroy());
+                    this.cropperInstances = [];
+                    this.galleryContainer.innerHTML = '';
+                }
+
+                const validFiles = Array.from(files).filter(file => 
+                    ['image/png', 'image/jpeg'].includes(file.type) && file.size <= 5 * 1024 * 1024
+                );
+                
+                if (validFiles.length === 0) {
+                    this.uploadError.textContent = 'No valid PNG or JPEG files (Max 5MB) were found.';
+                    this.uploadError.classList.remove('hidden');
+                    this.fileInput.value = '';
+                    return;
+                }
+                
+                toggleLoading(true, `Loading ${validFiles.length} images...`);
+                this.fileInput.value = '';
+                
+                let fileLoadPromises = validFiles.map((file, index) => {
+                    const uniqueId = crypto.randomUUID().substring(0, 8); 
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = this.createCropperCardHTML(file, index, uniqueId);
+                    const card = tempDiv.children[0]; 
+                    this.galleryContainer.appendChild(card);
+
+                    return new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const imageElement = card.querySelector(`#image-cropper-${index}`);
+                            imageElement.src = event.target.result;
+                            imageElement.classList.remove('cropper-hidden');
+                            
+                            const cropper = new Cropper(imageElement, {
+                                aspectRatio: this.currentAspectRatio,
+                                viewMode: 0, dragMode: 'move', background: false, movable: true, zoomable: true, zoomOnWheel: true, 
+                                ready: () => {
+                                    this.applyAutoCenter(cropper, cropper.options.aspectRatio, imageElement.naturalWidth, imageElement.naturalHeight);
+                                    resolve({ file, cropper, index, card, uniqueId, ratioSelectElement: card.querySelector('.local-ratio-select') });
+                                }
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+
+                const results = await Promise.allSettled(fileLoadPromises);
+                results.forEach(result => {
+                    if (result.status === 'fulfilled' && result.value) {
+                        const item = result.value;
+                        item.card.querySelector('.gallery-item').addEventListener('wheel', (e) => e.preventDefault(), { passive: false }); 
+                        item.ratioSelectElement.addEventListener('change', (e) => this.handleLocalRatioChange(e.target.value, item));
+                        item.card.querySelector('.local-fill-color').addEventListener('change', () => this.updateLocalVisualFeedback(item.card));
+                        item.card.querySelector('.local-fill-toggle').addEventListener('change', () => this.updateLocalVisualFeedback(item.card));
+                        item.card.querySelector('.local-resolution-select').addEventListener('change', () => this.updateLocalVisualFeedback(item.card));
+                        
+                        this.updateLocalVisualFeedback(item.card);
+                        this.cropperInstances.push(item);
+                    }
+                });
+
+                this.updateGalleryIndexAndCount();
+                toggleLoading(false);
+            },
+
+            setupDragDrop: function() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    this.uploadDropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+                });
+                ['dragenter', 'dragover'].forEach(eventName => this.uploadDropZone.classList.add('drop-active'));
+                ['dragleave', 'drop'].forEach(eventName => this.uploadDropZone.classList.remove('drop-active'));
+                this.uploadDropZone.addEventListener('drop', (e) => this.processFiles(e.dataTransfer.files));
+            },
+
+            setupGlobalRatioHandlers: function() {
+                this.ratioBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const ratioString = btn.dataset.ratio;
+                        this.setCropperRatio(ratioString);
+                        document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                        btn.classList.add('active-ratio');
+                        this.customWidthInput.value = '';
+                        this.customHeightInput.value = '';
+                        this.ratioError.classList.add('hidden');
+                        showMessage(`Global ratio set to ${ratioString.replace('/', ':')}`);
+                    });
+                });
+                this.applyCustomRatioBtn.addEventListener('click', () => {
+                    this.ratioError.classList.add('hidden');
+                    const width = parseInt(this.customWidthInput.value, 10);
+                    const height = parseInt(this.customHeightInput.value, 10);
+                    if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                        this.ratioError.textContent = 'Please enter valid positive numbers.';
+                        this.ratioError.classList.remove('hidden');
+                        return;
+                    }
+                    this.setCropperRatio(`${width}/${height}`);
+                    document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                    showMessage(`Custom ratio ${width}:${height} applied.`);
+                });
+            },
+
+            setupGalleryDelegation: function() {
+                this.galleryContainer.addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-btn');
+                    const resetCropBtn = e.target.closest('.reset-crop-btn');
+                    const rotateBtn = e.target.closest('.rotate-btn'); 
+                    const flipBtn = e.target.closest('.flip-btn');     
+                    const localDownloadBtn = e.target.closest('.local-download-btn');
+
+                    const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || rotateBtn?.dataset.index || flipBtn?.dataset.index || localDownloadBtn?.dataset.index;
+                    if (index === undefined) return;
+                    
+                    const item = this.cropperInstances.find(i => i.index === parseInt(index, 10)); 
+                    if (!item) return;
+
+                    if (deleteBtn) {
+                        item.cropper.destroy();
+                        item.card.remove();
+                        this.cropperInstances = this.cropperInstances.filter(i => i.index !== item.index);
+                        this.updateGalleryIndexAndCount();
+                        showMessage(`Image removed from batch.`);
+                    } else if (resetCropBtn) {
+                        const ratio = item.card.querySelector('.local-ratio-select').value === 'GLOBAL' ? this.currentAspectRatio : ratioToFloat(item.card.querySelector('.local-ratio-select').value);
+                        this.applyAutoCenter(item.cropper, ratio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
+                        showMessage(`Crop reset.`);
+                    } else if (rotateBtn) {
+                        item.cropper.rotate(90);
+                    } else if (flipBtn) {
+                        item.cropper.scaleX((item.cropper.getData().scaleX || 1) === 1 ? -1 : 1);
+                    } else if (localDownloadBtn) {
+                        this.processAndDownloadSingle(item, false);
+                    }
+                });
+            },
+
+            processAndDownloadSingle: async function(item, isBatch = false) {
+                if (!isBatch) toggleLoading(true, `Processing single file...`);
+                try {
+                    const cropper = item.cropper;
+                    const card = item.card;
+                    const useSolidFill = card.querySelector('.local-fill-toggle').checked;
+                    const finalFillColor = card.querySelector('.local-fill-color').value; 
+                    const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card); 
+
+                    let outputFormat = this.globalOutputFormat; 
+                    if (!useSolidFill) outputFormat = 'png'; 
+                    
+                    const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+                    const extension = outputFormat === 'jpeg' ? 'jpeg' : 'png';
+                    const croppedCanvas = cropper.getCroppedCanvas();
+                    const sourceWidth = croppedCanvas.width;
+                    const sourceHeight = croppedCanvas.height;
+                    
+                    let finalWidth = targetWidth || sourceWidth;
+                    let finalHeight = targetHeight || sourceHeight;
+                    if (targetWidth && !targetHeight) finalHeight = Math.round(sourceHeight * (targetWidth / sourceWidth));
+                    else if (targetHeight && !targetWidth) finalWidth = Math.round(sourceWidth * (targetHeight / sourceHeight));
+                    
+                    let canvasToBlob = croppedCanvas;
+                    if ((finalWidth !== sourceWidth) || (finalHeight !== sourceHeight) || useSolidFill) {
+                        canvasToBlob = document.createElement('canvas');
+                        canvasToBlob.width = finalWidth;
+                        canvasToBlob.height = finalHeight;
+                        const ctx = canvasToBlob.getContext('2d');
+                        if (useSolidFill) {
+                            ctx.fillStyle = finalFillColor;
+                            ctx.fillRect(0, 0, finalWidth, finalHeight);
+                        }
+                        ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
+                    }
+                    
+                    const originalNameWithoutExt = item.file.name.substring(0, item.file.name.lastIndexOf('.')) || item.file.name;
+                    let filename = `${originalNameWithoutExt}.${extension}`;
+                    
+                    if (isBatch) {
+                        return new Promise(resolve => canvasToBlob.toBlob((blob) => resolve({ filename, blob }), mimeType, outputFormat === 'jpeg' ? this.globalJpegQuality : 1.0));
+                    }
+                    
+                    await new Promise(resolve => {
+                        canvasToBlob.toBlob((blob) => {
+                            if (blob) { saveAs(blob, filename); showMessage(`Downloaded ${filename}`); } 
+                            else { showMessage("Failed to create image blob.", true); }
+                            resolve();
+                        }, mimeType, outputFormat === 'jpeg' ? this.globalJpegQuality : 1.0);
+                    });
+                } catch (e) {
+                    console.error("Error processing file:", e);
+                    if (!isBatch) showMessage("Error downloading image.", true);
+                    throw e; 
+                } finally {
+                    if (!isBatch) toggleLoading(false);
+                }
+            },
+
+            downloadAllBatch: async function() {
+                if (this.cropperInstances.length === 0) return;
+                
+                if (typeof JSZip === 'undefined') {
+                    showMessage("Compression library failed to load. Check your internet connection.", true);
+                    return;
+                }
+
+                this.downloadAllBtn.disabled = true;
+                const totalFiles = this.cropperInstances.length;
+                
+                if (totalFiles === 1) {
+                    try { await this.processAndDownloadSingle(this.cropperInstances[0], false); } 
+                    catch (e) {} 
+                    finally { this.downloadAllBtn.disabled = false; }
+                    return; 
+                }
+
+                let successfulFiles = [];
+                const zip = new JSZip();
+
+                for (let i = 0; i < totalFiles; i++) {
+                    toggleLoading(true, `Processing file ${i + 1} of ${totalFiles}...`);
+                    try {
+                        const { filename, blob } = await this.processAndDownloadSingle(this.cropperInstances[i], true);
+                        if (blob) {
+                            let finalZipFilename = filename;
+                            let counter = 1;
+                            while (zip.files[finalZipFilename]) {
+                                const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+                                const ext = filename.substring(filename.lastIndexOf('.'));
+                                finalZipFilename = `${nameWithoutExt}_(${counter})${ext}`;
+                                counter++;
+                            }
+                            zip.file(finalZipFilename, blob);
+                            successfulFiles.push(finalZipFilename);
+                        }
+                    } catch (e) {
+                        console.error(`Error processing file index ${i}:`, e);
+                    }
+                }
+                
+                if (successfulFiles.length > 0) {
+                    try {
+                        toggleLoading(true, `Compiling ZIP file...`);
+                        const zipBlob = await zip.generateAsync({ type: "blob" });
+                        saveAs(zipBlob, "batch_cropped_images.zip");
+                        showMessage(`Batch download complete! ${successfulFiles.length} files compiled into ZIP.`);
+                    } catch (e) {
+                        console.error("Error during ZIP compilation:", e);
+                        showMessage("Error compiling ZIP file.", true);
+                    }
+                } else {
+                    showMessage("Batch failed: Could not process images.", true);
+                }
+                toggleLoading(false);
+                this.downloadAllBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

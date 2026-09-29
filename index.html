@@ -1,556 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batch Cropper | Digital Asset Tools</title>
+    <title>Digital Asset Tools Suite</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Cropper.js CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Load JSZip for client-side compression -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Load FileSaver for cross-browser file downloading -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        .gallery-item {
-            width: 100%;
-            min-height: 100px; 
-            overflow: hidden; 
-            background-color: #374151;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #4b5563;
-            border-radius: 0.5rem;
+        body { font-family: 'Inter', sans-serif; background-color: #030712; color: #f3f4f6; }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(75, 85, 99, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .gallery-item img {
-            max-width: 100%;
-            height: auto;
-            display: block;
+        .glass-panel:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.2);
+            transform: translateY(-4px);
         }
-        .cropper-hidden {
-            display: none !important;
-        }
-        .ratio-btn {
-            background-color: #374151;
-            color: #d1d5db;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.2s;
-        }
-        .ratio-btn:hover {
-            background-color: #4b5563;
-        }
-        .ratio-btn.active-ratio {
-            background-color: #6366f1;
-            color: #ffffff;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .drop-active {
-            border-color: #6366f1 !important;
-            background-color: rgba(49, 46, 129, 0.5) !important;
+        .hero-glow {
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(3, 7, 18, 0) 70%);
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="initApp()">
+<body class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white overflow-x-hidden">
 
-    <!-- SHARED NAVIGATION BAR -->
-    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
-        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
-            <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
-            <nav class="flex flex-wrap justify-center gap-2">
-                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Batch Cropper</a>
-                <a href="editor.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Image Editor</a>
-                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
-                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
-                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Text Editor</a>
-                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Solid PNG</a>
-            </nav>
+    <!-- Ambient Background Glow -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] hero-glow pointer-events-none z-0"></div>
+
+    <!-- Minimalist Header -->
+    <header class="sticky top-0 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800/80 z-30">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-xl group-hover:scale-105 transition">
+                    🧰
+                </div>
+                <span class="text-lg font-black tracking-tight text-white">Digital Asset Tools</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <a href="editor.html" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>PixelCraft Studio</span>
+                </a>
+            </div>
         </div>
     </header>
 
-    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
-        <div class="flex flex-col items-center text-white">
-            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p id="loading-text" class="mt-3 text-lg">Processing 0 files...</p>
+    <!-- Main Content Hub -->
+    <main class="flex-grow max-w-7xl mx-auto px-6 py-16 relative z-10 w-full flex flex-col justify-center">
+        <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <span class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest">
+                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                <span>Client-Side Engine</span>
+            </span>
+            <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight">
+                Command Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Digital Assets</span>
+            </h1>
+            <p class="text-gray-400 text-base sm:text-lg">
+                Lightning-fast browser utilities. Zero server latency, total privacy.
+            </p>
         </div>
-    </div>
-    
-    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
-        <p id="messageText"></p>
-    </div>
 
-    <!-- Batch Cropper App -->
-    <div id="cropper-app" class="tool-container w-full p-4 sm:p-8">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">Batch Cropper</h2>
-        
-        <div class="flex flex-col lg:flex-row-reverse lg:gap-8 relative">
-            <aside id="sticky-settings" class="lg:w-80 lg:flex-shrink-0 mb-8 lg:mb-0 lg:sticky lg:top-8 lg:self-start z-10">
-                <div id="cropperUploadDropZone" class="mb-8 p-6 bg-gray-800 shadow-xl rounded-xl border border-gray-700 transition-all duration-300 border-dashed border-4 border-gray-600 hover:border-indigo-400">
-                    <label for="cropperFileInput" class="block text-lg font-bold text-gray-100 mb-3 cursor-pointer">1. Upload PNG or JPEG Files (or Drag Here)</label>
-                    <input type="file" id="cropperFileInput" accept="image/png, image/jpeg" multiple class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
-                    <p id="cropper-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
-                </div>
-
-                <div class="p-4 sm:p-6 bg-indigo-950 rounded-xl border border-indigo-700 shadow-lg mb-8">
-                    <h2 class="text-xl font-bold text-indigo-300 mb-4">2. Global Crop Settings (Default)</h2>
-                    
-                    <div class="grid lg:grid-cols-1 gap-6">
-                        <div class="col-span-full">
-                            <label class="block text-sm font-semibold text-gray-300 mb-2">Aspect Ratios (Applies to all crops)</label>
-                            <div class="flex flex-wrap gap-2">
-                                <button data-ratio="9/16" class="ratio-btn active-ratio" type="button">9:16 (Story)</button>
-                                <button data-ratio="16/9" class="ratio-btn" type="button">16:9 (HD)</button>
-                                <button data-ratio="1/1" class="ratio-btn" type="button">1:1 (Square)</button>
-                                <button data-ratio="4/3" class="ratio-btn" type="button">4:3</button>
-                                <button data-ratio="3/2" class="ratio-btn" type="button">3:2</button>
-                                <button data-ratio="5/4" class="ratio-btn" type="button">5:4</button>
-                                <button data-ratio="21/9" class="ratio-btn" type="button">21:9 (Cinematic)</button>
-                                <button data-ratio="NaN" class="ratio-btn" type="button">Free Crop</button>
-                            </div>
-                        </div>
-
-                        <div class="col-span-full">
-                            <label class="block text-sm font-semibold text-gray-300 mb-2">Custom Ratio (e.g., 5:2)</label>
-                            <div class="flex flex-col space-y-2">
-                                <div class="flex space-x-2 items-center">
-                                    <input type="number" id="customWidth" placeholder="Width" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
-                                    <span class="text-xl text-gray-400">:</span>
-                                    <input type="number" id="customHeight" placeholder="Height" class="w-1/2 p-2 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-center bg-gray-700 text-gray-100" min="1">
-                                </div>
-                                <button id="applyCustomRatio" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition shadow-md" type="button">Apply Custom Ratio</button>
-                            </div>
-                            <p id="ratio-error" class="text-red-500 text-sm mt-2 hidden"></p>
-                        </div>
-                        
-                        <div class="col-span-full border-t pt-4 mt-4 border-indigo-700">
-                            <h3 class="text-lg font-bold text-indigo-300 mb-3">2.5. Global Output Settings</h3>
-
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Default Output Resolution:</label>
-                                <select id="global-resolution-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
-                                    <option value="auto" selected>Auto-size (Based on Crop Box)</option>
-                                    <option value="1920x1080">1920x1080 (HD - Default)</option>
-                                    <option value="1080x1920">1080x1920 (Story)</option>
-                                    <option value="1080x1080">1080x1080 (Square)</option>
-                                    <option value="custom">Custom Pixels...</option>
-                                </select>
-                                <div id="global-custom-res-inputs" class="flex space-x-2 items-center hidden">
-                                    <input type="number" id="globalWidth" placeholder="Width (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
-                                    <span class="text-xl text-gray-400">:</span>
-                                    <input type="number" id="globalHeight" placeholder="Height (px)" class="w-1/2 p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center" min="1">
-                                </div>
-                            </div>
-
-                            <label class="block text-sm font-semibold text-gray-300 mb-1">Output Format:</label>
-                            <select id="global-format-select" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 mb-2">
-                                <option value="png">PNG (Best Quality/Transparency)</option>
-                                <option value="jpeg" selected>JPEG (Smaller File Size)</option>
-                            </select>
-                            
-                            <div id="global-quality-control" class="hidden mt-2 p-3 bg-indigo-900 rounded-lg">
-                                <label class="block text-sm font-semibold text-indigo-300 mb-1">JPEG Quality (<span id="global-quality-display">90</span>%):</label>
-                                <input type="range" id="global-quality-slider" min="1" max="100" value="90" class="w-full h-2 bg-indigo-700/50 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="cropperDownloadSection" class="pt-6 flex flex-col items-center hidden bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-700">
-                    <h2 class="text-xl font-bold text-gray-100 mb-4">3. Batch Download</h2>
-                    <button id="downloadAllCropperBtn" class="bg-green-600 text-white text-xl font-bold px-10 py-4 rounded-full hover:bg-green-700 transition transform hover:scale-[1.02] shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                        Download All Cropped Images (ZIP)
-                    </button>
-                </div>
-            </aside>
+        <!-- Interactive Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <div id="cropper-main-content" class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700">
-                <div id="cropperGallerySection" class="hidden mb-8">
-                    <h2 class="text-xl font-bold text-gray-100 mb-4">4. Crop Gallery (<span id="cropperFileCount">0</span> Files)</h2>
-                    <div id="cropperGalleryContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            <!-- 1. Batch Cropper -->
+            <a href="batchcropper.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-2xl mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L1 6.13"/><path d="M14 6h3a2 2 0 0 1 2 2v3"/><path d="M19 17v3a2 2 0 0 1-2 2h-3"/><path d="M10 17H7a2 2 0 0 1-2-2V8"/><path d="M14 10h-4v4h4z"/></svg>
+                    </div>
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Cropping Suite</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-indigo-300 transition">Batch Cropper</h3>
                 </div>
-            </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-gray-400 group-hover:text-white transition">
+                    <span>Launch Tool</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 2. SqueezePix -->
+            <a href="squeezepix.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-purple-600/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-2xl mb-6 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                        🗜️
+                    </div>
+                    <span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Quantization</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-purple-300 transition">SqueezePix</h3>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-gray-400 group-hover:text-white transition">
+                    <span>Launch Tool</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 3. Video Frames -->
+            <a href="video.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-pink-600/10 text-pink-400 border border-pink-500/20 flex items-center justify-center text-2xl mb-6 group-hover:bg-pink-600 group-hover:text-white transition-all duration-300">
+                        🎥
+                    </div>
+                    <span class="text-xs font-bold text-pink-400 uppercase tracking-wider">Extraction</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-pink-300 transition">Video Frames</h3>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-gray-400 group-hover:text-white transition">
+                    <span>Launch Tool</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 4. Text Editor -->
+            <a href="text.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                        📝
+                    </div>
+                    <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Workspace</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-blue-300 transition">Cloud Editor</h3>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-gray-400 group-hover:text-white transition">
+                    <span>Launch Tool</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 5. Solid PNG -->
+            <a href="png.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-green-600/10 text-green-400 border border-green-500/20 flex items-center justify-center text-2xl mb-6 group-hover:bg-green-600 group-hover:text-white transition-all duration-300">
+                        🎨
+                    </div>
+                    <span class="text-xs font-bold text-green-400 uppercase tracking-wider">Generator</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-green-300 transition">Solid PNG</h3>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-gray-400 group-hover:text-white transition">
+                    <span>Launch Tool</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 6. PixelCraft Pro -->
+            <a href="editor.html" class="glass-panel rounded-3xl p-8 flex flex-col justify-between group border-indigo-500/30 bg-gradient-to-br from-indigo-950/30 to-gray-900/60">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xl shadow-indigo-600/40">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Advanced Suite</span>
+                    <h3 class="text-2xl font-bold text-white mt-1 group-hover:text-indigo-300 transition">PixelCraft Studio</h3>
+                </div>
+                <div class="mt-8 flex items-center justify-between text-sm font-semibold text-indigo-400 group-hover:text-white transition">
+                    <span>Open Studio</span>
+                    <i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
+                </div>
+            </a>
+
         </div>
-    </div>
-    
-    <!-- Load Cropper.js Script -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    </main>
 
-    <script>
-        const messageBox = document.getElementById('messageBox');
-        const messageText = document.getElementById('messageText');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const loadingText = document.getElementById('loading-text');
+    <!-- Minimal Footer -->
+    <footer class="py-8 text-center text-xs text-gray-600 border-t border-gray-900">
+        <p>Digital Asset Tools Suite • 100% Client-Side Processing</p>
+    </footer>
 
-        const showMessage = (text, isError = false) => {
-            messageText.textContent = text;
-            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
-            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
-            clearTimeout(messageBox.timer);
-            messageBox.timer = setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 5000);
-        };
-
-        const toggleLoading = (isVisible, text = 'Processing...') => {
-            loadingText.textContent = text;
-            loadingOverlay.classList.toggle('hidden', !isVisible);
-        };
-
-        const getResolutionValue = (input) => {
-            const value = parseInt(input.value, 10);
-            return (isNaN(value) || value <= 0) ? null : value;
-        };
-
-        const ratioToFloat = (ratioString) => {
-            if (ratioString === 'NaN') return NaN;
-            const parts = ratioString.split('/');
-            if (parts.length === 2) {
-                const num = parseFloat(parts[0]);
-                const den = parseFloat(parts[1]);
-                if (!isNaN(num) && !isNaN(den) && den !== 0) return num / den;
-            }
-            return NaN;
-        };
-
-        const cropperTool = {
-            fileInput: document.getElementById('cropperFileInput'),
-            uploadDropZone: document.getElementById('cropperUploadDropZone'),
-            ratioBtns: document.querySelectorAll('.ratio-btn'),
-            applyCustomRatioBtn: document.getElementById('applyCustomRatio'),
-            customWidthInput: document.getElementById('customWidth'),
-            customHeightInput: document.getElementById('customHeight'),
-            uploadError: document.getElementById('cropper-upload-error'),
-            gallerySection: document.getElementById('cropperGallerySection'),
-            galleryContainer: document.getElementById('cropperGalleryContainer'),
-            fileCountDisplay: document.getElementById('cropperFileCount'),
-            downloadAllBtn: document.getElementById('downloadAllCropperBtn'),
-            downloadSection: document.getElementById('cropperDownloadSection'),
-            ratioError: document.getElementById('ratio-error'),
-            
-            globalResolutionSelect: document.getElementById('global-resolution-select'),
-            globalCustomResInputs: document.getElementById('global-custom-res-inputs'),
-            globalWidthInput: document.getElementById('globalWidth'),
-            globalHeightInput: document.getElementById('globalHeight'),
-            globalFormatSelect: document.getElementById('global-format-select'),
-            globalQualityControl: document.getElementById('global-quality-control'),
-            globalQualitySlider: document.getElementById('global-quality-slider'),
-            globalQualityDisplay: document.getElementById('global-quality-display'),
-
-            cropperInstances: [], 
-            currentAspectRatio: ratioToFloat("9/16"), 
-            globalOutputFormat: 'jpeg', 
-            globalJpegQuality: 0.9,     
-            globalOutputWidth: null, 
-            globalOutputHeight: null, 
-            
-            RATIO_PRESETS: [
-                { label: "Global Default", value: "GLOBAL" },
-                { label: "9:16 (Story)", value: "9/16" },
-                { label: "16:9 (HD)", value: "16/9" },
-                { label: "1:1 (Square)", value: "1/1" },
-                { label: "4:3", value: "4/3" },
-                { label: "3:2", value: "3/2" },
-                { label: "5:4", value: "5/4" },
-                { label: "21:9 (Cinematic)", value: "21/9" },
-                { label: "Free Crop", value: "NaN" }
-            ],
-
-            RESOLUTION_PRESETS: [
-                { label: "Global Default Resolution", value: "GLOBAL" }, 
-                { label: "None (Auto-size)", value: "auto" },
-                { label: "Custom Pixels...", value: "custom" },
-                { label: "1080x1920 (Story)", value: "1080x1920" }, 
-                { label: "1920x1080 (HD)", value: "1920x1080" },
-                { label: "1080x1080 (Square)", value: "1080x1080" },
-                { label: "1280x720 (720p)", value: "1280x720" },
-                { label: "4096x2160 (4K Cinema)", value: "4096x2160" }
-            ],
-
-            init: function() {
-                this.fileInput.addEventListener('change', (e) => this.processFiles(e.target.files));
-                this.downloadAllBtn.addEventListener('click', () => this.downloadAllBatch());
-                this.setupDragDrop();
-                this.setupGlobalRatioHandlers();
-                this.setupGalleryDelegation(); 
-                
-                this.globalFormatSelect.addEventListener('change', (e) => this.setGlobalOutputFormat(e.target.value));
-                this.globalQualitySlider.addEventListener('input', (e) => this.setGlobalJpegQuality(parseInt(e.target.value, 10)));
-                this.updateGlobalFormatDisplay(); 
-
-                this.globalResolutionSelect.addEventListener('change', () => this.updateGlobalResolution());
-                this.globalWidthInput.addEventListener('input', () => this.updateGlobalResolution());
-                this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
-
-                // Custom Ratio Button Handler
-                this.applyCustomRatioBtn.addEventListener('click', () => {
-                    const w = parseFloat(this.customWidthInput.value);
-                    const h = parseFloat(this.customHeightInput.value);
-                    if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
-                        this.ratioError.textContent = "Please enter valid positive numbers for width and height.";
-                        this.ratioError.classList.remove('hidden');
-                        return;
-                    }
-                    this.ratioError.classList.add('hidden');
-                    document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
-                    const customRatioStr = `${w}/${h}`;
-                    this.setCropperRatio(customRatioStr);
-                    showMessage(`Applied custom ratio ${w}:${h}`);
-                });
-            },
-
-            setGlobalOutputFormat: function(format) {
-                this.globalOutputFormat = format;
-                this.updateGlobalFormatDisplay();
-                showMessage(`Global output format set to ${format.toUpperCase()}.`);
-            },
-
-            setGlobalJpegQuality: function(qualityPercent) {
-                this.globalJpegQuality = qualityPercent / 100;
-                this.globalQualityDisplay.textContent = qualityPercent;
-            },
-
-            updateGlobalFormatDisplay: function() {
-                this.globalQualityControl.classList.toggle('hidden', this.globalOutputFormat !== 'jpeg');
-            },
-
-            updateGlobalResolution: function() {
-                const value = this.globalResolutionSelect.value;
-                this.globalCustomResInputs.classList.toggle('hidden', value !== 'custom');
-                if (value === 'auto') {
-                    this.globalOutputWidth = null;
-                    this.globalOutputHeight = null;
-                } else if (value === 'custom') {
-                    this.globalOutputWidth = getResolutionValue(this.globalWidthInput);
-                    this.globalOutputHeight = getResolutionValue(this.globalHeightInput);
-                } else {
-                    const parts = value.split('x');
-                    this.globalOutputWidth = parseInt(parts[0], 10);
-                    this.globalOutputHeight = parseInt(parts[1], 10);
-                }
-                showMessage(`Global resolution updated.`);
-            },
-
-            getOutputResolution: function(card) {
-                const resSelect = card.querySelector('.local-resolution-select');
-                const value = resSelect.value;
-                if (value === 'GLOBAL') return { width: this.globalOutputWidth, height: this.globalOutputHeight };
-                if (value === 'auto') return { width: null, height: null }; 
-                if (value === 'custom') {
-                    return {
-                        width: getResolutionValue(card.querySelector('.custom-res-inputs input[data-dim="width"]')),
-                        height: getResolutionValue(card.querySelector('.custom-res-inputs input[data-dim="height"]'))
-                    };
-                }
-                const parts = value.split('x');
-                return { width: parseInt(parts[0], 10), height: parseInt(parts[1], 10) };
-            },
-
-            applyAutoCenter: function(cropper, ratio, imageWidth, imageHeight) {
-                let cropWidth = imageWidth, cropHeight = imageHeight;
-                if (!isNaN(ratio) && ratio > 0) {
-                    if ((imageWidth / imageHeight) > ratio) {
-                        cropWidth = imageHeight * ratio;
-                    } else {
-                        cropHeight = imageWidth / ratio;
-                    }
-                } 
-                cropper.setCropBoxData({ width: cropWidth, height: cropHeight, left: (imageWidth - cropWidth) / 2, top: (imageHeight - cropHeight) / 2 });
-            },
-
-            setCropperRatio: function(ratioString) {
-                this.currentAspectRatio = ratioToFloat(ratioString);
-                this.cropperInstances.forEach(item => {
-                    if (item.card.querySelector('.local-ratio-select').value === "GLOBAL") {
-                        item.cropper.setAspectRatio(this.currentAspectRatio);
-                        this.applyAutoCenter(item.cropper, this.currentAspectRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
-                    }
-                });
-            },
-
-            handleLocalRatioChange: function(ratioValue, item) {
-                const newRatio = ratioValue === "GLOBAL" ? this.currentAspectRatio : ratioToFloat(ratioValue);
-                item.cropper.setAspectRatio(newRatio);
-                this.applyAutoCenter(item.cropper, newRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
-            },
-            
-            updateGalleryIndexAndCount: function() {
-                const count = this.cropperInstances.length;
-                this.fileCountDisplay.textContent = count;
-                this.cropperInstances.forEach((item, newIndex) => {
-                    item.index = newIndex;
-                    item.card.querySelectorAll('[data-index]').forEach(el => el.dataset.index = newIndex);
-                });
-                this.gallerySection.classList.toggle('hidden', count === 0);
-                this.downloadSection.classList.toggle('hidden', count === 0);
-                this.downloadAllBtn.disabled = count === 0;
-            },
-
-            createCardHTML: function(file, index, uniqueId) {
-                return `
-                    <div class="bg-gray-800 shadow-xl rounded-xl flex flex-col border border-gray-700" data-unique-id="${uniqueId}">
-                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
-                            <select class="local-ratio-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100">
-                                ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
-                            <select class="local-resolution-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 mb-2">
-                                ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === 'GLOBAL' ? 'selected' : ''}>${p.label}</option>`).join('')}
-                            </select>
-                            <div class="custom-res-inputs flex space-x-2 items-center hidden">
-                                <input type="number" data-dim="width" placeholder="W" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center">
-                                <span class="text-gray-400">x</span>
-                                <input type="number" data-dim="height" placeholder="H" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center">
-                            </div>
-                        </div>
-                        <div class="flex-grow p-1">
-                            <div class="gallery-item"><img id="image-cropper-${index}" src="" class="cropper-hidden"></div>
-                        </div>
-                        <div class="px-4 py-2 border-t border-gray-700 bg-gray-800 flex justify-between items-center">
-                            <label class="flex items-center space-x-2 text-xs text-gray-300">
-                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-500 rounded" checked>
-                                <span>Fill Area</span>
-                            </label>
-                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-600 rounded cursor-pointer bg-gray-700">
-                        </div>
-                        <div class="px-4 py-2 border-t border-gray-700 flex justify-end space-x-2">
-                            <button data-index="${index}" class="rotate-btn text-gray-300 hover:text-white p-1" title="Rotate">🔄</button>
-                            <button data-index="${index}" class="reset-crop-btn text-gray-300 hover:text-white p-1" title="Reset">🎯</button>
-                            <button data-index="${index}" class="delete-btn text-red-400 hover:text-red-300 p-1" title="Delete">❌</button>
-                        </div>
-                        <div class="p-4 pt-0">
-                            <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full py-2 text-sm rounded-lg hover:bg-indigo-700 transition">Download</button>
-                        </div>
-                    </div>
-                `;
-            },
-
-            processFiles: async function(files) {
-                if (!files.length) return;
-                toggleLoading(true, `Loading ${files.length} images...`);
-                Array.from(files).forEach((file, index) => {
-                    const uniqueId = crypto.randomUUID().substring(0, 8);
-                    const cardDiv = document.createElement('div');
-                    cardDiv.innerHTML = this.createCardHTML(file, index, uniqueId);
-                    const card = cardDiv.children[0];
-                    this.galleryContainer.appendChild(card);
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = card.querySelector(`#image-cropper-${index}`);
-                        img.src = e.target.result;
-                        img.classList.remove('cropper-hidden');
-                        const cropper = new Cropper(img, {
-                            aspectRatio: this.currentAspectRatio,
-                            viewMode: 0,
-                            ready: () => {
-                                this.applyAutoCenter(cropper, this.currentAspectRatio, img.naturalWidth, img.naturalHeight);
-                                this.cropperInstances.push({ file, cropper, index, card, uniqueId });
-                                this.updateGalleryIndexAndCount();
-                                toggleLoading(false);
-                            }
-                        });
-
-                        card.querySelector('.local-ratio-select').addEventListener('change', (ev) => {
-                            this.handleLocalRatioChange(ev.target.value, this.cropperInstances.find(i => i.index === index));
-                        });
-
-                        card.querySelector('.local-resolution-select').addEventListener('change', (ev) => {
-                            card.querySelector('.custom-res-inputs').classList.toggle('hidden', ev.target.value !== 'custom');
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                });
-            },
-
-            setupDragDrop: function() {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(n => this.uploadDropZone.addEventListener(n, e => { e.preventDefault(); e.stopPropagation(); }));
-                this.uploadDropZone.addEventListener('drop', e => this.processFiles(e.dataTransfer.files));
-            },
-
-            setupGlobalRatioHandlers: function() {
-                this.ratioBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
-                        btn.classList.add('active-ratio');
-                        this.setCropperRatio(btn.dataset.ratio);
-                    });
-                });
-            },
-
-            setupGalleryDelegation: function() {
-                this.galleryContainer.addEventListener('click', (e) => {
-                    const idx = parseInt(e.target.dataset.index, 10);
-                    const item = this.cropperInstances.find(i => i.index === idx);
-                    if (!item) return;
-
-                    if (e.target.closest('.delete-btn')) {
-                        item.cropper.destroy();
-                        item.card.remove();
-                        this.cropperInstances = this.cropperInstances.filter(i => i !== item);
-                        this.updateGalleryIndexAndCount();
-                    } else if (e.target.closest('.rotate-btn')) {
-                        item.cropper.rotate(90);
-                    } else if (e.target.closest('.reset-crop-btn')) {
-                        this.applyAutoCenter(item.cropper, item.cropper.options.aspectRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
-                    } else if (e.target.closest('.local-download-btn')) {
-                        this.processAndDownloadSingle(item, false);
-                    }
-                });
-            },
-
-            processAndDownloadSingle: async function(item, isBatch = false) {
-                const canvas = item.cropper.getCroppedCanvas();
-                const res = this.getOutputResolution(item.card);
-                let finalCanvas = canvas;
-
-                if (res.width || res.height) {
-                    finalCanvas = document.createElement('canvas');
-                    finalCanvas.width = res.width || canvas.width;
-                    finalCanvas.height = res.height || canvas.height;
-                    const ctx = finalCanvas.getContext('2d');
-                    if (item.card.querySelector('.local-fill-toggle').checked) {
-                        ctx.fillStyle = item.card.querySelector('.local-fill-color').value;
-                        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-                    }
-                    ctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
-                }
-
-                const mime = this.globalOutputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
-                const filename = `img_${item.uniqueId}.${this.globalOutputFormat}`;
-
-                if (isBatch) {
-                    return new Promise(res => finalCanvas.toBlob(blob => res({ filename, blob }), mime, this.globalJpegQuality));
-                }
-                finalCanvas.toBlob(blob => saveAs(blob, filename), mime, this.globalJpegQuality);
-            },
-
-            downloadAllBatch: async function() {
-                if (!this.cropperInstances.length) return;
-                toggleLoading(true, "Compiling ZIP archive...");
-                const zip = new JSZip();
-                for (const item of this.cropperInstances) {
-                    const res = await this.processAndDownloadSingle(item, true);
-                    zip.file(res.filename, res.blob);
-                }
-                const content = await zip.generateAsync({ type: 'blob' });
-                saveAs(content, 'batch_cropped_images.zip');
-                toggleLoading(false);
-                showMessage("Batch download complete!");
-            }
-        };
-
-        function initApp() {
-            cropperTool.init();
-        }
-    </script>
 </body>
 </html>

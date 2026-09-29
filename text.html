@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         .editor-container {
@@ -49,17 +50,16 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="textTool.init()">
 
-    <!-- SHARED NAVIGATION BAR -->
+    <!-- SHARED NAVIGATION BAR (Tabs Removed) -->
     <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
-        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
-            <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
-            <nav class="flex flex-wrap justify-center gap-2">
-                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Batch Cropper</a>
-                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
-                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
-                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Text Editor</a>
-                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Solid PNG</a>
-            </nav>
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
+                <span>🧰 Digital Asset Tools</span>
+            </a>
+            <a href="index.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-house"></i>
+                <span>Back to Home</span>
+            </a>
         </div>
     </header>
 
