@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelCraft - Basic Image Editor</title>
+    <title>PixelCraft Pro - Photoshop-Style Editor</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,9 +13,15 @@
                 extend: {
                     colors: {
                         dark: {
+                            700: '#27272f',
                             800: '#1e1e24',
                             900: '#121216',
                             950: '#0a0a0c'
+                        },
+                        photoshop: {
+                            bg: '#353535',
+                            panel: '#262626',
+                            border: '#1e1e1e'
                         }
                     }
                 }
@@ -27,56 +33,46 @@
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        input[type="range"] {
-            accent-color: #6366f1;
-        }
-        /* Custom scrollbar for control panel */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.5);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.8);
+        body { font-family: 'Inter', sans-serif; user-select: none; touch-action: none; }
+        input[type="range"] { accent-color: #6366f1; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
+        .floating-panel {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
-<body class="bg-dark-900 text-gray-100 h-full flex flex-col overflow-hidden">
+<body class="bg-photoshop-bg text-gray-100 h-full flex flex-col overflow-hidden">
 
-    <header class="bg-dark-950 border-b border-gray-800 px-6 py-4 flex items-center justify-between shrink-0">
+    <header class="bg-photoshop-panel border-b border-photoshop-border px-6 py-3 flex items-center justify-between shrink-0 z-30">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-base"></i>
             </div>
             <div>
-                <h1 class="font-bold text-lg tracking-wide text-white">PixelCraft</h1>
-                <p class="text-xs text-gray-400">Lightweight Online Image Editor</p>
+                <h1 class="font-bold text-base tracking-wide text-white leading-none">PixelCraft Pro</h1>
+                <p class="text-[10px] text-gray-400 mt-0.5">Advanced Photoshop-Style Web Editor</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
-            <button id="reset-btn" class="px-4 py-2 bg-dark-800 hover:bg-gray-700 text-gray-300 rounded-xl font-medium text-sm transition-all flex items-center space-x-2 border border-gray-700">
+            <button id="reset-btn" class="px-3.5 py-1.5 bg-dark-800 hover:bg-gray-700 text-gray-300 rounded-xl font-medium text-xs transition-all flex items-center space-x-2 border border-gray-700">
                 <i class="fa-solid fa-rotate-left"></i>
-                <span>Reset</span>
+                <span>Reset All</span>
             </button>
-            <button id="download-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button id="download-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-xs transition-all shadow-lg shadow-indigo-600/20 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <i class="fa-solid fa-download"></i>
-                <span>Download</span>
+                <span>Export Image</span>
             </button>
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+    <main class="flex-1 flex overflow-hidden relative">
         
         <!-- Upload State Overlay / Dropzone -->
-        <div id="upload-overlay" class="absolute inset-0 z-20 bg-dark-900/95 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
-            <div class="max-w-md w-full border-2 border-dashed border-gray-700 hover:border-indigo-500 rounded-2xl p-10 text-center bg-dark-800/50 backdrop-blur transition-all group cursor-pointer" id="drop-zone">
+        <div id="upload-overlay" class="absolute inset-0 z-50 bg-photoshop-bg/95 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+            <div class="max-w-md w-full border-2 border-dashed border-gray-600 hover:border-indigo-500 rounded-2xl p-10 text-center bg-photoshop-panel/80 backdrop-blur transition-all group cursor-pointer shadow-2xl" id="drop-zone">
                 <div class="w-16 h-16 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
                 </div>
@@ -94,192 +90,222 @@
             </div>
         </div>
 
-        <!-- Canvas / Image Viewer Area -->
-        <div class="flex-1 bg-dark-950 flex items-center justify-center p-6 relative overflow-hidden">
-            <div id="canvas-container" class="relative max-w-full max-h-full flex items-center justify-center overflow-auto shadow-2xl rounded-xl border border-gray-800/80 bg-black/40 p-4">
-                <canvas id="image-canvas" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-inner block"></canvas>
+        <!-- Canvas Workspace Area -->
+        <div id="viewport-container" class="flex-1 bg-photoshop-bg flex items-center justify-center relative overflow-hidden">
+            <div id="canvas-container" class="absolute inset-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+                <div id="canvas-viewport-transform" class="relative transition-transform duration-75 origin-center">
+                    <div id="canvas-wrapper" class="relative shadow-2xl rounded-sm border border-black/60 bg-[#2b2b2b] p-2">
+                        <canvas id="image-canvas" class="block rounded shadow-inner"></canvas>
+                        <canvas id="selection-canvas" class="absolute inset-0 pointer-events-none rounded"></canvas>
+                    </div>
+                </div>
             </div>
             
+            <!-- Floating Viewport Controls -->
+            <div class="absolute bottom-4 right-4 bg-photoshop-panel/90 backdrop-blur px-3 py-2 rounded-xl border border-photoshop-border text-xs text-gray-300 flex items-center space-x-3 z-10 shadow-lg">
+                <button id="zoom-out" class="w-6 h-6 bg-dark-900 hover:bg-gray-700 rounded-lg flex items-center justify-center text-gray-300"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                <span id="zoom-val" class="font-mono text-indigo-400 w-12 text-center">100%</span>
+                <button id="zoom-in" class="w-6 h-6 bg-dark-900 hover:bg-gray-700 rounded-lg flex items-center justify-center text-gray-300"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                <div class="w-[1px] h-4 bg-gray-700"></div>
+                <button id="reset-view" class="hover:text-white flex items-center space-x-1"><i class="fa-solid fa-expand"></i><span>Fit</span></button>
+            </div>
+
             <!-- Quick Image Info Bar -->
-            <div id="image-info" class="absolute bottom-4 left-4 bg-dark-800/80 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-700 text-xs text-gray-400 flex items-center space-x-3 hidden">
+            <div id="image-info" class="absolute bottom-4 left-4 bg-photoshop-panel/90 backdrop-blur px-3 py-1.5 rounded-lg border border-photoshop-border text-xs text-gray-400 flex items-center space-x-3 hidden z-10">
                 <span id="info-name">image.jpg</span>
                 <span>•</span>
                 <span id="info-dims">800 × 600 px</span>
             </div>
         </div>
 
-        <aside class="w-full lg:w-96 bg-dark-800 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col shrink-0">
-            <!-- Tabs Header -->
-            <div class="flex border-b border-gray-700/60 bg-dark-900/40">
-                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center space-x-2 tab-btn" data-target="adjust-panel">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span>Adjust</span>
-                </button>
-                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center justify-center space-x-2 tab-btn" data-target="filters-panel">
-                    <i class="fa-solid fa-wand-magic"></i>
-                    <span>Filters</span>
-                </button>
-                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center justify-center space-x-2 tab-btn" data-target="transform-panel">
-                    <i class="fa-solid fa-crop-simple"></i>
-                    <span>Transform</span>
-                </button>
+        <!-- Left Toolbar Dock -->
+        <aside id="left-dock" class="w-16 bg-photoshop-panel border-r border-photoshop-border flex flex-col items-center py-3 space-y-2 shrink-0 z-20 shadow-xl">
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow transition hover:bg-indigo-500" data-tool="move" title="Move / Hand Pan"><i class="fa-solid fa-hand text-sm"></i></button>
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition" data-tool="rect-select" title="Rectangular Marquee"><i class="fa-regular fa-square text-sm"></i></button>
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition" data-tool="circle-select" title="Elliptical Marquee"><i class="fa-regular fa-circle text-sm"></i></button>
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition" data-tool="lasso-select" title="Lasso Marquee"><i class="fa-solid fa-lasso text-sm"></i></button>
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition" data-tool="brush" title="Paint Brush"><i class="fa-solid fa-paintbrush text-sm"></i></button>
+            <button class="tool-dock-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition" data-tool="eraser" title="Eraser"><i class="fa-solid fa-eraser text-sm"></i></button>
+
+            <div class="w-8 h-[1px] bg-gray-700 my-2"></div>
+
+            <button class="panel-toggle-btn w-10 h-10 rounded-xl bg-dark-800 text-indigo-400 flex items-center justify-center border border-gray-700/60 transition hover:bg-gray-700" data-panel="layers-panel" title="Layers"><i class="fa-solid fa-layer-group text-sm"></i></button>
+            <button class="panel-toggle-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition hover:bg-gray-700" data-panel="paint-panel" title="Brush Settings"><i class="fa-solid fa-palette text-sm"></i></button>
+            <button class="panel-toggle-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition hover:bg-gray-700" data-panel="adjust-panel" title="Adjustments"><i class="fa-solid fa-sliders text-sm"></i></button>
+            <button class="panel-toggle-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition hover:bg-gray-700" data-panel="filters-panel" title="Filters"><i class="fa-solid fa-wand-magic text-sm"></i></button>
+            <button class="panel-toggle-btn w-10 h-10 rounded-xl bg-dark-800 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700/60 transition hover:bg-gray-700" data-panel="transform-panel" title="Transform & Resize"><i class="fa-solid fa-crop-simple text-sm"></i></button>
+        </aside>
+
+        <!-- Right / Floating Panels Workspace -->
+        <div id="panels-workspace" class="absolute inset-0 pointer-events-none overflow-hidden z-20">
+            
+            <!-- Layers Panel (Locked Left-Top Stack by default, un-dockable) -->
+            <div id="layers-panel" class="floating-panel pointer-events-auto absolute top-6 left-20 w-80 bg-photoshop-panel border border-photoshop-border rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+                <div class="panel-header bg-black/40 px-4 py-3 flex items-center justify-between cursor-move border-b border-photoshop-border">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center space-x-2"><i class="fa-solid fa-layer-group"></i><span>Layers</span></span>
+                    <div class="flex items-center space-x-2">
+                        <button class="dock-toggle text-gray-400 hover:text-white text-xs" title="Dock/Undock"><i class="fa-solid fa-anchor"></i></button>
+                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] text-gray-400">Stack Order</span>
+                        <button id="add-layer-btn" class="px-2.5 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-medium flex items-center space-x-1"><i class="fa-solid fa-plus text-[10px]"></i><span>Add Layer</span></button>
+                    </div>
+                    <!-- Fixed Height Scrollable Layer List Container -->
+                    <div id="layers-list" class="space-y-2 h-48 overflow-y-auto pr-1"></div>
+                </div>
             </div>
 
-            <!-- Tab Contents Container -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                
-                <!-- Adjustments Panel -->
-                <div id="adjust-panel" class="space-y-5 control-panel">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Basic Adjustments</h3>
-                    
-                    <!-- Brightness -->
+            <!-- Brush & Selection Panel (Locked Right-Top) -->
+            <div id="paint-panel" class="floating-panel pointer-events-auto absolute top-6 right-6 w-80 bg-photoshop-panel border border-photoshop-border rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+                <div class="panel-header bg-black/40 px-4 py-3 flex items-center justify-between cursor-move border-b border-photoshop-border">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center space-x-2"><i class="fa-solid fa-palette"></i><span>Brush & Selection Options</span></span>
+                    <div class="flex items-center space-x-2">
+                        <button class="dock-toggle text-gray-400 hover:text-white text-xs" title="Dock/Undock"><i class="fa-solid fa-anchor"></i></button>
+                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <!-- Foreground & Background Colors -->
                     <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-sun w-5 text-indigo-400"></i><span>Brightness</span></span>
-                            <span id="brightness-val" class="text-gray-400 text-xs font-mono">100%</span>
+                        <span class="text-xs text-gray-300 font-medium">Photoshop Swatches</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-1">Foreground</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="brush-color" value="#6366f1" class="w-8 h-8 rounded-lg bg-dark-900 border border-gray-700 cursor-pointer p-0.5">
+                                    <button id="fill-fg-btn" class="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-medium shadow transition">Fill FG</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-1">Background</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" id="bg-color" value="#ffffff" class="w-8 h-8 rounded-lg bg-dark-900 border border-gray-700 cursor-pointer p-0.5">
+                                    <button id="fill-bg-btn" class="flex-1 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-[11px] font-medium shadow transition">Fill BG</button>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                    <!-- Brush Size -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs"><span class="text-gray-300 font-medium">Brush / Eraser Size</span><span id="brush-size-val" class="text-gray-400 font-mono">10px</span></div>
+                        <input type="range" id="brush-size" min="1" max="100" value="10" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <!-- Selection Actions -->
+                    <div class="pt-3 border-t border-gray-700/60 flex space-x-2">
+                        <button id="clear-selection-btn" class="flex-1 py-2 bg-dark-900 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-xl text-xs font-medium transition">Deselect</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adjustments Panel (Locked Right-Middle) -->
+            <div id="adjust-panel" class="floating-panel pointer-events-auto absolute top-96 right-6 w-80 bg-photoshop-panel border border-photoshop-border rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+                <div class="panel-header bg-black/40 px-4 py-3 flex items-center justify-between cursor-move border-b border-photoshop-border">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center space-x-2"><i class="fa-solid fa-sliders"></i><span>Adjustments</span></span>
+                    <div class="flex items-center space-x-2">
+                        <button class="dock-toggle text-gray-400 hover:text-white text-xs" title="Dock/Undock"><i class="fa-solid fa-anchor"></i></button>
+                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs"><span class="text-gray-300 font-medium">Brightness</span><span id="brightness-val" class="text-gray-400 font-mono">100%</span></div>
                         <input type="range" id="brightness" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
                     </div>
-
-                    <!-- Contrast -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-circle-half-stroke w-5 text-indigo-400"></i><span>Contrast</span></span>
-                            <span id="contrast-val" class="text-gray-400 text-xs font-mono">100%</span>
-                        </div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs"><span class="text-gray-300 font-medium">Contrast</span><span id="contrast-val" class="text-gray-400 font-mono">100%</span></div>
                         <input type="range" id="contrast" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
                     </div>
-
-                    <!-- Saturation -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-droplet w-5 text-indigo-400"></i><span>Saturation</span></span>
-                            <span id="saturation-val" class="text-gray-400 text-xs font-mono">100%</span>
-                        </div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs"><span class="text-gray-300 font-medium">Saturation</span><span id="saturation-val" class="text-gray-400 font-mono">100%</span></div>
                         <input type="range" id="saturation" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
                     </div>
-
-                    <!-- Blur -->
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-water w-5 text-indigo-400"></i><span>Blur</span></span>
-                            <span id="blur-val" class="text-gray-400 text-xs font-mono">0px</span>
-                        </div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs"><span class="text-gray-300 font-medium">Blur</span><span id="blur-val" class="text-gray-400 font-mono">0px</span></div>
                         <input type="range" id="blur" min="0" max="20" value="0" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
                     </div>
                 </div>
+            </div>
 
-                <!-- Filters Panel -->
-                <div id="filters-panel" class="space-y-5 control-panel hidden">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Preset Filters</h3>
+            <!-- Filters Panel (Hidden by default, toggleable) -->
+            <div id="filters-panel" class="floating-panel pointer-events-auto absolute top-6 right-96 w-80 bg-photoshop-panel border border-photoshop-border rounded-2xl flex flex-col shadow-2xl overflow-hidden hidden">
+                <div class="panel-header bg-black/40 px-4 py-3 flex items-center justify-between cursor-move border-b border-photoshop-border">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center space-x-2"><i class="fa-solid fa-wand-magic"></i><span>Filters</span></span>
+                    <div class="flex items-center space-x-2">
+                        <button class="dock-toggle text-gray-400 hover:text-white text-xs" title="Dock/Undock"><i class="fa-solid fa-anchor"></i></button>
+                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="p-5 max-h-[60vh] overflow-y-auto">
                     <div class="grid grid-cols-2 gap-3">
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="normal">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Normal</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="normal">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Normal</span>
                         </button>
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="grayscale">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative grayscale">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Grayscale</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="grayscale">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative grayscale"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Grayscale</span>
                         </button>
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="sepia">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative sepia">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="sepia">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative sepia"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span>
                         </button>
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="vintage">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative contrast-125 sepia-[.3]">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Vintage</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="vintage">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative contrast-125 sepia-[.3]"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Vintage</span>
                         </button>
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="invert">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative invert">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Invert</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="invert">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative invert"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Invert</span>
                         </button>
-                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="kodak">
-                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative saturate-150 contrast-110">
-                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
-                            </div>
-                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span>
+                        <button class="filter-preset p-2.5 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="kodak">
+                            <div class="w-full h-10 bg-gray-800 rounded-lg mb-1.5 overflow-hidden relative saturate-150 contrast-110"><div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div></div>
+                            <span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span>
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Transform Panel -->
-                <div id="transform-panel" class="space-y-6 control-panel hidden">
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Rotate & Flip</h3>
+            <!-- Transform Panel (Hidden by default, toggleable) -->
+            <div id="transform-panel" class="floating-panel pointer-events-auto absolute top-96 right-96 w-80 bg-photoshop-panel border border-photoshop-border rounded-2xl flex flex-col shadow-2xl overflow-hidden hidden">
+                <div class="panel-header bg-black/40 px-4 py-3 flex items-center justify-between cursor-move border-b border-photoshop-border">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center space-x-2"><i class="fa-solid fa-crop-simple"></i><span>Transform & Resize</span></span>
+                    <div class="flex items-center space-x-2">
+                        <button class="dock-toggle text-gray-400 hover:text-white text-xs" title="Dock/Undock"><i class="fa-solid fa-anchor"></i></button>
+                        <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="rotate-left" class="p-2.5 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-rotate-left"></i><span>Left 90°</span></button>
+                        <button id="rotate-right" class="p-2.5 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-rotate-right"></i><span>Right 90°</span></button>
+                        <button id="flip-h" class="p-2.5 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-arrows-left-right"></i><span>Flip H</span></button>
+                        <button id="flip-v" class="p-2.5 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-arrows-up-down"></i><span>Flip V</span></button>
+                    </div>
+                    <div class="pt-3 border-t border-gray-700/60 space-y-3">
                         <div class="grid grid-cols-2 gap-3">
-                            <button id="rotate-left" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
-                                <i class="fa-solid fa-rotate-left"></i>
-                                <span>Rotate Left</span>
-                            </button>
-                            <button id="rotate-right" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
-                                <i class="fa-solid fa-rotate-right"></i>
-                                <span>Rotate Right</span>
-                            </button>
-                            <button id="flip-h" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
-                                <i class="fa-solid fa-arrows-left-right"></i>
-                                <span>Flip Horizontal</span>
-                            </button>
-                            <button id="flip-v" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
-                                <i class="fa-solid fa-arrows-up-down"></i>
-                                <span>Flip Vertical</span>
-                            </button>
+                            <div><label class="block text-[10px] text-gray-400 mb-1">Width (px)</label><input type="number" id="resize-w" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"></div>
+                            <div><label class="block text-[10px] text-gray-400 mb-1">Height (px)</label><input type="number" id="resize-h" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono"></div>
                         </div>
-                    </div>
-
-                    <!-- Resize / Dimensions -->
-                    <div class="pt-4 border-t border-gray-700/60">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Resize Image</h3>
-                        <div class="space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[11px] text-gray-400 mb-1">Width (px)</label>
-                                    <input type="number" id="resize-w" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] text-gray-400 mb-1">Height (px)</label>
-                                    <input type="number" id="resize-h" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1">
-                                <label class="flex items-center space-x-2 cursor-pointer text-xs text-gray-300">
-                                    <input type="checkbox" id="lock-aspect" checked class="rounded bg-dark-900 border-gray-700 text-indigo-600 focus:ring-0">
-                                    <span>Maintain Aspect Ratio</span>
-                                </label>
-                                <button id="apply-resize" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-medium transition">
-                                    Apply Resize
-                                </button>
-                            </div>
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center space-x-2 text-[11px] text-gray-300 cursor-pointer"><input type="checkbox" id="lock-aspect" checked class="rounded bg-dark-900 border-gray-700 text-indigo-600"><span>Aspect Ratio</span></label>
+                            <button id="apply-resize" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-medium">Resize</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-            </div>
-            
-            <!-- Replace Image Bar at bottom of sidebar -->
-            <div class="p-4 bg-dark-950 border-t border-gray-800 flex items-center justify-between">
-                <span class="text-xs text-gray-400">Want to change image?</span>
-                <label class="px-3 py-1.5 bg-dark-800 hover:bg-gray-700 text-xs font-medium text-gray-200 rounded-lg cursor-pointer border border-gray-700 transition">
-                    <span>Upload New</span>
-                    <input type="file" id="image-upload-alt" accept="image/*" class="hidden">
-                </label>
-            </div>
-        </aside>
+        </div>
 
     </main>
 
     <script>
         const canvas = document.getElementById('image-canvas');
         const ctx = canvas.getContext('2d');
+        const selectionCanvas = document.getElementById('selection-canvas');
+        const selectionCtx = selectionCanvas.getContext('2d');
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
         const downloadBtn = document.getElementById('download-btn');
@@ -287,13 +313,21 @@
         const imageInfo = document.getElementById('image-info');
         const infoName = document.getElementById('info-name');
         const infoDims = document.getElementById('info-dims');
-        
+
+        // Viewport Pan, Zoom & Rotate state
+        const viewportContainer = document.getElementById('viewport-container');
+        const transformContainer = document.getElementById('canvas-viewport-transform');
+        let zoomLevel = 1;
+        let panX = 0, panY = 0;
+        let canvasRotation = 0;
+        let isPanning = false;
+        let startPanX = 0, startPanY = 0;
+
         // Controls
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
         const saturationInput = document.getElementById('saturation');
         const blurInput = document.getElementById('blur');
-        
         const brightnessVal = document.getElementById('brightness-val');
         const contrastVal = document.getElementById('contrast-val');
         const saturationVal = document.getElementById('saturation-val');
@@ -304,7 +338,16 @@
         const lockAspectCheckbox = document.getElementById('lock-aspect');
         const applyResizeBtn = document.getElementById('apply-resize');
 
-        // State variables
+        const brushColorInput = document.getElementById('brush-color');
+        const bgColorInput = document.getElementById('bg-color');
+        const brushSizeInput = document.getElementById('brush-size');
+        const brushSizeVal = document.getElementById('brush-size-val');
+        const addLayerBtn = document.getElementById('add-layer-btn');
+        const layersListContainer = document.getElementById('layers-list');
+        const fillFgBtn = document.getElementById('fill-fg-btn');
+        const fillBgBtn = document.getElementById('fill-bg-btn');
+        const clearSelectionBtn = document.getElementById('clear-selection-btn');
+
         let originalImage = null;
         let imageName = "image.jpg";
         let rotationAngle = 0;
@@ -314,236 +357,403 @@
         let originalWidth = 0;
         let originalHeight = 0;
 
-        document.querySelectorAll('.tab-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                // Update tab buttons style
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('text-indigo-400', 'border-indigo-500');
-                    btn.classList.add('text-gray-400', 'border-transparent');
-                });
-                button.classList.remove('text-gray-400', 'border-transparent');
-                button.classList.add('text-indigo-400', 'border-indigo-500');
+        let currentTool = 'move';
+        let fgColor = '#6366f1';
+        let bgColor = '#ffffff';
+        let brushSize = 10;
+        let layers = [];
+        let activeLayerId = null;
 
-                // Hide all panels
-                document.querySelectorAll('.control-panel').forEach(panel => {
-                    panel.classList.add('hidden');
-                });
+        // Selection state
+        let selectionType = null;
+        let selectionBounds = null;
+        let activeAction = null;
+        let startSelX = 0, startSelY = 0;
+        let lassoPoints = [];
 
-                // Show target panel
-                const targetId = button.getAttribute('data-target');
-                document.getElementById(targetId).classList.remove('hidden');
+        function updateViewportTransform() {
+            transformContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel}) rotate(${canvasRotation}deg)`;
+            document.getElementById('zoom-val').textContent = `${Math.round(zoomLevel * 100)}%`;
+        }
+
+        viewportContainer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            if (e.deltaY < 0) {
+                zoomLevel = Math.min(zoomLevel * zoomFactor, 5);
+            } else {
+                zoomLevel = Math.max(zoomLevel / zoomFactor, 0.2);
+            }
+            updateViewportTransform();
+        }, { passive: false });
+
+        document.getElementById('zoom-in').addEventListener('click', () => { zoomLevel = Math.min(zoomLevel * 1.2, 5); updateViewportTransform(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoomLevel = Math.max(zoomLevel / 1.2, 0.2); updateViewportTransform(); });
+        document.getElementById('reset-view').addEventListener('click', () => { zoomLevel = 1; panX = 0; panY = 0; canvasRotation = 0; updateViewportTransform(); });
+
+        viewportContainer.addEventListener('pointerdown', (e) => {
+            if (currentTool === 'move' || e.button === 1 || e.target === viewportContainer || e.target.id === 'canvas-container' || e.target.id === 'canvas-wrapper') {
+                isPanning = true;
+                startPanX = e.clientX - panX;
+                startPanY = e.clientY - panY;
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (isPanning) {
+                panX = e.clientX - startPanX;
+                panY = e.clientY - startPanY;
+                updateViewportTransform();
+            }
+        });
+
+        window.addEventListener('pointerup', () => { isPanning = false; });
+
+        // Floating / Dockable Panel Dragging
+        document.querySelectorAll('.floating-panel').forEach(panel => {
+            const header = panel.querySelector('.panel-header');
+            let isDraggingPanel = false;
+            let startX, startY;
+
+            header.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('button')) return;
+                isDraggingPanel = true;
+                startX = e.clientX - panel.offsetLeft;
+                startY = e.clientY - panel.offsetTop;
+                panel.style.zIndex = 100;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isDraggingPanel) return;
+                panel.style.left = `${Math.max(0, e.clientX - startX)}px`;
+                panel.style.top = `${Math.max(0, e.clientY - startY)}px`;
+                panel.style.right = 'auto';
+                panel.style.bottom = 'auto';
+            });
+
+            window.addEventListener('pointerup', () => { isDraggingPanel = false; });
+
+            panel.querySelector('.close-panel').addEventListener('click', () => {
+                panel.classList.add('hidden');
+                const toggle = document.querySelector(`.panel-toggle-btn[data-panel="${panel.id}"]`);
+                if (toggle) toggle.classList.remove('text-indigo-400', 'bg-dark-700');
+            });
+
+            panel.querySelector('.dock-toggle').addEventListener('click', () => {
+                panel.style.left = '75px';
+                panel.style.top = '70px';
+                panel.style.right = 'auto';
             });
         });
 
-        function handleImageLoad(src, name = "uploaded-image.jpg") {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => {
-                originalImage = img;
-                imageName = name;
-                originalWidth = img.naturalWidth;
-                originalHeight = img.naturalHeight;
-                
-                resizeWInput.value = originalWidth;
-                resizeHInput.value = originalHeight;
-                
-                // Hide upload overlay
-                uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
-                downloadBtn.removeAttribute('disabled');
-                imageInfo.classList.remove('hidden');
-                infoName.textContent = imageName;
-                
-                resetEdits();
-                applyEdits();
-            };
-            img.src = src;
-        }
-
-        // File inputs listener
-        document.querySelectorAll('#image-upload, #image-upload-alt').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        handleImageLoad(event.target.result, file.name);
-                    };
-                    reader.readAsDataURL(file);
+        document.querySelectorAll('.panel-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-panel');
+                const panel = document.getElementById(targetId);
+                panel.classList.toggle('hidden');
+                if (!panel.classList.contains('hidden')) {
+                    btn.classList.add('text-indigo-400', 'bg-dark-700');
+                    panel.style.zIndex = 100;
+                } else {
+                    btn.classList.remove('text-indigo-400', 'bg-dark-700');
                 }
             });
         });
 
-        // Drag and drop listeners
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-indigo-500', 'bg-dark-800');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-indigo-500', 'bg-dark-800');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-indigo-500', 'bg-dark-800');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    handleImageLoad(event.target.result, file.name);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Sample image loader for immediate testing
-        document.getElementById('load-sample-btn').addEventListener('click', () => {
-            const sampleUrl = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
-            handleImageLoad(sampleUrl, 'tropical-beach-sample.jpg');
-            
-            // Populate filter thumbnails with sample image
-            setTimeout(() => {
-                document.querySelectorAll('.sample-thumb').forEach(thumb => {
-                    thumb.style.backgroundImage = `url('${sampleUrl}')`;
+        document.querySelectorAll('.tool-dock-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-dock-btn').forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white');
+                    b.classList.add('bg-dark-800', 'text-gray-400');
                 });
-            }, 500);
+                btn.classList.remove('bg-dark-800', 'text-gray-400');
+                btn.classList.add('bg-indigo-600', 'text-white');
+                currentTool = btn.getAttribute('data-tool');
+
+                const wrapper = document.getElementById('canvas-wrapper');
+                if (['rect-select', 'circle-select', 'lasso-select'].includes(currentTool)) {
+                    wrapper.style.cursor = 'crosshair';
+                } else if (currentTool === 'brush' || currentTool === 'eraser') {
+                    wrapper.style.cursor = 'pointer';
+                } else {
+                    wrapper.style.cursor = 'grab';
+                }
+            });
         });
+
+        function initLayers(w, h) {
+            layers = [
+                { id: 'layer-base', name: 'Background Image', visible: true, canvas: createOffscreenCanvas(w, h), isBase: true },
+                { id: 'layer-1', name: 'Drawing Layer 1', visible: true, canvas: createOffscreenCanvas(w, h), isBase: false }
+            ];
+            activeLayerId = 'layer-1';
+            renderLayersUI();
+        }
+
+        function createOffscreenCanvas(w, h) {
+            const c = document.createElement('canvas');
+            c.width = w;
+            c.height = h;
+            return c;
+        }
+
+        function renderLayersUI() {
+            layersListContainer.innerHTML = '';
+            [...layers].reverse().forEach((layer) => {
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-2 rounded-xl border transition ${layer.id === activeLayerId ? 'bg-indigo-950/40 border-indigo-500' : 'bg-dark-900 border-gray-700/60'}`;
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-1 min-w-0 cursor-pointer" onclick="setActiveLayer('${layer.id}')">
+                        <button class="text-gray-400 hover:text-white" onclick="event.stopPropagation(); toggleLayerVisibility('${layer.id}')"><i class="fa-solid ${layer.visible ? 'fa-eye text-indigo-400' : 'fa-eye-slash text-gray-600'} text-xs"></i></button>
+                        <span class="text-xs font-medium text-gray-200 truncate">${layer.name}</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', 1)"><i class="fa-solid fa-chevron-up text-[9px]"></i></button>
+                        <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', -1)"><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
+                        ${!layer.isBase && layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="deleteLayer('${layer.id}')"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
+                    </div>
+                `;
+                layersListContainer.appendChild(item);
+            });
+        }
+
+        window.setActiveLayer = (id) => { activeLayerId = id; renderLayersUI(); };
+        window.toggleLayerVisibility = (id) => {
+            const l = layers.find(x => x.id === id);
+            if (l) { l.visible = !l.visible; renderLayersUI(); compositeCanvas(); }
+        };
+        window.deleteLayer = (id) => {
+            if (layers.length <= 1) return;
+            layers = layers.filter(x => x.id !== id);
+            if (activeLayerId === id) activeLayerId = layers[layers.length - 1].id;
+            renderLayersUI(); compositeCanvas();
+        };
+        window.moveLayer = (id, dir) => {
+            const idx = layers.findIndex(x => x.id === id);
+            const target = idx + dir;
+            if (target < 0 || target >= layers.length) return;
+            const temp = layers[idx]; layers[idx] = layers[target]; layers[target] = temp;
+            renderLayersUI(); compositeCanvas();
+        };
+
+        addLayerBtn.addEventListener('click', () => {
+            const newId = 'layer-' + Date.now();
+            layers.push({ id: newId, name: `Layer ${layers.length}`, visible: true, canvas: createOffscreenCanvas(canvas.width, canvas.height), isBase: false });
+            activeLayerId = newId; renderLayersUI(); compositeCanvas();
+        });
+
+        function handleImageLoad(src, name = "image.jpg") {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                originalImage = img; imageName = name;
+                originalWidth = img.naturalWidth; originalHeight = img.naturalHeight;
+                resizeWInput.value = originalWidth; resizeHInput.value = originalHeight;
+                uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
+                downloadBtn.removeAttribute('disabled');
+                imageInfo.classList.remove('hidden');
+                infoName.textContent = imageName;
+                canvas.width = originalWidth; canvas.height = originalHeight;
+                selectionCanvas.width = originalWidth; selectionCanvas.height = originalHeight;
+                initLayers(originalWidth, originalHeight);
+                resetEdits();
+            };
+            img.src = src;
+        }
+
+        document.querySelectorAll('#image-upload, #image-upload-alt').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const f = e.target.files[0];
+                if (f) { const r = new FileReader(); r.onload = (ev) => handleImageLoad(ev.target.result, f.name); r.readAsDataURL(f); }
+            });
+        });
+
+        document.getElementById('load-sample-btn').addEventListener('click', () => {
+            const url = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+            handleImageLoad(url, 'tropical-beach.jpg');
+            setTimeout(() => { document.querySelectorAll('.sample-thumb').forEach(t => t.style.backgroundImage = `url('${url}')`); }, 500);
+        });
+
+        function updateBaseLayerContent() {
+            const base = layers.find(l => l.isBase);
+            if (!base || !originalImage) return;
+            const bCtx = base.canvas.getContext('2d');
+            bCtx.save(); bCtx.clearRect(0, 0, base.canvas.width, base.canvas.height);
+            bCtx.translate(base.canvas.width / 2, base.canvas.height / 2);
+            bCtx.rotate((rotationAngle * Math.PI) / 180);
+            bCtx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+
+            let filterStr = `brightness(${brightnessInput.value}%) contrast(${contrastInput.value}%) saturate(${saturationInput.value}%) blur(${blurInput.value}px)`;
+            if (activeFilter === 'grayscale') filterStr += ' grayscale(100%)';
+            if (activeFilter === 'sepia') filterStr += ' sepia(100%)';
+            if (activeFilter === 'vintage') filterStr += ' sepia(40%) contrast(120%) brightness(95%)';
+            if (activeFilter === 'invert') filterStr += ' invert(100%)';
+            if (activeFilter === 'kodak') filterStr += ' saturate(150%) contrast(110%)';
+            bCtx.filter = filterStr;
+
+            const dw = (rotationAngle === 90 || rotationAngle === 270) ? base.canvas.height : base.canvas.width;
+            const dh = (rotationAngle === 90 || rotationAngle === 270) ? base.canvas.width : base.canvas.height;
+            bCtx.drawImage(originalImage, -dw / 2, -dh / 2, dw, dh);
+            bCtx.restore();
+        }
+
+        function compositeCanvas() {
+            if (!originalImage) return;
+            let w = parseInt(resizeWInput.value) || originalWidth;
+            let h = parseInt(resizeHInput.value) || originalHeight;
+            if (rotationAngle === 90 || rotationAngle === 270) { canvas.width = h; canvas.height = w; selectionCanvas.width = h; selectionCanvas.height = w; }
+            else { canvas.width = w; canvas.height = h; selectionCanvas.width = w; selectionCanvas.height = h; }
+            infoDims.textContent = `${canvas.width} × ${canvas.height} px`;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            layers.forEach(l => { if (l.visible && l.canvas) ctx.drawImage(l.canvas, 0, 0, canvas.width, canvas.height); });
+        }
 
         function applyEdits() {
             if (!originalImage) return;
-
-            const brightness = brightnessInput.value;
-            const contrast = contrastInput.value;
-            const saturation = saturationInput.value;
-            const blur = blurInput.value;
-
-            // Update range text indicators
-            brightnessVal.textContent = `${brightness}%`;
-            contrastVal.textContent = `${contrast}%`;
-            saturationVal.textContent = `${saturation}%`;
-            blurVal.textContent = `${blur}px`;
-
-            // Compute dimensions based on rotation
-            let w = parseInt(resizeWInput.value) || originalImage.naturalWidth;
-            let h = parseInt(resizeHInput.value) || originalImage.naturalHeight;
-
-            // Set canvas dimensions
-            if (rotationAngle === 90 || rotationAngle === 270) {
-                canvas.width = h;
-                canvas.height = w;
-            } else {
-                canvas.width = w;
-                canvas.height = h;
-            }
-
-            infoDims.textContent = `${canvas.width} × ${canvas.height} px`;
-
-            ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Move to center for transformations
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate((rotationAngle * Math.PI) / 180);
-            ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-
-            // Construct filter string
-            let filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) blur(${blur}px)`;
-            
-            if (activeFilter === 'grayscale') filterString += ' grayscale(100%)';
-            if (activeFilter === 'sepia') filterString += ' sepia(100%)';
-            if (activeFilter === 'vintage') filterString += ' sepia(40%) contrast(120%) brightness(95%)';
-            if (activeFilter === 'invert') filterString += ' invert(100%)';
-            if (activeFilter === 'kodak') filterString += ' saturate(150%) contrast(110%)';
-
-            ctx.filter = filterString;
-
-            // Draw image centered
-            const drawW = (rotationAngle === 90 || rotationAngle === 270) ? h : w;
-            const drawH = (rotationAngle === 90 || rotationAngle === 270) ? w : h;
-            ctx.drawImage(originalImage, -drawW / 2, -drawH / 2, drawW, drawH);
-
-            ctx.restore();
+            brightnessVal.textContent = `${brightnessInput.value}%`;
+            contrastVal.textContent = `${contrastInput.value}%`;
+            saturationVal.textContent = `${saturationInput.value}%`;
+            blurVal.textContent = `${blurInput.value}px`;
+            updateBaseLayerContent(); compositeCanvas();
         }
 
-        [brightnessInput, contrastInput, saturationInput, blurInput].forEach(input => {
-            input.addEventListener('input', applyEdits);
-        });
+        [brightnessInput, contrastInput, saturationInput, blurInput].forEach(i => i.addEventListener('input', applyEdits));
 
-        // Preset filters click handler
-        document.querySelectorAll('.filter-preset').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-preset').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-950/20'));
-                btn.classList.add('border-indigo-500', 'bg-indigo-950/20');
-                activeFilter = btn.getAttribute('data-filter');
+        document.querySelectorAll('.filter-preset').forEach(b => {
+            b.addEventListener('click', () => {
+                activeFilter = b.getAttribute('data-filter');
                 applyEdits();
             });
         });
 
-        // Rotation and Flip controls
-        document.getElementById('rotate-left').addEventListener('click', () => {
-            rotationAngle = (rotationAngle - 90 + 360) % 360;
-            applyEdits();
-        });
+        function getCanvasPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
 
-        document.getElementById('rotate-right').addEventListener('click', () => {
-            rotationAngle = (rotationAngle + 90) % 360;
-            applyEdits();
-        });
-
-        document.getElementById('flip-h').addEventListener('click', () => {
-            flipH = !flipH;
-            applyEdits();
-        });
-
-        document.getElementById('flip-v').addEventListener('click', () => {
-            flipV = !flipV;
-            applyEdits();
-        });
-
-        // Aspect ratio lock during resize calculation
-        let aspectRatio = 1;
-        resizeWInput.addEventListener('input', () => {
-            if (lockAspectCheckbox.checked && originalWidth > 0) {
-                aspectRatio = originalHeight / originalWidth;
-                resizeHInput.value = Math.round(resizeWInput.value * aspectRatio);
+        canvas.addEventListener('pointerdown', (e) => {
+            if (currentTool === 'move') return;
+            const pos = getCanvasPointerPos(e);
+            if (['rect-select', 'circle-select', 'lasso-select'].includes(currentTool)) {
+                activeAction = 'select';
+                startSelX = pos.x; startSelY = pos.y;
+                if (currentTool === 'lasso-select') lassoPoints = [pos];
+                selectionType = currentTool === 'rect-select' ? 'rect' : (currentTool === 'circle-select' ? 'circle' : 'lasso');
+            } else if (currentTool === 'brush' || currentTool === 'eraser') {
+                const active = layers.find(l => l.id === activeLayerId);
+                if (!active || active.isBase) {
+                    const edit = layers.find(l => !l.isBase && l.visible);
+                    if (edit) setActiveLayer(edit.id); else return;
+                }
+                activeAction = 'draw';
+                startSelX = pos.x; startSelY = pos.y;
             }
         });
 
-        resizeHInput.addEventListener('input', () => {
-            if (lockAspectCheckbox.checked && originalHeight > 0) {
-                aspectRatio = originalWidth / originalHeight;
-                resizeWInput.value = Math.round(resizeHInput.value * aspectRatio);
+        window.addEventListener('pointermove', (e) => {
+            if (!activeAction) return;
+            const pos = getCanvasPointerPos(e);
+
+            if (activeAction === 'select') {
+                selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+                selectionCtx.strokeStyle = '#6366f1';
+                selectionCtx.lineWidth = 2;
+                selectionCtx.setLineDash([4, 4]);
+
+                if (selectionType === 'rect') {
+                    const w = pos.x - startSelX, h = pos.y - startSelY;
+                    selectionBounds = { x: w < 0 ? pos.x : startSelX, y: h < 0 ? pos.y : startSelY, w: Math.abs(w), h: Math.abs(h) };
+                    selectionCtx.strokeRect(selectionBounds.x, selectionBounds.y, selectionBounds.w, selectionBounds.h);
+                } else if (selectionType === 'circle') {
+                    const rx = Math.abs(pos.x - startSelX) / 2, ry = Math.abs(pos.y - startSelY) / 2;
+                    const cx = startSelX + (pos.x > startSelX ? rx : -rx), cy = startSelY + (pos.y > startSelY ? ry : -ry);
+                    selectionBounds = { x: cx - rx, y: cy - ry, w: rx * 2, h: ry * 2, cx, cy, rx, ry };
+                    selectionCtx.beginPath(); selectionCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); selectionCtx.stroke();
+                } else if (selectionType === 'lasso') {
+                    lassoPoints.push(pos);
+                    selectionCtx.beginPath();
+                    lassoPoints.forEach((p, idx) => idx === 0 ? selectionCtx.moveTo(p.x, p.y) : selectionCtx.lineTo(p.x, p.y));
+                    selectionCtx.stroke();
+                }
+            } else if (activeAction === 'draw') {
+                const active = layers.find(l => l.id === activeLayerId);
+                if (!active) return;
+                const lCtx = active.canvas.getContext('2d');
+                lCtx.save();
+                lCtx.lineWidth = brushSize; lCtx.lineCap = 'round'; lCtx.lineJoin = 'round';
+                if (currentTool === 'eraser') { lCtx.globalCompositeOperation = 'destination-out'; lCtx.strokeStyle = 'rgba(0,0,0,1)'; }
+                else { lCtx.globalCompositeOperation = 'source-over'; lCtx.strokeStyle = fgColor; }
+
+                lCtx.beginPath(); lCtx.moveTo(startSelX, startSelY); lCtx.lineTo(pos.x, pos.y); lCtx.stroke();
+                lCtx.restore();
+                startSelX = pos.x; startSelY = pos.y;
+                compositeCanvas();
             }
         });
+
+        window.addEventListener('pointerup', () => { activeAction = null; });
+        window.addEventListener('pointercancel', () => { activeAction = null; });
+
+        clearSelectionBtn.addEventListener('click', () => {
+            selectionBounds = null; selectionType = null; lassoPoints = [];
+            selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+        });
+
+        function performSelectionFill(colorToFill) {
+            if (!selectionBounds && selectionType !== 'lasso') return;
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || active.isBase) return;
+            const lCtx = active.canvas.getContext('2d');
+            lCtx.save();
+            lCtx.fillStyle = colorToFill;
+            lCtx.globalCompositeOperation = 'source-over';
+
+            if (selectionType === 'rect') {
+                lCtx.fillRect(selectionBounds.x, selectionBounds.y, selectionBounds.w, selectionBounds.h);
+            } else if (selectionType === 'circle') {
+                lCtx.beginPath(); lCtx.ellipse(selectionBounds.cx, selectionBounds.cy, selectionBounds.rx, selectionBounds.ry, 0, 0, Math.PI * 2); lCtx.fill();
+            } else if (selectionType === 'lasso' && lassoPoints.length > 2) {
+                lCtx.beginPath();
+                lassoPoints.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
+                lCtx.closePath(); lCtx.fill();
+            }
+            lCtx.restore();
+            compositeCanvas();
+        }
+
+        fillFgBtn.addEventListener('click', () => performSelectionFill(fgColor));
+        fillBgBtn.addEventListener('click', () => performSelectionFill(bgColor));
+
+        brushColorInput.addEventListener('input', (e) => { fgColor = e.target.value; });
+        bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; });
+        brushSizeInput.addEventListener('input', (e) => { brushSize = e.target.value; brushSizeVal.textContent = `${brushSize}px`; });
+
+        document.getElementById('rotate-left').addEventListener('click', () => { rotationAngle = (rotationAngle - 90 + 360) % 360; applyEdits(); });
+        document.getElementById('rotate-right').addEventListener('click', () => { rotationAngle = (rotationAngle + 90) % 360; applyEdits(); });
+        document.getElementById('flip-h').addEventListener('click', () => { flipH = !flipH; applyEdits(); });
+        document.getElementById('flip-v').addEventListener('click', () => { flipV = !flipV; applyEdits(); });
 
         applyResizeBtn.addEventListener('click', () => {
+            const w = parseInt(resizeWInput.value) || originalWidth;
+            const h = parseInt(resizeHInput.value) || originalHeight;
+            layers.forEach(l => {
+                const tc = document.createElement('canvas'); tc.width = w; tc.height = h;
+                tc.getContext('2d').drawImage(l.canvas, 0, 0, w, h); l.canvas = tc;
+            });
             applyEdits();
         });
 
         function resetEdits() {
-            brightnessInput.value = 100;
-            contrastInput.value = 100;
-            saturationInput.value = 100;
-            blurInput.value = 0;
-            rotationAngle = 0;
-            flipH = false;
-            flipV = false;
-            activeFilter = 'normal';
-            
-            if (originalImage) {
-                resizeWInput.value = originalImage.naturalWidth;
-                resizeHInput.value = originalImage.naturalHeight;
-            }
-
-            document.querySelectorAll('.filter-preset').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-950/20'));
-            const normalPreset = document.querySelector('[data-filter="normal"]');
-            if (normalPreset) normalPreset.classList.add('border-indigo-500', 'bg-indigo-950/20');
-
+            brightnessInput.value = 100; contrastInput.value = 100; saturationInput.value = 100; blurInput.value = 0;
+            rotationAngle = 0; flipH = false; flipV = false; activeFilter = 'normal';
+            if (originalImage) { resizeWInput.value = originalWidth; resizeHInput.value = originalHeight; initLayers(originalWidth, originalHeight); }
             applyEdits();
         }
 
         resetBtn.addEventListener('click', resetEdits);
-
         downloadBtn.addEventListener('click', () => {
             if (!originalImage) return;
             const link = document.createElement('a');
@@ -551,7 +761,6 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
-
     </script>
 </body>
 </html>
