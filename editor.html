@@ -113,6 +113,7 @@
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Window</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="layers-panel">Layers (F7)</button>
+                    <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="swatches-panel">Swatches</button>
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="adjust-panel">Adjustments</button>
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="history-panel">History</button>
                 </div>
@@ -143,7 +144,7 @@
                 </div>
                 <div class="flex items-center space-x-2" id="color-option-wrapper">
                     <span>Color (Q):</span>
-                    <input type="color" id="opt-brush-color" value="#6366f1" class="w-6 h-6 rounded bg-transparent cursor-pointer border border-gray-600" title="Press Q to open color picker">
+                    <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" title="Press Q to open Photoshop Color Picker"></button>
                 </div>
             </div>
         </div>
@@ -216,11 +217,9 @@
 
             <div class="w-8 h-[1px] bg-[#444] my-2"></div>
 
-            <div id="swatch-container" class="relative w-8 h-8 my-1 cursor-pointer" title="Foreground / Background Swatches (Press X to Swap, Q for Picker)">
-                <div id="swatch-bg" class="absolute bottom-0 right-0 w-5 h-5 bg-white border border-black rounded-sm"></div>
-                <input type="color" id="bg-color-picker" value="#ffffff" class="absolute bottom-0 right-0 w-5 h-5 opacity-0 cursor-pointer">
-                <div id="swatch-fg" class="absolute top-0 left-0 w-5 h-5 bg-indigo-600 border border-black rounded-sm shadow"></div>
-                <input type="color" id="fg-color-picker" value="#6366f1" class="absolute top-0 left-0 w-5 h-5 opacity-0 cursor-pointer">
+            <div id="swatch-container" class="relative w-8 h-8 my-1 cursor-pointer" title="Foreground / Background Swatches (Press X to Swap, Q for Color Picker)">
+                <div id="swatch-bg" class="absolute bottom-0 right-0 w-5 h-5 bg-white border border-black rounded-sm" title="Background color swatch"></div>
+                <div id="swatch-fg" class="absolute top-0 left-0 w-5 h-5 bg-indigo-600 border border-black rounded-sm shadow" title="Foreground color swatch"></div>
             </div>
         </aside>
 
@@ -270,6 +269,17 @@
                         <button id="add-layer-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 border border-[#555] rounded text-[11px] font-medium flex items-center space-x-1"><i class="fa-solid fa-plus text-[9px]"></i><span>New</span></button>
                     </div>
                     <div id="layers-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Swatches Panel -->
+            <div id="swatches-panel" class="floating-panel pointer-events-auto absolute top-[360px] right-80 w-64 bg-[#262626] border border-[#1a1a1a] rounded flex flex-col shadow-2xl overflow-hidden hidden">
+                <div class="panel-header bg-[#323232] px-3 py-2 flex items-center justify-between cursor-move border-b border-[#1c1c1c]">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center space-x-1.5"><i class="fa-solid fa-swatchbook text-indigo-400"></i><span>Swatches</span></span>
+                    <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="p-3">
+                    <div id="swatches-grid" class="grid grid-cols-6 gap-1.5 max-h-48 overflow-y-auto"></div>
                 </div>
             </div>
 
@@ -354,7 +364,123 @@
 
     </main>
 
-    <input type="color" id="popup-color-picker" class="fixed opacity-0 pointer-events-none z-[99999]" value="#6366f1">
+    <!-- Photoshop Color Picker Modal with FG/BG Selector Option -->
+    <div id="ps-color-picker-modal" class="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center hidden">
+        <div class="bg-[#353535] border border-[#1e1e1e] rounded shadow-2xl w-[530px] flex flex-col overflow-hidden text-xs text-gray-200">
+            <div id="ps-cp-header" class="bg-[#2c2c2c] px-3 py-2 flex items-center justify-between border-b border-[#1c1c1c] cursor-move">
+                <span class="font-bold text-white flex items-center space-x-1.5"><i class="fa-solid fa-palette text-indigo-400"></i><span>Color Picker</span></span>
+                <button id="ps-cp-close" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- Target Selector Option Inside Modal -->
+            <div class="bg-[#2e2e2e] px-4 py-2 border-b border-[#1c1c1c] flex items-center space-x-4">
+                <span class="text-gray-400 font-medium">Target Swatch:</span>
+                <label class="flex items-center space-x-1.5 cursor-pointer text-gray-200">
+                    <input type="radio" name="ps-cp-target" value="fg" id="ps-target-fg" checked class="text-[#0058d0] bg-[#1e1e1e] border-gray-600">
+                    <span>Foreground Color</span>
+                </label>
+                <label class="flex items-center space-x-1.5 cursor-pointer text-gray-200">
+                    <input type="radio" name="ps-cp-target" value="bg" id="ps-target-bg" class="text-[#0058d0] bg-[#1e1e1e] border-gray-600">
+                    <span>Background Color</span>
+                </label>
+            </div>
+
+            <div class="p-4 flex space-x-4">
+                <!-- Left: Color Field & Hue Slider -->
+                <div class="flex space-x-3">
+                    <div id="ps-cp-field" class="w-[220px] h-[220px] relative cursor-crosshair border border-black/50 rounded-sm">
+                        <canvas id="ps-cp-field-canvas" width="220" height="220" class="w-full h-full block rounded-sm"></canvas>
+                        <div id="ps-cp-field-cursor" class="absolute w-3 h-3 border-2 border-white rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none shadow" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.8);"></div>
+                    </div>
+                    <div id="ps-cp-slider" class="w-6 h-[220px] relative cursor-pointer border border-black/50 rounded-sm">
+                        <canvas id="ps-cp-slider-canvas" width="24" height="220" class="w-full h-full block rounded-sm"></canvas>
+                        <div id="ps-cp-slider-cursor" class="absolute w-full h-1.5 bg-white border border-black -translate-y-1/2 pointer-events-none"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Previews & Numerical Spaces -->
+                <div class="flex-1 flex flex-col space-y-3">
+                    <!-- Preview Swatch -->
+                    <div class="flex items-center space-x-2">
+                        <div class="flex flex-col w-24 text-[10px] text-center font-medium text-gray-400">
+                            <span>New</span>
+                            <div id="ps-cp-new-preview" class="w-full h-7 border border-black mt-1"></div>
+                        </div>
+                        <div class="flex flex-col w-24 text-[10px] text-center font-medium text-gray-400">
+                            <span>Current</span>
+                            <div id="ps-cp-curr-preview" class="w-full h-7 border border-black mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Numerical Inputs -->
+                    <div class="space-y-1.5 bg-[#2b2b2b] p-2.5 rounded border border-[#1e1e1e]">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">H:</span>
+                            <input type="number" id="ps-cp-h" min="0" max="360" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">°</span>
+                            <span class="w-6 font-bold text-gray-400 ml-3">R:</span>
+                            <input type="number" id="ps-cp-r" min="0" max="255" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">S:</span>
+                            <input type="number" id="ps-cp-s" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                            <span class="w-6 font-bold text-gray-400 ml-3">G:</span>
+                            <input type="number" id="ps-cp-g" min="0" max="255" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">B:</span>
+                            <input type="number" id="ps-cp-b" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                            <span class="w-6 font-bold text-gray-400 ml-3">B:</span>
+                            <input type="number" id="ps-cp-bl" min="0" max="255" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                        </div>
+                        <div class="border-t border-[#444] pt-1 my-1"></div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">L:</span>
+                            <input type="number" id="ps-cp-l" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="w-6 font-bold text-gray-400 ml-3">C:</span>
+                            <input type="number" id="ps-cp-c" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">a:</span>
+                            <input type="number" id="ps-cp-la" min="-128" max="127" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="w-6 font-bold text-gray-400 ml-3">M:</span>
+                            <input type="number" id="ps-cp-m" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">b:</span>
+                            <input type="number" id="ps-cp-lb" min="-128" max="127" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="w-6 font-bold text-gray-400 ml-3">Y:</span>
+                            <input type="number" id="ps-cp-y" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold"></span>
+                            <span class="w-14"></span>
+                            <span class="w-6 font-bold text-gray-400 ml-3">K:</span>
+                            <input type="number" id="ps-cp-k" min="0" max="100" class="w-14 bg-[#1e1e1e] border border-[#444] px-1.5 py-0.5 rounded text-right font-mono text-white">
+                            <span class="text-gray-400">%</span>
+                        </div>
+                        <div class="border-t border-[#444] pt-1 my-1"></div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 font-bold text-gray-400">#</span>
+                            <input type="text" id="ps-cp-hex" class="flex-1 bg-[#1e1e1e] border border-[#444] px-2 py-0.5 rounded font-mono text-white uppercase">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#2c2c2c] px-4 py-2.5 flex justify-between items-center border-t border-[#1c1c1c]">
+                <button id="ps-cp-add-swatch" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] font-medium transition">Add to Swatches</button>
+                <div class="flex space-x-2">
+                    <button id="ps-cp-cancel" class="px-4 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition">Cancel</button>
+                    <button id="ps-cp-ok" class="px-4 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded font-medium transition shadow">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('image-canvas');
@@ -370,7 +496,6 @@
         const brushCursor = document.getElementById('brush-cursor');
         const sizeBadge = document.getElementById('size-badge');
         const badgeSizeVal = document.getElementById('badge-size-val');
-        const popupColorPicker = document.getElementById('popup-color-picker');
 
         const viewportContainer = document.getElementById('viewport-container');
         const transformContainer = document.getElementById('canvas-viewport-transform');
@@ -386,8 +511,6 @@
         let isCtrlPressed = false;
         let isShiftPressed = false;
         let isAltPressed = false;
-        let lastMouseScreenX = window.innerWidth / 2;
-        let lastMouseScreenY = window.innerHeight / 2;
         let badgeTimeout = null;
         let dashOffset = 0;
 
@@ -409,10 +532,10 @@
         const dynamicOptionsContainer = document.getElementById('dynamic-options-container');
         const optionsTitle = document.getElementById('options-title');
 
-        const fgColorPicker = document.getElementById('fg-color-picker');
-        const bgColorPicker = document.getElementById('bg-color-picker');
         const swatchFg = document.getElementById('swatch-fg');
         const swatchBg = document.getElementById('swatch-bg');
+        const swatchContainer = document.getElementById('swatch-container');
+        const optBrushColorBtn = document.getElementById('opt-brush-color-btn');
 
         const addLayerBtn = document.getElementById('add-layer-btn');
         const layersListContainer = document.getElementById('layers-list');
@@ -421,6 +544,13 @@
         const fillFgBtn = document.getElementById('fill-fg-btn');
         const fillBgBtn = document.getElementById('fill-bg-btn');
         const clearSelectionBtn = document.getElementById('clear-selection-btn');
+
+        // Swatches Palette State
+        let swatchesList = [
+            '#000000', '#ffffff', '#6366f1', '#ef4444', '#10b981', '#f59e0b',
+            '#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#84cc16',
+            '#64748b', '#475569', '#334155', '#1e293b', '#0f172a', '#312e81'
+        ];
 
         let originalImage = null;
         let imageName = "document.png";
@@ -439,10 +569,10 @@
         let wandTolerance = 32;
 
         // Marquee Advanced Options State
-        let marqueeMode = 'new'; // 'new', 'add', 'subtract', 'intersect'
+        let marqueeMode = 'new';
         let marqueeFeather = 0;
         let marqueeAntialias = true;
-        let marqueeStyle = 'normal'; // 'normal', 'aspect', 'fixed'
+        let marqueeStyle = 'normal';
         let marqueeAspectW = 1;
         let marqueeAspectH = 1;
         let marqueeFixedW = 100;
@@ -451,7 +581,7 @@
         let layers = [];
         let activeLayerId = null;
 
-        let selectionRegions = []; // Stores combined selection regions (paths/bounds/types)
+        let selectionRegions = [];
         let activeAction = null;
         let startSelX = 0, startSelY = 0;
         let currentDragSelection = null;
@@ -462,6 +592,316 @@
         let lassoPoints = [];
         let historyStack = [];
         let historyIndex = -1;
+
+        // --- Photoshop Color Picker Modal Logic ---
+        const psColorPickerModal = document.getElementById('ps-color-picker-modal');
+        const psTargetFgRadio = document.getElementById('ps-target-fg');
+        const psTargetBgRadio = document.getElementById('ps-target-bg');
+        const psCpFieldCanvas = document.getElementById('ps-cp-field-canvas');
+        const psCpFieldCtx = psCpFieldCanvas.getContext('2d');
+        const psCpFieldCursor = document.getElementById('ps-cp-field-cursor');
+        const psCpSliderCanvas = document.getElementById('ps-cp-slider-canvas');
+        const psCpSliderCtx = psCpSliderCanvas.getContext('2d');
+        const psCpSliderCursor = document.getElementById('ps-cp-slider-cursor');
+        const psCpNewPreview = document.getElementById('ps-cp-new-preview');
+        const psCpCurrPreview = document.getElementById('ps-cp-curr-preview');
+
+        const psCpInputs = {
+            h: document.getElementById('ps-cp-h'),
+            s: document.getElementById('ps-cp-s'),
+            b: document.getElementById('ps-cp-b'),
+            r: document.getElementById('ps-cp-r'),
+            g: document.getElementById('ps-cp-g'),
+            bl: document.getElementById('ps-cp-bl'),
+            l: document.getElementById('ps-cp-l'),
+            la: document.getElementById('ps-cp-la'),
+            lb: document.getElementById('ps-cp-lb'),
+            c: document.getElementById('ps-cp-c'),
+            m: document.getElementById('ps-cp-m'),
+            y: document.getElementById('ps-cp-y'),
+            k: document.getElementById('ps-cp-k'),
+            hex: document.getElementById('ps-cp-hex')
+        };
+
+        let pickerHue = 240;
+        let pickerSat = 60;
+        let pickerVal = 95;
+        let isDraggingField = false;
+        let isDraggingSlider = false;
+
+        // Color Math Helpers
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
+        }
+        function hexToRgb(hex) {
+            let c = hex.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            const num = parseInt(c, 16) || 0;
+            return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+        }
+        function rgbToHsb(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, v = max;
+            const d = max - min;
+            s = max === 0 ? 0 : d / max;
+            if (max === min) { h = 0; }
+            else {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return { h: Math.round(h * 360), s: Math.round(s * 100), b: Math.round(v * 100) };
+        }
+        function hsbToRgb(h, s, b) {
+            h = (h % 360) / 360; s /= 100; b /= 100;
+            let r, g, b_val;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = b * (1 - s);
+            const q = b * (1 - f * s);
+            const t = b * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = b; g = t; b_val = p; break;
+                case 1: r = q; g = b; b_val = p; break;
+                case 2: r = p; g = b; b_val = t; break;
+                case 3: r = p; g = q; b_val = b; break;
+                case 4: r = t; g = p; b_val = b; break;
+                case 5: r = b; g = p; b_val = q; break;
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b_val * 255) };
+        }
+        function rgbToCmyk(r, g, b) {
+            let c = 1 - (r / 255); let m = 1 - (g / 255); let y = 1 - (b / 255);
+            let k = Math.min(c, Math.min(m, y));
+            if (k === 1) return { c: 0, m: 0, y: 0, k: 100 };
+            c = Math.round(((c - k) / (1 - k)) * 100);
+            m = Math.round(((m - k) / (1 - k)) * 100);
+            y = Math.round(((y - k) / (1 - k)) * 100);
+            k = Math.round(k * 100);
+            return { c, m, y, k };
+        }
+        function rgbToLab(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+            g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+            b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+            let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+            let y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+            let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+            x = x > 0.008856 ? Math.cbrt(x) : (7.787 * x) + (16 / 116);
+            y = y > 0.008856 ? Math.cbrt(y) : (7.787 * y) + (16 / 116);
+            z = z > 0.008856 ? Math.cbrt(z) : (7.787 * z) + (16 / 116);
+            const L = Math.round((116 * y) - 16);
+            const A = Math.round(500 * (x - y));
+            const B = Math.round(200 * (y - z));
+            return { l: Math.max(0, Math.min(100, L)), a: Math.max(-128, Math.min(127, A)), b: Math.max(-128, Math.min(127, B)) };
+        }
+
+        function drawHueSlider() {
+            const w = psCpSliderCanvas.width;
+            const h = psCpSliderCanvas.height;
+            const grad = psCpSliderCtx.createLinearGradient(0, 0, 0, h);
+            for (let i = 0; i <= 6; i++) {
+                grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
+            }
+            psCpSliderCtx.fillStyle = grad;
+            psCpSliderCtx.fillRect(0, 0, w, h);
+        }
+
+        function drawColorField() {
+            const w = psCpFieldCanvas.width;
+            const h = psCpFieldCanvas.height;
+            psCpFieldCtx.fillStyle = `hsl(${pickerHue}, 100%, 50%)`;
+            psCpFieldCtx.fillRect(0, 0, w, h);
+
+            const whiteGrad = psCpFieldCtx.createLinearGradient(0, 0, w, 0);
+            whiteGrad.addColorStop(0, 'rgba(255,255,255,1)');
+            whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
+            psCpFieldCtx.fillStyle = whiteGrad;
+            psCpFieldCtx.fillRect(0, 0, w, h);
+
+            const blackGrad = psCpFieldCtx.createLinearGradient(0, 0, 0, h);
+            blackGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
+            psCpFieldCtx.fillStyle = blackGrad;
+            psCpFieldCtx.fillRect(0, 0, w, h);
+        }
+
+        function updatePickerUIFromHsb() {
+            drawColorField();
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+            const lab = rgbToLab(rgb.r, rgb.g, rgb.b);
+
+            psCpNewPreview.style.backgroundColor = hex;
+
+            psCpInputs.h.value = pickerHue;
+            psCpInputs.s.value = pickerSat;
+            psCpInputs.b.value = pickerVal;
+            psCpInputs.r.value = rgb.r;
+            psCpInputs.g.value = rgb.g;
+            psCpInputs.bl.value = rgb.b;
+            psCpInputs.l.value = lab.l;
+            psCpInputs.la.value = lab.a;
+            psCpInputs.lb.value = lab.b;
+            psCpInputs.c.value = cmyk.c;
+            psCpInputs.m.value = cmyk.m;
+            psCpInputs.y.value = cmyk.y;
+            psCpInputs.k.value = cmyk.k;
+            psCpInputs.hex.value = hex;
+
+            const fieldW = psCpFieldCanvas.width;
+            const fieldH = psCpFieldCanvas.height;
+            psCpFieldCursor.style.left = `${(pickerSat / 100) * fieldW}px`;
+            psCpFieldCursor.style.top = `${((100 - pickerVal) / 100) * fieldH}px`;
+
+            const sliderH = psCpSliderCanvas.height;
+            psCpSliderCursor.style.top = `${(pickerHue / 360) * sliderH}px`;
+        }
+
+        function loadPickerTargetColor(target) {
+            const activeColor = (target === 'fg') ? fgColor : bgColor;
+            psCpCurrPreview.style.backgroundColor = activeColor;
+            const rgb = hexToRgb(activeColor);
+            const hsb = rgbToHsb(rgb.r, rgb.g, rgb.b);
+            pickerHue = hsb.h;
+            pickerSat = hsb.s;
+            pickerVal = hsb.b;
+            updatePickerUIFromHsb();
+        }
+
+        function openPhotoshopColorPicker(target = 'fg') {
+            if (target === 'fg') {
+                psTargetFgRadio.checked = true;
+            } else {
+                psTargetBgRadio.checked = true;
+            }
+            loadPickerTargetColor(target);
+            drawHueSlider();
+            psColorPickerModal.classList.remove('hidden');
+        }
+
+        psTargetFgRadio.addEventListener('change', () => { if (psTargetFgRadio.checked) loadPickerTargetColor('fg'); });
+        psTargetBgRadio.addEventListener('change', () => { if (psTargetBgRadio.checked) loadPickerTargetColor('bg'); });
+
+        document.getElementById('ps-cp-close').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
+        document.getElementById('ps-cp-cancel').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
+        document.getElementById('ps-cp-ok').addEventListener('click', () => {
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            if (psTargetFgRadio.checked) {
+                fgColor = hex;
+                swatchFg.style.backgroundColor = fgColor;
+                const colorBtn = document.getElementById('opt-brush-color-btn');
+                if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+            } else {
+                bgColor = hex;
+                swatchBg.style.backgroundColor = bgColor;
+            }
+            psColorPickerModal.classList.add('hidden');
+        });
+
+        document.getElementById('ps-cp-add-swatch').addEventListener('click', () => {
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            if (!swatchesList.includes(hex)) {
+                swatchesList.push(hex);
+                renderSwatchesUI();
+            }
+        });
+
+        psCpFieldCanvas.addEventListener('pointerdown', (e) => {
+            isDraggingField = true;
+            handleFieldPointer(e);
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (isDraggingField) handleFieldPointer(e);
+            if (isDraggingSlider) handleSliderPointer(e);
+        });
+        window.addEventListener('pointerup', () => {
+            isDraggingField = false;
+            isDraggingSlider = false;
+        });
+
+        function handleFieldPointer(e) {
+            const rect = psCpFieldCanvas.getBoundingClientRect();
+            const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+            const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+            pickerSat = Math.round((x / rect.width) * 100);
+            pickerVal = Math.round((1 - (y / rect.height)) * 100);
+            updatePickerUIFromHsb();
+        }
+
+        psCpSliderCanvas.addEventListener('pointerdown', (e) => {
+            isDraggingSlider = true;
+            handleSliderPointer(e);
+        });
+        function handleSliderPointer(e) {
+            const rect = psCpSliderCanvas.getBoundingClientRect();
+            const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+            pickerHue = Math.round((y / rect.height) * 360);
+            if (pickerHue > 360) pickerHue = 360;
+            drawColorField();
+            updatePickerUIFromHsb();
+        }
+
+        psCpInputs.hex.addEventListener('input', (e) => {
+            let val = e.target.value.trim();
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                const rgb = hexToRgb(val);
+                const hsb = rgbToHsb(rgb.r, rgb.g, rgb.b);
+                pickerHue = hsb.h; pickerSat = hsb.s; pickerVal = hsb.b;
+                drawColorField();
+                updatePickerUIFromHsb();
+            }
+        });
+
+        ['h', 's', 'b'].forEach(k => {
+            psCpInputs[k].addEventListener('input', () => {
+                pickerHue = parseInt(psCpInputs.h.value) || 0;
+                pickerSat = parseInt(psCpInputs.s.value) || 0;
+                pickerVal = parseInt(psCpInputs.b.value) || 0;
+                drawColorField();
+                updatePickerUIFromHsb();
+            });
+        });
+
+        ['r', 'g', 'bl'].forEach(k => {
+            psCpInputs[k].addEventListener('input', () => {
+                const r = parseInt(psCpInputs.r.value) || 0;
+                const g = parseInt(psCpInputs.g.value) || 0;
+                const b = parseInt(psCpInputs.bl.value) || 0;
+                const hsb = rgbToHsb(r, g, b);
+                pickerHue = hsb.h; pickerSat = hsb.s; pickerVal = hsb.b;
+                drawColorField();
+                updatePickerUIFromHsb();
+            });
+        });
+
+        function renderSwatchesUI() {
+            const grid = document.getElementById('swatches-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            swatchesList.forEach((hex) => {
+                const item = document.createElement('div');
+                item.className = 'w-7 h-7 rounded cursor-pointer border border-black/60 shadow hover:scale-105 transition';
+                item.style.backgroundColor = hex;
+                item.title = hex;
+                item.onclick = () => {
+                    fgColor = hex;
+                    swatchFg.style.backgroundColor = fgColor;
+                    optBrushColorBtn.style.backgroundColor = fgColor;
+                };
+                grid.appendChild(item);
+            });
+        }
+        renderSwatchesUI();
 
         function saveHistoryState(actionName = "Action") {
             if (historyIndex < historyStack.length - 1) {
@@ -586,9 +1026,6 @@
         }
 
         window.addEventListener('pointermove', (e) => {
-            lastMouseScreenX = e.clientX;
-            lastMouseScreenY = e.clientY;
-
             const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
             if (activeBrushes.includes(currentTool)) {
                 const rect = canvas.getBoundingClientRect();
@@ -636,20 +1073,14 @@
             selectionCtx.setLineDash([4, 4]);
             selectionCtx.lineDashOffset = dashOffset;
 
-            // Render all committed regions
             selectionCtx.strokeStyle = '#000000';
             selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-
-            if (currentDragSelection) {
-                drawRegionOutline(selectionCtx, currentDragSelection);
-            }
+            if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
 
             selectionCtx.strokeStyle = '#ffffff';
             selectionCtx.lineDashOffset = dashOffset + 4;
             selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-            if (currentDragSelection) {
-                drawRegionOutline(selectionCtx, currentDragSelection);
-            }
+            if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
         }
 
         function drawRegionOutline(sCtx, reg) {
@@ -734,40 +1165,19 @@
                             <option value="fixed" ${marqueeStyle === 'fixed' ? 'selected' : ''}>Fixed Size</option>
                         </select>
                     </div>
-                    <div id="marquee-style-params" class="flex items-center space-x-2 ${marqueeStyle === 'normal' ? 'hidden' : ''}">
-                        <div id="aspect-params" class="flex items-center space-x-1 ${marqueeStyle === 'aspect' ? '' : 'hidden'}">
-                            <span>W:</span><input type="number" id="opt-aspect-w" value="${marqueeAspectW}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
-                            <span>H:</span><input type="number" id="opt-aspect-h" value="${marqueeAspectH}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
-                        </div>
-                        <div id="fixed-params" class="flex items-center space-x-1 ${marqueeStyle === 'fixed' ? '' : 'hidden'}">
-                            <span>W(px):</span><input type="number" id="opt-fixed-w" value="${marqueeFixedW}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
-                            <span>H(px):</span><input type="number" id="opt-fixed-h" value="${marqueeFixedH}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
-                        </div>
-                    </div>
-                    <div class="w-[1px] h-4 bg-[#555]"></div>
                     <div class="flex items-center space-x-1.5">
                         <span>Feather:</span>
                         <input type="number" id="opt-feather" value="${marqueeFeather}" min="0" max="250" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
                         <span>px</span>
                     </div>
-                    ${isEllipse ? `
-                    <div class="flex items-center space-x-1">
-                        <label class="flex items-center space-x-1 cursor-pointer text-[11px]">
-                            <input type="checkbox" id="opt-antialias" ${marqueeAntialias ? 'checked' : ''} class="rounded bg-[#222] border-[#555] text-[#0058d0]">
-                            <span>Anti-alias</span>
-                        </label>
-                    </div>
-                    ` : ''}
                 `;
 
-                // Hook up marquee options events
                 document.querySelectorAll('.marquee-mode-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         marqueeMode = btn.getAttribute('data-mode');
                         updateOptionsBarForTool(currentTool);
                     });
                 });
-
                 const styleSelect = document.getElementById('opt-marquee-style');
                 if (styleSelect) {
                     styleSelect.addEventListener('change', (e) => {
@@ -775,31 +1185,10 @@
                         updateOptionsBarForTool(currentTool);
                     });
                 }
-
-                const aspectW = document.getElementById('opt-aspect-w');
-                const aspectH = document.getElementById('opt-aspect-h');
-                if (aspectW && aspectH) {
-                    aspectW.addEventListener('input', (e) => marqueeAspectW = Math.max(1, parseInt(e.target.value) || 1));
-                    aspectH.addEventListener('input', (e) => marqueeAspectH = Math.max(1, parseInt(e.target.value) || 1));
-                }
-
-                const fixedW = document.getElementById('opt-fixed-w');
-                const fixedH = document.getElementById('opt-fixed-h');
-                if (fixedW && fixedH) {
-                    fixedW.addEventListener('input', (e) => marqueeFixedW = Math.max(1, parseInt(e.target.value) || 1));
-                    fixedH.addEventListener('input', (e) => marqueeFixedH = Math.max(1, parseInt(e.target.value) || 1));
-                }
-
                 const featherInput = document.getElementById('opt-feather');
                 if (featherInput) {
                     featherInput.addEventListener('input', (e) => marqueeFeather = Math.max(0, parseInt(e.target.value) || 0));
                 }
-
-                const antialiasCheck = document.getElementById('opt-antialias');
-                if (antialiasCheck) {
-                    antialiasCheck.addEventListener('change', (e) => marqueeAntialias = e.target.checked);
-                }
-
             } else if (toolName === 'mixer-brush') {
                 optionsTitle.textContent = "Mixer Brush Options:";
                 dynamicOptionsContainer.innerHTML = `
@@ -814,14 +1203,15 @@
                         <span id="opt-wetness-val" class="font-mono text-indigo-300 w-7">${brushWetness}%</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span>Color:</span>
-                        <input type="color" id="opt-brush-color" value="${fgColor}" class="w-6 h-6 rounded bg-transparent cursor-pointer border border-gray-600">
+                        <span>Color (Q):</span>
+                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press Q to open Color Picker"></button>
                     </div>
                 `;
                 document.getElementById('opt-wetness').addEventListener('input', (e) => {
                     brushWetness = parseInt(e.target.value);
                     document.getElementById('opt-wetness-val').textContent = `${brushWetness}%`;
                 });
+                document.getElementById('opt-brush-color-btn').addEventListener('click', () => openPhotoshopColorPicker('fg'));
             } else if (toolName === 'smudge') {
                 optionsTitle.textContent = "Smudge Tool Options:";
                 dynamicOptionsContainer.innerHTML = `
@@ -865,16 +1255,12 @@
                     </div>
                     <div class="flex items-center space-x-2">
                         <span>Color (Q):</span>
-                        <input type="color" id="opt-brush-color" value="${fgColor}" class="w-6 h-6 rounded bg-transparent cursor-pointer border border-gray-600">
+                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press Q to open Color Picker"></button>
                     </div>
                 `;
                 document.getElementById('brush-increase').addEventListener('click', () => changeBrushSize(5));
                 document.getElementById('brush-decrease').addEventListener('click', () => changeBrushSize(-5));
-                document.getElementById('opt-brush-color').addEventListener('input', (e) => {
-                    fgColor = e.target.value;
-                    swatchFg.style.backgroundColor = fgColor;
-                    fgColorPicker.value = fgColor;
-                });
+                document.getElementById('opt-brush-color-btn').addEventListener('click', () => openPhotoshopColorPicker('fg'));
             }
 
             const sizeInput = document.getElementById('opt-brush-size');
@@ -952,12 +1338,22 @@
             fgColor = bgColor;
             bgColor = temp;
             swatchFg.style.backgroundColor = fgColor;
-            fgColorPicker.value = fgColor;
             swatchBg.style.backgroundColor = bgColor;
-            bgColorPicker.value = bgColor;
-            const colorInput = document.getElementById('opt-brush-color');
-            if (colorInput) colorInput.value = fgColor;
+            const colorBtn = document.getElementById('opt-brush-color-btn');
+            if (colorBtn) colorBtn.style.backgroundColor = fgColor;
         }
+
+        swatchFg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPhotoshopColorPicker('fg');
+        });
+        swatchBg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPhotoshopColorPicker('bg');
+        });
+        swatchContainer.addEventListener('dblclick', () => {
+            openPhotoshopColorPicker('fg');
+        });
 
         window.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -1001,14 +1397,7 @@
             if (key === 'x') { e.preventDefault(); swapColors(); return; }
             if (key === 'q') {
                 e.preventDefault();
-                popupColorPicker.style.left = `${lastMouseScreenX}px`;
-                popupColorPicker.style.top = `${lastMouseScreenY}px`;
-                popupColorPicker.value = fgColor;
-                if (typeof popupColorPicker.showPicker === 'function') {
-                    try { popupColorPicker.showPicker(); } catch (err) { popupColorPicker.click(); }
-                } else {
-                    popupColorPicker.click();
-                }
+                openPhotoshopColorPicker('fg');
                 return;
             }
 
@@ -1134,8 +1523,7 @@
             const lowerLayer = layers[idx - 1];
 
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
+            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
             const tCtx = tempCanvas.getContext('2d');
 
             tCtx.globalAlpha = lowerLayer.opacity ?? 1;
@@ -1345,9 +1733,7 @@
                 let r = data[i], g = data[i+1], b = data[i+2];
 
                 if (filterType === 'invert') {
-                    data[i] = 255 - r;
-                    data[i+1] = 255 - g;
-                    data[i+2] = 255 - b;
+                    data[i] = 255 - r; data[i+1] = 255 - g; data[i+2] = 255 - b;
                 } else if (filterType === 'grayscale') {
                     let avg = 0.3 * r + 0.59 * g + 0.11 * b;
                     data[i] = avg; data[i+1] = avg; data[i+2] = avg;
@@ -1399,10 +1785,7 @@
             if (sx < 0 || sx >= w || sy < 0 || sy >= h) return;
 
             const startIdx = (sy * w + sx) * 4;
-            const sr = data[startIdx];
-            const sg = data[startIdx + 1];
-            const sb = data[startIdx + 2];
-            const sa = data[startIdx + 3];
+            const sr = data[startIdx], sg = data[startIdx + 1], sb = data[startIdx + 2], sa = data[startIdx + 3];
 
             const hex = fillColor.replace('#', '');
             const tr = parseInt(hex.substring(0, 2), 16);
@@ -1425,11 +1808,7 @@
                     Math.abs(data[pIdx+1] - sg) < 15 && 
                     Math.abs(data[pIdx+2] - sb) < 15 && 
                     Math.abs(data[pIdx+3] - sa) < 15) {
-                    data[pIdx] = tr;
-                    data[pIdx+1] = tg;
-                    data[pIdx+2] = tb;
-                    data[pIdx+3] = 255;
-
+                    data[pIdx] = tr; data[pIdx+1] = tg; data[pIdx+2] = tb; data[pIdx+3] = 255;
                     if (x > 0) queue.push([x - 1, y]);
                     if (x < w - 1) queue.push([x + 1, y]);
                     if (y > 0) queue.push([x, y - 1]);
@@ -1453,10 +1832,7 @@
             if (sx < 0 || sx >= w || sy < 0 || sy >= h) return;
 
             const startIdx = (sy * w + sx) * 4;
-            const sr = data[startIdx];
-            const sg = data[startIdx + 1];
-            const sb = data[startIdx + 2];
-            const sa = data[startIdx + 3];
+            const sr = data[startIdx], sg = data[startIdx + 1], sb = data[startIdx + 2], sa = data[startIdx + 3];
 
             const queue = [[sx, sy]];
             const visited = new Uint8Array(w * h);
@@ -1645,9 +2021,8 @@
                 const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(x => x.toString(16).padStart(2, '0')).join('');
                 fgColor = hex;
                 swatchFg.style.backgroundColor = fgColor;
-                fgColorPicker.value = fgColor;
-                const colorInput = document.getElementById('opt-brush-color');
-                if (colorInput) colorInput.value = fgColor;
+                const colorBtn = document.getElementById('opt-brush-color-btn');
+                if (colorBtn) colorBtn.style.backgroundColor = fgColor;
                 return;
             } else if (currentTool === 'bucket') {
                 floodFill(pos.x, pos.y, fgColor);
@@ -1856,10 +2231,7 @@
                         for (let i = 0; i < reg.mask.length; i++) {
                             if (reg.mask[i]) {
                                 const idx = i * 4;
-                                data[idx] = tr;
-                                data[idx+1] = tg;
-                                data[idx+2] = tb;
-                                data[idx+3] = 255;
+                                data[idx] = tr; data[idx+1] = tg; data[idx+2] = tb; data[idx+3] = 255;
                             }
                         }
                         lCtx.putImageData(imgData, 0, 0);
@@ -1879,23 +2251,6 @@
             selectionRegions = []; 
             currentDragSelection = null;
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-        });
-
-        fgColorPicker.addEventListener('input', (e) => {
-            fgColor = e.target.value;
-            swatchFg.style.backgroundColor = fgColor;
-            const colorInput = document.getElementById('opt-brush-color');
-            if (colorInput) colorInput.value = fgColor;
-        });
-        bgColorPicker.addEventListener('input', (e) => {
-            bgColor = e.target.value;
-            swatchBg.style.backgroundColor = bgColor;
-        });
-        popupColorPicker.addEventListener('input', (e) => {
-            fgColor = e.target.value;
-            swatchFg.style.backgroundColor = fgColor;
-            const colorInput = document.getElementById('opt-brush-color');
-            if (colorInput) colorInput.value = fgColor;
         });
 
         document.getElementById('rotate-left').addEventListener('click', () => { rotationAngle = (rotationAngle - 90 + 360) % 360; applyEdits(); saveHistoryState("Rotate Left 90°"); });
