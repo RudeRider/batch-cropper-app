@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame Capture | Digital Asset Tools</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load JSZip for client-side compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Load FileSaver for cross-browser file downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        #video-capture-preview {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            background-color: #1f2937;
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+        #frame-canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="videoTool.init()">
+
+    <!-- SHARED NAVIGATION BAR -->
+    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
+            <nav class="flex flex-wrap justify-center gap-2">
+                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Batch Cropper</a>
+                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
+                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Video Frames</a>
+                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Text Editor</a>
+                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Solid PNG</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center hidden">
+        <div class="flex flex-col items-center text-white">
+            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p id="loading-text" class="mt-3 text-lg">Processing 0 files...</p>
+        </div>
+    </div>
+    
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
+        <p id="messageText"></p>
+    </div>
+
+    <!-- Video Frame Capture Tab -->
+    <div class="w-full p-4 sm:p-8">
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎥 Video Frame Capture</h2>
+        
+        <div class="flex flex-col lg:flex-row lg:gap-8 relative">
+            <div class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700 mb-8 lg:mb-0">
+                <div class="space-y-6">
+                    <div class="border-b border-gray-700 pb-4">
+                        <label for="videoFileInput" class="block text-xl font-bold text-gray-100 mb-2">1. Upload Video (MP4, MOV, etc.)</label>
+                        <input type="file" id="videoFileInput" accept="video/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
+                        <p id="video-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                    </div>
+
+                    <div id="video-preview-area" class="hidden space-y-4">
+                        <div class="relative rounded-lg overflow-hidden shadow-2xl">
+                            <video id="video-preview" controls preload="metadata" class="w-full h-auto" crossorigin="anonymous"></video>
+                        </div>
+                        <canvas id="frame-canvas" class="hidden"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-80 lg:flex-shrink-0">
+                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700 lg:sticky lg:top-8 lg:self-start space-y-6">
+                    <h3 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
+                    
+                    <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        <p id="frames-placeholder" class="text-sm text-gray-400">No frames captured yet. Load a video and use the capture buttons.</p>
+                    </div>
+
+                    <div id="frame-capture-controls" class="border-t border-gray-700 pt-4 hidden"> 
+                        <h3 class="text-xl font-bold text-gray-100 mb-4">3. Frame Capture Controls</h3>
+                        <div class="bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-600 space-y-3">
+                            <p class="text-sm font-medium text-gray-300">Current Time: <span id="video-current-time" class="font-bold text-gray-100">0.00</span> / <span id="video-duration" class="font-bold text-gray-100">0.00</span> seconds</p>
+                            
+                            <div class="flex items-center space-x-2">
+                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
+                                    <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
+                                    <span>frames to capture</span>
+                                </label>
+                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
+                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
+                                    <span>sec interval</span>
+                                </label>
+                            </div>
+
+                            <div class="flex flex-wrap gap-4 items-center border-t border-gray-600 pt-3">
+                                <button id="capture-frame-btn" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
+                                    <span class="flex items-center space-x-2">Capture Frame</span>
+                                </button>
+                                <button id="capture-multiple-frames-btn" class="bg-pink-600 text-white font-bold px-6 py-3 rounded-full hover:bg-pink-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
+                                    Capture <span id="capture-frame-count-display">10</span> Frames (Auto)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-700 pt-4">
+                        <button id="download-all-frames-btn" class="bg-green-600 text-white font-bold w-full px-6 py-3 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
+                            Download All Frames (ZIP)
+                        </button>
+                        <button id="clear-frames-btn" class="mt-2 bg-red-800 text-red-100 font-semibold w-full px-6 py-3 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+                            Clear All Frames
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        const showMessage = (text, isError = false) => {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
+            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
+            clearTimeout(messageBox.timer);
+            messageBox.timer = setTimeout(() => messageBox.classList.add('hidden'), 5000);
+        };
+
+        const toggleLoading = (isVisible, text = 'Processing...') => {
+            loadingText.textContent = text;
+            loadingOverlay.classList.toggle('hidden', !isVisible);
+        };
+
+        const videoTool = {
+            fileInput: document.getElementById('videoFileInput'),
+            video: document.getElementById('video-preview'),
+            canvas: document.getElementById('frame-canvas'),
+            videoPreviewArea: document.getElementById('video-preview-area'), 
+            controlsArea: document.getElementById('frame-capture-controls'), 
+            durationDisplay: document.getElementById('video-duration'),
+            currentTimeDisplay: document.getElementById('video-current-time'),
+            captureBtn: document.getElementById('capture-frame-btn'),
+            captureMultiBtn: document.getElementById('capture-multiple-frames-btn'),
+            intervalInput: document.getElementById('frame-interval-input'),
+            framesGallery: document.getElementById('frames-gallery'),
+            framesCountDisplay: document.getElementById('frames-count'),
+            downloadBtn: document.getElementById('download-all-frames-btn'),
+            clearBtn: document.getElementById('clear-frames-btn'),
+            placeholder: document.getElementById('frames-placeholder'),
+            errorDisplay: document.getElementById('video-upload-error'),
+            frameCountInput: document.getElementById('frame-count-input'),
+            frameCountDisplay: document.getElementById('capture-frame-count-display'),
+            frames: [], 
+
+            init: function() {
+                this.fileInput.addEventListener('change', (e) => this.handleVideoUpload(e.target.files));
+                this.video.addEventListener('loadedmetadata', () => this.handleVideoLoad());
+                this.video.addEventListener('timeupdate', () => this.updateTimeDisplay());
+                this.captureBtn.addEventListener('click', () => this.captureFrame());
+                this.captureMultiBtn.addEventListener('click', () => this.captureMultipleFrames());
+                this.downloadBtn.addEventListener('click', () => this.downloadAllFrames());
+                this.clearBtn.addEventListener('click', () => this.clearFrames());
+                this.frameCountInput.addEventListener('input', () => this.updateFrameCountDisplay());
+
+                this.framesGallery.addEventListener('click', (e) => {
+                    const deleteBtn = e.target.closest('.delete-frame-btn');
+                    if (deleteBtn) this.deleteFrame(parseInt(deleteBtn.dataset.index, 10));
+                });
+                this.updateUI();
+            },
+
+            updateFrameCountDisplay: function() {
+                let count = parseInt(this.frameCountInput.value, 10);
+                if (isNaN(count) || count < 1) count = 1;
+                this.frameCountDisplay.textContent = count;
+            },
+
+            handleVideoUpload: function(files) {
+                this.errorDisplay.classList.add('hidden');
+                if (!files.length || !files[0].type.startsWith('video/')) {
+                    this.errorDisplay.textContent = 'Please select a valid video file.';
+                    this.errorDisplay.classList.remove('hidden');
+                    return;
+                }
+                const url = URL.createObjectURL(files[0]);
+                this.video.src = url;
+                this.videoPreviewArea.classList.add('hidden');
+                this.controlsArea.classList.add('hidden');
+                showMessage(`Video loaded. Waiting for metadata...`);
+            },
+
+            handleVideoLoad: function() {
+                this.durationDisplay.textContent = this.video.duration.toFixed(2);
+                this.video.currentTime = 0;
+                this.videoPreviewArea.classList.remove('hidden');
+                this.controlsArea.classList.remove('hidden');
+                this.captureBtn.disabled = false;
+                this.captureMultiBtn.disabled = false;
+                showMessage('Video ready for frame capture.');
+            },
+
+            updateTimeDisplay: function() {
+                this.currentTimeDisplay.textContent = this.video.currentTime.toFixed(2);
+            },
+            
+            getFrameData: function(time, index) {
+                return new Promise(resolve => {
+                    const video = this.video;
+                    const canvas = this.canvas;
+                    const ctx = canvas.getContext('2d');
+                    video.pause();
+                    video.currentTime = time;
+                    
+                    const onSeeked = () => {
+                        video.removeEventListener('seeked', onSeeked);
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        resolve({ filename: `frame_${(time * 1000).toFixed(0)}_index_${index}.png`, dataUrl: canvas.toDataURL('image/png') });
+                    };
+                    video.addEventListener('seeked', onSeeked);
+                });
+            },
+
+            captureFrame: async function() {
+                this.captureBtn.disabled = true;
+                const time = this.video.currentTime;
+                toggleLoading(true, `Capturing frame at ${time.toFixed(2)}s...`);
+                try {
+                    const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
+                    this.addFrameToGallery(filename, dataUrl);
+                    showMessage(`Captured frame at ${time.toFixed(2)}s.`);
+                } catch (e) {
+                    showMessage("Failed to capture frame.", true);
+                } finally {
+                    toggleLoading(false);
+                    this.captureBtn.disabled = false;
+                    if (!this.video.paused) this.video.play();
+                }
+            },
+            
+            captureMultipleFrames: async function() {
+                const interval = parseFloat(this.intervalInput.value);
+                const duration = this.video.duration;
+                const totalFrames = parseInt(this.frameCountInput.value, 10) || 10;
+                let time = this.video.currentTime;
+                
+                this.captureMultiBtn.disabled = true;
+                this.video.pause();
+
+                for (let i = 0; i < totalFrames; i++) {
+                    if (time > duration) break;
+                    toggleLoading(true, `Capturing frame ${i + 1} of ${totalFrames}...`);
+                    try {
+                        const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
+                        this.addFrameToGallery(filename, dataUrl);
+                        time += interval;
+                    } catch(e) {
+                        break;
+                    }
+                }
+                toggleLoading(false);
+                this.captureMultiBtn.disabled = false;
+                showMessage(`Finished capturing frames.`);
+            },
+
+            addFrameToGallery: function(filename, dataUrl) {
+                this.frames.push({ filename, dataUrl });
+                this.renderGallery();
+            },
+            
+            deleteFrame: function(idx) {
+                this.frames.splice(idx, 1);
+                this.renderGallery();
+                showMessage("Frame removed.");
+            },
+
+            renderGallery: function() {
+                this.framesGallery.innerHTML = '';
+                this.frames.forEach((frame, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center space-x-3 bg-gray-700 p-2 rounded-lg border border-gray-600';
+                    div.innerHTML = `
+                        <img src="${frame.dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner">
+                        <span class="text-sm font-medium text-gray-300 truncate flex-grow">${frame.filename}</span>
+                        <button data-index="${index}" class="delete-frame-btn text-red-400 hover:text-red-300 p-1">❌</button>
+                    `;
+                    this.framesGallery.appendChild(div);
+                });
+                this.updateUI();
+            },
+
+            clearFrames: function() {
+                this.frames = [];
+                this.renderGallery();
+                showMessage("All captured frames cleared.");
+            },
+            
+            updateUI: function() {
+                const count = this.frames.length;
+                this.framesCountDisplay.textContent = count;
+                this.downloadBtn.disabled = count === 0;
+                this.clearBtn.disabled = count === 0;
+                this.placeholder.classList.toggle('hidden', count > 0);
+            },
+
+            downloadAllFrames: async function() {
+                if (!this.frames.length) return;
+                toggleLoading(true, "Compiling ZIP with captured frames...");
+                const zip = new JSZip();
+                for (const frame of this.frames) {
+                    const blob = await fetch(frame.dataUrl).then(res => res.blob());
+                    zip.file(frame.filename, blob);
+                }
+                const zipBlob = await zip.generateAsync({ type: "blob" });
+                saveAs(zipBlob, "video_frames.zip");
+                toggleLoading(false);
+                showMessage("Frames downloaded as ZIP!");
+            }
+        };
+    </script>
+</body>
+</html>

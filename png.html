@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solid PNG Generator | Digital Asset Tools</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load FileSaver for cross-browser file downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        .png-preview-checkerboard {
+            background-color: #111827;
+            background-image: linear-gradient(45deg, #1f2937 25%, transparent 25%), 
+                              linear-gradient(-45deg, #1f2937 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #1f2937 75%), 
+                              linear-gradient(-45deg, transparent 75%, #1f2937 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        .color-swatch-btn {
+            height: 20px;
+            width: 100%;
+            transition: transform 0.1s ease, outline 0.1s ease;
+            border-radius: 4px;
+        }
+        .color-swatch-btn:hover {
+            transform: scale(1.15);
+            z-index: 10;
+        }
+        .color-swatch-btn:focus {
+            outline: 2px solid #818cf8;
+            outline-offset: 1px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="pngTool.init()">
+
+    <!-- SHARED NAVIGATION BAR -->
+    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
+            <nav class="flex flex-wrap justify-center gap-2">
+                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Batch Cropper</a>
+                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
+                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
+                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Text Editor</a>
+                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Solid PNG</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
+        <p id="messageText"></p>
+    </div>
+
+    <!-- Solid Color PNG Generator Tab -->
+    <div class="w-full p-4 sm:p-8">
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎨 Solid Color PNG Generator</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-4 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 space-y-6 self-start">
+                <div>
+                    <label class="block text-sm font-bold text-gray-200 mb-2">1. Quick Resolution Presets</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="512" data-h="512">512x512</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1024" data-h="1024">1024x1024</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="256" data-h="512">256x512</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="512" data-h="256">512x256</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1920" data-h="1080">1920x1080 (HD)</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1080" data-h="1080">1080x1080 (Square)</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1080" data-h="1920">1080x1920 (Story)</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="3840" data-h="2160">3840x2160 (4K)</button>
+                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition col-span-2" data-w="1500" data-h="500">1500x500 (Header Banner)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-200 mb-2">2. Custom Dimensions (px)</label>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-1/2">
+                            <span class="text-xs text-gray-400">Width</span>
+                            <input type="number" id="png-width" value="512" min="1" max="10000" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center font-mono">
+                        </div>
+                        <span class="text-xl text-gray-400 mt-4">x</span>
+                        <div class="w-1/2">
+                            <span class="text-xs text-gray-400">Height</span>
+                            <input type="number" id="png-height" value="512" min="1" max="10000" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-200 mb-2">3. Background Color</label>
+                    <div class="flex items-center space-x-3 bg-gray-700 p-3 rounded-lg border border-gray-600">
+                        <input type="color" id="png-color-picker" value="#FFCDD2" class="h-10 w-14 p-1 border border-gray-600 rounded cursor-pointer bg-gray-800">
+                        <input type="text" id="png-color-hex" value="#FFCDD2" placeholder="#FFCDD2" class="flex-grow p-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 uppercase font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-200 mb-2">4. Output Filename</label>
+                    <input type="text" id="png-filename" value="solid_color" placeholder="solid_color" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100">
+                </div>
+
+                <button id="png-download-btn" type="button" class="w-full bg-green-600 text-white font-bold px-6 py-4 rounded-xl hover:bg-green-700 transition transform hover:scale-[1.01] shadow-xl flex items-center justify-center space-x-2">
+                    <span>Download PNG File</span>
+                </button>
+            </div>
+
+            <div class="lg:col-span-8 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 flex flex-col justify-between min-h-[450px]">
+                <div class="flex justify-between items-center w-full mb-3 border-b border-gray-700 pb-2">
+                    <h3 class="text-lg font-bold text-gray-200">Live Canvas Area</h3>
+                    <span id="png-res-badge" class="text-xs font-mono bg-indigo-900/60 text-indigo-300 px-3 py-1 rounded-full border border-indigo-700">512 x 512 px</span>
+                </div>
+                
+                <div class="w-full flex-grow flex items-center justify-center png-preview-checkerboard p-3 rounded-xl border border-gray-700 min-h-[220px] mb-3">
+                    <canvas id="solid-png-canvas" class="max-w-full max-h-[280px] shadow-2xl rounded border border-gray-600 transition-all duration-200"></canvas>
+                </div>
+
+                <div class="bg-gray-900/90 p-2.5 rounded-xl border border-gray-700 space-y-2">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <span class="text-xs font-bold text-indigo-300">Color Palette Layers (6 Total Layers)</span>
+                        <span class="text-[10px] text-gray-400">Click any color swatch to apply</span>
+                    </div>
+                    <div id="png-swatches-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                        <!-- Swatches rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const showMessage = (text, isError = false) => {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
+            messageBox.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
+            clearTimeout(messageBox.timer);
+            messageBox.timer = setTimeout(() => messageBox.classList.add('hidden'), 5000);
+        };
+
+        const pngTool = {
+            widthInput: document.getElementById('png-width'),
+            heightInput: document.getElementById('png-height'),
+            colorPicker: document.getElementById('png-color-picker'),
+            colorHexInput: document.getElementById('png-color-hex'),
+            filenameInput: document.getElementById('png-filename'),
+            canvas: document.getElementById('solid-png-canvas'),
+            downloadBtn: document.getElementById('png-download-btn'),
+            resBadge: document.getElementById('png-res-badge'),
+            swatchesContainer: document.getElementById('png-swatches-grid'),
+
+            layers: [
+                {
+                    name: "LAYER 1 (Light)",
+                    colors: [
+                        { hex: "#FFCDD2", name: "Red (Light)" }, { hex: "#FFE0B2", name: "Orange (Light)" },
+                        { hex: "#FFF9C4", name: "Yellow (Light)" }, { hex: "#C8E6C9", name: "Green (Light)" },
+                        { hex: "#BBDEFB", name: "Blue (Light)" }, { hex: "#E1BEE7", name: "Purple (Light)" }
+                    ]
+                },
+                {
+                    name: "LAYER 2 (Medium)",
+                    colors: [
+                        { hex: "#E57373", name: "Red (Medium)" }, { hex: "#FFB74D", name: "Orange (Medium)" },
+                        { hex: "#FFF176", name: "Yellow (Medium)" }, { hex: "#81C784", name: "Green (Medium)" },
+                        { hex: "#64B5F6", name: "Blue (Medium)" }, { hex: "#BA68C8", name: "Purple (Medium)" }
+                    ]
+                },
+                {
+                    name: "LAYER 3 (Vivid/Deep)",
+                    colors: [
+                        { hex: "#F44336", name: "Red (Vivid)" }, { hex: "#FF9800", name: "Orange (Vivid)" },
+                        { hex: "#FFEE58", name: "Yellow (Vivid)" }, { hex: "#4CAF50", name: "Green (Vivid)" },
+                        { hex: "#2196F3", name: "Blue (Vivid)" }, { hex: "#9C27B0", name: "Purple (Vivid)" }
+                    ]
+                },
+                {
+                    name: "LAYER 4 (Neon/Electric)",
+                    colors: [
+                        { hex: "#FF0055", name: "Neon Rose" }, { hex: "#FF5500", name: "Electric Orange" },
+                        { hex: "#FFFF00", name: "Electric Yellow" }, { hex: "#00FF66", name: "Neon Mint" },
+                        { hex: "#00FFFF", name: "Cyan Blast" }, { hex: "#CC00FF", name: "Electric Magenta" }
+                    ]
+                },
+                {
+                    name: "LAYER 5 (Cyberpunk/Dark)",
+                    colors: [
+                        { hex: "#4A0033", name: "Deep Burgundy" }, { hex: "#331A00", name: "Dark Bronze" },
+                        { hex: "#1A3300", name: "Olive Shadow" }, { hex: "#00332B", name: "Deep Teal" },
+                        { hex: "#0A0A3D", name: "Midnight Navy" }, { hex: "#2E004F", name: "Dark Indigo" }
+                    ]
+                },
+                {
+                    name: "LAYER 6 (Monochrome/Neutrals)",
+                    colors: [
+                        { hex: "#FFFFFF", name: "Pure White" }, { hex: "#CCCCCC", name: "Light Silver" },
+                        { hex: "#888888", name: "Medium Gray" }, { hex: "#444444", name: "Dark Slate" },
+                        { hex: "#1A1A1A", name: "Charcoal" }, { hex: "#000000", name: "Pure Black" }
+                    ]
+                }
+            ],
+
+            init: function() {
+                this.renderSwatches();
+
+                this.colorPicker.addEventListener('input', (e) => {
+                    this.colorHexInput.value = e.target.value.toUpperCase();
+                    this.render();
+                });
+
+                this.colorHexInput.addEventListener('input', (e) => {
+                    let val = e.target.value.trim();
+                    if (!val.startsWith('#')) val = '#' + val;
+                    if (/^#[0-9A-F]{6}$/i.test(val)) {
+                        this.colorPicker.value = val;
+                        this.render();
+                    }
+                });
+
+                [this.widthInput, this.heightInput].forEach(input => {
+                    input.addEventListener('input', () => this.render());
+                });
+
+                document.querySelectorAll('.png-preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.widthInput.value = e.currentTarget.dataset.w;
+                        this.heightInput.value = e.currentTarget.dataset.h;
+                        this.render();
+                        showMessage(`Dimension preset set to ${e.currentTarget.dataset.w}x${e.currentTarget.dataset.h} px`);
+                    });
+                });
+
+                this.downloadBtn.addEventListener('click', () => this.downloadPNG());
+                this.render();
+            },
+
+            renderSwatches: function() {
+                if (!this.swatchesContainer) return;
+                this.swatchesContainer.innerHTML = '';
+
+                this.layers.forEach((layer) => {
+                    const layerWrapper = document.createElement('div');
+                    layerWrapper.className = 'bg-gray-800 p-2 rounded border border-gray-700';
+
+                    const label = document.createElement('div');
+                    label.className = 'text-[11px] font-bold text-indigo-300 mb-1';
+                    label.textContent = layer.name;
+                    layerWrapper.appendChild(label);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-6 gap-1';
+
+                    layer.colors.forEach((color) => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'color-swatch-btn rounded border border-gray-600 cursor-pointer shadow-sm relative focus:outline-none';
+                        button.style.backgroundColor = color.hex;
+                        button.title = `${color.name} (${color.hex})`;
+
+                        button.addEventListener('click', () => {
+                            this.colorPicker.value = color.hex;
+                            this.colorHexInput.value = color.hex.toUpperCase();
+                            this.render();
+                            showMessage(`Selected ${color.name} (${color.hex})`);
+                        });
+
+                        grid.appendChild(button);
+                    });
+
+                    layerWrapper.appendChild(grid);
+                    this.swatchesContainer.appendChild(layerWrapper);
+                });
+            },
+
+            render: function() {
+                const w = parseInt(this.widthInput.value, 10) || 100;
+                const h = parseInt(this.heightInput.value, 10) || 100;
+                const color = this.colorPicker.value;
+
+                this.canvas.width = w;
+                this.canvas.height = h;
+
+                const ctx = this.canvas.getContext('2d');
+                ctx.fillStyle = color;
+                ctx.fillRect(0, 0, w, h);
+
+                this.resBadge.textContent = `${w} x ${h} px`;
+            },
+
+            downloadPNG: function() {
+                const w = parseInt(this.widthInput.value, 10) || 100;
+                const h = parseInt(this.heightInput.value, 10) || 100;
+                let rawFilename = this.filenameInput.value.trim() || 'solid_color';
+                
+                if (!rawFilename.toLowerCase().endsWith('.png')) {
+                    rawFilename += '.png';
+                }
+
+                this.canvas.toBlob((blob) => {
+                    if (blob) {
+                        saveAs(blob, rawFilename);
+                        showMessage(`Downloaded ${w}x${h} PNG as "${rawFilename}"`);
+                    } else {
+                        showMessage('Failed to generate PNG image.', true);
+                    }
+                }, 'image/png');
+            }
+        };
+    </script>
+</body>
+</html>

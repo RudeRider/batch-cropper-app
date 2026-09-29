@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Asset Tools: Cropper, Frame Capture & Solid PNG</title>
+    <title>Batch Cropper | Digital Asset Tools</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Cropper.js CSS -->
@@ -12,27 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Engines for SqueezePix Quantization (Pako + UPNG) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
-        .tool-menu-btn {
-            transition: all 0.2s;
-        }
-        .tool-menu-btn.active-tool {
-            background-color: #6366f1;
-            color: #ffffff;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .tool-menu-btn:not(.active-tool) {
-            background-color: #374151;
-            color: #d1d5db;
-        }
-        .tool-menu-btn:not(.active-tool):hover {
-            background-color: #4b5563;
-        }
-
         .gallery-item {
             width: 100%;
             min-height: 100px; 
@@ -73,128 +54,20 @@
             border-color: #6366f1 !important;
             background-color: rgba(49, 46, 129, 0.5) !important;
         }
-        
-        #video-capture-preview {
-            width: 100%;
-            height: auto;
-            max-height: 500px;
-            background-color: #1f2937;
-            object-fit: contain;
-            border-radius: 0.5rem;
-        }
-        #frame-canvas {
-            display: none;
-        }
-        
-        .editor-container {
-            position: relative;
-            min-height: 50vh;
-            border-radius: 0.5rem;
-            border: 1px solid #4b5563;
-            background-color: #374151;
-            padding: 0;
-        }
-        
-        #text-editor-content {
-            padding: 2rem;
-            min-height: 50vh;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            line-height: 1.6;
-            background-color: #1f2937;
-            color: #f3f4f6;
-            border-radius: 0.5rem;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3); 
-            white-space: normal; 
-            overflow-y: auto;
-        }
-        
-        #text-editor-content:focus {
-             outline: none;
-        }
-        
-        #text-editor-content h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-            color: #818cf8;
-        }
-        
-        #text-editor-content p:empty:before{
-            content:attr(placeholder);
-            color:#9ca3af;
-        }
-        
-        #text-editor-content ul, #text-editor-content ol {
-            list-style-position: inside;
-            margin-left: 1.5rem;
-            padding-left: 0.5rem;
-        }
-
-        .png-preview-checkerboard {
-            background-color: #111827;
-            background-image: linear-gradient(45deg, #1f2937 25%, transparent 25%), 
-                              linear-gradient(-45deg, #1f2937 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #1f2937 75%), 
-                              linear-gradient(-45deg, transparent 75%, #1f2937 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-        }
-
-        .color-swatch-btn {
-            height: 20px;
-            width: 100%;
-            transition: transform 0.1s ease, outline 0.1s ease;
-            border-radius: 4px;
-        }
-        .color-swatch-btn:hover {
-            transform: scale(1.15);
-            z-index: 10;
-        }
-        .color-swatch-btn:focus {
-            outline: 2px solid #818cf8;
-            outline-offset: 1px;
-        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="App.init()">
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="cropperTool.init()">
 
+    <!-- SHARED NAVIGATION BAR -->
     <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
         <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
             <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
             <nav class="flex flex-wrap justify-center gap-2">
-                <button onclick="App.switchTool('cropper')" id="menu-cropper" class="tool-menu-btn active-tool px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
-                    <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L1 6.13"/><path d="M14 6h3a2 2 0 0 1 2 2v3"/><path d="M19 17v3a2 2 0 0 1-2 2h-3"/><path d="M10 17H7a2 2 0 0 1-2-2V8"/><path d="M14 10h-4v4h4z"/></svg>
-                        <span>Batch Cropper</span>
-                    </span>
-                </button>
-                <button onclick="App.switchTool('squeezepix')" id="menu-squeezepix" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
-                    <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                        <span>SqueezePix</span>
-                    </span>
-                </button>
-                <button onclick="App.switchTool('video')" id="menu-video" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
-                    <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><path d="M14 12c0-2.4-.23-4.81-1.42-6.75C11.66 3.1 9.4 2 7 2H3a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4c2.4 0 4.66-1.1 5.58-3.25C13.77 16.81 14 14.4 14 12z"/></svg>
-                        <span>Video Frames</span>
-                    </span>
-                </button>
-                <button onclick="App.switchTool('text')" id="menu-text" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
-                    <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
-                        <span>Text Editor</span>
-                    </span>
-                </button>
-                <button onclick="App.switchTool('png')" id="menu-png" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
-                    <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                        <span>Solid PNG</span>
-                    </span>
-                </button>
+                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Batch Cropper</a>
+                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
+                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
+                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Text Editor</a>
+                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Solid PNG</a>
             </nav>
         </div>
     </header>
@@ -211,107 +84,6 @@
     
     <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
         <p id="messageText"></p>
-    </div>
-
-    <!-- SqueezePix Application Tab -->
-    <div id="squeezepix-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <div>
-                <h2 class="text-3xl font-extrabold text-gray-50 flex items-center gap-2">
-                    <span>🗜️ SqueezePix Compressor</span>
-                    <span class="text-xs bg-indigo-900 text-indigo-300 font-mono px-2 py-0.5 rounded-full border border-indigo-700">UPNG Quantizer Engine</span>
-                </h2>
-                <p class="text-sm text-gray-400 mt-1">Smart color quantization & lossy downsampling. All compression runs 100% locally in your browser.</p>
-            </div>
-            <div id="sqz-batch-actions" class="hidden flex gap-3">
-                <button id="sqz-clear-btn" class="bg-red-900/60 hover:bg-red-800 text-red-200 text-sm font-semibold px-4 py-2.5 rounded-xl border border-red-700 transition">
-                    Clear List
-                </button>
-                <button id="sqz-download-all-btn" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span>Download All (ZIP)</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Left Controls / Dropzone -->
-            <div class="lg:col-span-5 space-y-6">
-                <div id="sqz-dropzone" class="p-8 bg-gray-800 shadow-xl rounded-xl border-4 border-dashed border-gray-600 hover:border-indigo-400 transition-all duration-300 text-center cursor-pointer">
-                    <input type="file" id="sqz-file-input" accept="image/png, image/jpeg, image/webp" multiple class="hidden">
-                    <div class="flex flex-col items-center pointer-events-none">
-                        <svg class="w-14 h-14 text-indigo-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p class="text-lg font-bold text-gray-100">Drop PNG, JPEG, or WebP files here</p>
-                        <p class="text-sm text-gray-400 mt-1">or click to browse files from your computer</p>
-                    </div>
-                </div>
-
-                <!-- Settings Box -->
-                <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 shadow-xl space-y-5">
-                    <h3 class="text-base font-bold text-indigo-300 uppercase tracking-wider">Compression Engine Settings</h3>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Target Format Mode</label>
-                        <select id="sqz-format-mode" class="w-full p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="auto" selected>Auto Match (Quantize PNG to 8-bit, Squeeze JPEG/WebP)</option>
-                            <option value="image/png">Force Quantized PNG (UPNG Palette)</option>
-                            <option value="image/webp">Force WebP (Maximum byte savings)</option>
-                            <option value="image/jpeg">Force JPEG (Standard photographic)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-sm font-semibold text-gray-300">Quality / Color Fidelity</label>
-                            <span id="sqz-quality-val" class="text-xs font-mono bg-indigo-900/60 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700">80% / 256 Colors</span>
-                        </div>
-                        <input type="range" id="sqz-quality-slider" min="10" max="100" value="80" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                        <p class="text-[11px] text-gray-400 mt-1">Controls lossy quality for WebP/JPEG, and palette depth (32–256 indexed colors) for PNGs.</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Max Dimension Boundary</label>
-                        <select id="sqz-max-res" class="w-full p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="original" selected>Keep Original Dimensions</option>
-                            <option value="3840">Clamp to 4K UHD (3840px max)</option>
-                            <option value="2560">Clamp to 2K QHD (2560px max)</option>
-                            <option value="1920">Clamp to Full HD (1920px max)</option>
-                            <option value="1280">Clamp to Web Standard (1280px max)</option>
-                        </select>
-                    </div>
-
-                    <div class="pt-2">
-                        <button id="sqz-reprocess-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition">
-                            Apply & Recompress All
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Results Queue -->
-            <div class="lg:col-span-7">
-                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 min-h-[420px] flex flex-col">
-                    <div class="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
-                        <h3 class="text-lg font-bold text-gray-100">Processed Output Queue (<span id="sqz-queue-count">0</span>)</h3>
-                        <span id="sqz-total-savings" class="text-xs font-semibold text-green-400">Total Saved: 0 KB (0%)</span>
-                    </div>
-
-                    <div id="sqz-empty-state" class="flex-grow flex flex-col items-center justify-center text-center p-8 text-gray-500 space-y-2">
-                        <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p class="text-sm">No images in compression queue.</p>
-                        <p class="text-xs">Drag and drop images onto the left pane to compress.</p>
-                    </div>
-
-                    <div id="sqz-list-container" class="space-y-3 overflow-y-auto max-h-[600px] pr-1">
-                        <!-- Squeeze item cards inserted dynamically -->
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Batch Cropper App -->
@@ -407,282 +179,10 @@
         </div>
     </div>
     
-    <!-- Video Frame Capture Tab -->
-    <div id="video-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎥 Video Frame Capture</h2>
-        
-        <div class="flex flex-col lg:flex-row lg:gap-8 relative">
-            <div class="flex-grow w-full bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-700 mb-8 lg:mb-0">
-                <div class="space-y-6">
-                    <div class="border-b border-gray-700 pb-4">
-                        <label for="videoFileInput" class="block text-xl font-bold text-gray-100 mb-2">1. Upload Video (MP4, MOV, etc.)</label>
-                        <input type="file" id="videoFileInput" accept="video/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-700/30 file:text-indigo-300 hover:file:bg-indigo-700/50 cursor-pointer rounded-xl border border-gray-600 p-2">
-                        <p id="video-upload-error" class="text-red-500 text-sm mt-2 hidden"></p>
-                    </div>
-
-                    <div id="video-preview-area" class="hidden space-y-4">
-                        <div class="relative rounded-lg overflow-hidden shadow-2xl">
-                            <video id="video-preview" controls preload="metadata" class="w-full h-auto" crossorigin="anonymous"></video>
-                        </div>
-                        <canvas id="frame-canvas" class="hidden"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:w-80 lg:flex-shrink-0">
-                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700 lg:sticky lg:top-8 lg:self-start space-y-6">
-                    <h3 class="text-xl font-bold text-gray-100 border-b border-gray-700 pb-2">2. Captured Frames (<span id="frames-count">0</span>)</h3>
-                    
-                    <div id="frames-gallery" class="space-y-4 max-h-96 overflow-y-auto pr-2">
-                        <p id="frames-placeholder" class="text-sm text-gray-400">No frames captured yet. Load a video and use the capture buttons.</p>
-                    </div>
-
-                    <div id="frame-capture-controls" class="border-t border-gray-700 pt-4 hidden"> 
-                        <h3 class="text-xl font-bold text-gray-100 mb-4">3. Frame Capture Controls</h3>
-                        <div class="bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-600 space-y-3">
-                            <p class="text-sm font-medium text-gray-300">Current Time: <span id="video-current-time" class="font-bold text-gray-100">0.00</span> / <span id="video-duration" class="font-bold text-gray-100">0.00</span> seconds</p>
-                            
-                            <div class="flex items-center space-x-2">
-                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
-                                    <input type="number" id="frame-count-input" value="10" min="1" step="1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
-                                    <span>frames to capture</span>
-                                </label>
-                                <label class="flex items-center text-sm font-semibold text-gray-300 space-x-2">
-                                    <input type="number" id="frame-interval-input" value="1" min="0.1" step="0.1" class="w-16 p-2 border border-gray-600 rounded-lg text-center bg-gray-800 text-gray-100">
-                                    <span>sec interval</span>
-                                </label>
-                            </div>
-
-                            <div class="flex flex-wrap gap-4 items-center border-t border-gray-600 pt-3">
-                                <button id="capture-frame-btn" class="bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
-                                    <span class="flex items-center space-x-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                            <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5a.75.75 0 0 0 .75-.75v-1.94l-2.432-2.432a4.5 4.5 0 0 0-1.274-1.274L12 9.5l-.711-.647c-.51-.463-1.135-.823-1.802-1.069a15.75 15.75 0 0 0-2.008-.294 1.5 1.5 0 0 0-1.196 1.052v.38c-.319.843-.732 1.63-1.243 2.332L3 16.06ZM10.5 12a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" clip-rule="evenodd" />
-                                        </svg>
-                                        Capture Frame
-                                    </span>
-                                </button>
-                                <button id="capture-multiple-frames-btn" class="bg-pink-600 text-white font-bold px-6 py-3 rounded-full hover:bg-pink-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled>
-                                    Capture <span id="capture-frame-count-display">10</span> Frames (Auto)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-gray-700 pt-4">
-                        <button id="download-all-frames-btn" class="bg-green-600 text-white font-bold w-full px-6 py-3 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                            Download All Frames (ZIP)
-                        </button>
-                        <button id="clear-frames-btn" class="mt-2 bg-red-800 text-red-100 font-semibold w-full px-6 py-3 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                            Clear All Frames
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Text Editor Tab -->
-    <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
-        
-        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
-                <div class="flex flex-col space-y-1 text-sm text-gray-300">
-                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
-                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
-                    <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Loading Cloud Data...</span></p>
-                </div>
-                <div class="flex space-x-3 flex-wrap justify-end">
-                    <input type="text" id="filename-input" placeholder="filename.html (optional)" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-40 bg-gray-700 text-gray-100">
-                    <button id="copy-text-btn" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button" title="Copy only the plain text content to clipboard">
-                        Copy Clean
-                    </button>
-                    <button id="download-txt-btn" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                        Download TXT
-                    </button>
-                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled type="button">
-                        Download HTML
-                    </button>
-                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                        Clear
-                    </button>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <div class="bg-gray-700 rounded-xl p-2 border border-gray-600 shadow-lg flex flex-row flex-wrap gap-2 justify-start">
-                    <button onclick="window.textTool.switchNotebook('notebook1')" id="notebook-tab-notebook1" class="px-4 py-2 rounded-lg font-semibold transition text-white bg-indigo-600 hover:bg-indigo-500 flex-grow sm:flex-grow-0">
-                        Notebook 1
-                    </button>
-                    <button onclick="window.textTool.switchNotebook('notebook2')" id="notebook-tab-notebook2" class="px-4 py-2 rounded-lg font-semibold transition text-gray-300 bg-gray-600 hover:bg-gray-500 flex-grow sm:flex-grow-0">
-                        Scratchpad 2
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-4">
-                <div id="text-transform-controls" class="flex-shrink-0 flex flex-row flex-wrap md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700 justify-start">
-                    <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-extrabold" type="button" title="Bold (Ctrl/Cmd+B)">B</button>
-                    <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold italic" type="button" title="Italic (Ctrl/Cmd+I)">I</button>
-                    <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold underline" type="button" title="Underline (Ctrl/Cmd+U)">U</button>
-                    
-                    <span class="border-l border-gray-600 mx-2 hidden md:block"></span>
-                    <span class="border-t border-gray-600 mt-2 block md:hidden w-full"></span>
-
-                    <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Unordered List">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
-                    </button>
-                    <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition shadow-md font-semibold" type="button" title="Heading">
-                        H3
-                    </button>
-                </div>
-                
-                <div class="editor-container flex-grow">
-                    <div id="text-editor-content" contenteditable="true" class="rich-text-content">
-                        <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Solid Color PNG Generator Tab -->
-    <div id="png-app" class="tool-container w-full p-4 sm:p-8 hidden">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎨 Solid Color PNG Generator</h2>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-4 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 space-y-6 self-start">
-                <div>
-                    <label class="block text-sm font-bold text-gray-200 mb-2">1. Quick Resolution Presets</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="512" data-h="512">512x512</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1024" data-h="1024">1024x1024</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="256" data-h="512">256x512</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="512" data-h="256">512x256</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1920" data-h="1080">1920x1080 (HD)</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1080" data-h="1080">1080x1080 (Square)</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="1080" data-h="1920">1080x1920 (Story)</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition" data-w="3840" data-h="2160">3840x2160 (4K)</button>
-                        <button type="button" class="png-preset-btn bg-gray-700 hover:bg-indigo-600 text-gray-200 text-xs py-2 px-3 rounded-lg font-medium transition col-span-2" data-w="1500" data-h="500">1500x500 (Header Banner)</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-200 mb-2">2. Custom Dimensions (px)</label>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-1/2">
-                            <span class="text-xs text-gray-400">Width</span>
-                            <input type="number" id="png-width" value="512" min="1" max="10000" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center font-mono">
-                        </div>
-                        <span class="text-xl text-gray-400 mt-4">x</span>
-                        <div class="w-1/2">
-                            <span class="text-xs text-gray-400">Height</span>
-                            <input type="number" id="png-height" value="512" min="1" max="10000" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 text-center font-mono">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-200 mb-2">3. Background Color</label>
-                    <div class="flex items-center space-x-3 bg-gray-700 p-3 rounded-lg border border-gray-600">
-                        <input type="color" id="png-color-picker" value="#FFCDD2" class="h-10 w-14 p-1 border border-gray-600 rounded cursor-pointer bg-gray-800">
-                        <input type="text" id="png-color-hex" value="#FFCDD2" placeholder="#FFCDD2" class="flex-grow p-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-gray-100 uppercase font-mono">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-bold text-gray-200 mb-2">4. Output Filename</label>
-                    <input type="text" id="png-filename" value="solid_color" placeholder="solid_color" class="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100">
-                </div>
-
-                <button id="png-download-btn" type="button" class="w-full bg-green-600 text-white font-bold px-6 py-4 rounded-xl hover:bg-green-700 transition transform hover:scale-[1.01] shadow-xl flex items-center justify-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                    <span>Download PNG File</span>
-                </button>
-            </div>
-
-            <div class="lg:col-span-8 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 flex flex-col justify-between min-h-[450px]">
-                <div class="flex justify-between items-center w-full mb-3 border-b border-gray-700 pb-2">
-                    <h3 class="text-lg font-bold text-gray-200">Live Canvas Area</h3>
-                    <span id="png-res-badge" class="text-xs font-mono bg-indigo-900/60 text-indigo-300 px-3 py-1 rounded-full border border-indigo-700">512 x 512 px</span>
-                </div>
-                
-                <div class="w-full flex-grow flex items-center justify-center png-preview-checkerboard p-3 rounded-xl border border-gray-700 min-h-[220px] mb-3">
-                    <canvas id="solid-png-canvas" class="max-w-full max-h-[280px] shadow-2xl rounded border border-gray-600 transition-all duration-200"></canvas>
-                </div>
-
-                <div class="bg-gray-900/90 p-2.5 rounded-xl border border-gray-700 space-y-2">
-                    <div class="flex justify-between items-center mb-0.5">
-                        <span class="text-xs font-bold text-indigo-300">Color Palette Layers (6 Total Layers)</span>
-                        <span class="text-[10px] text-gray-400">Click any color swatch to apply</span>
-                    </div>
-                    <div id="png-swatches-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-                        <!-- Swatches rendered dynamically -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Load Cropper.js -->
+    <!-- Load Cropper.js Script -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let app, db, auth;
-        let userId = 'anonymous';
-        let isAuthReady = false;
-
-        setLogLevel('Debug');
-
-        const initializeFirebase = async () => {
-            if (!firebaseConfig) {
-                 console.error("Firebase config is missing.");
-                 return;
-            }
-
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                const setupAuth = async () => {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        if (!isAuthReady) {
-                            isAuthReady = true;
-                            textTool.loadTextFromFirestore();
-                        }
-                    } else {
-                        setupAuth().catch(e => console.error("Anonymous/Custom sign-in failed:", e));
-                    }
-                    textTool.updateStatus(`Authenticated (User ID: ${userId.substring(0, 8)}...)`);
-                });
-
-                setupAuth(); 
-
-            } catch (e) {
-                console.error("Firebase initialization failed:", e);
-                textTool.updateStatus('Cloud Sync Failed', true);
-            }
-        };
-
+    <script>
         const messageBox = document.getElementById('messageBox');
         const messageText = document.getElementById('messageText');
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -698,17 +198,9 @@
             }, 5000);
         };
 
-        const toggleLoading = (isVisible, text = 'Processing...', count = 0) => {
+        const toggleLoading = (isVisible, text = 'Processing...') => {
             loadingText.textContent = text;
             loadingOverlay.classList.toggle('hidden', !isVisible);
-        };
-
-        const formatBytes = (bytes) => {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         };
 
         const getResolutionValue = (input) => {
@@ -718,1102 +210,19 @@
 
         const ratioToFloat = (ratioString) => {
             if (ratioString === 'NaN') return NaN;
-            
             const parts = ratioString.split('/');
             if (parts.length === 2) {
                 const num = parseFloat(parts[0]);
                 const den = parseFloat(parts[1]);
-                if (!isNaN(num) && !isNaN(den) && den !== 0) {
-                    return num / den;
-                }
+                if (!isNaN(num) && !isNaN(den) && den !== 0) return num / den;
             }
             return NaN;
         };
 
-        // --- SqueezePix Tool Implementation ---
-        const squeezePixTool = {
-            dropzone: document.getElementById('sqz-dropzone'),
-            fileInput: document.getElementById('sqz-file-input'),
-            formatSelect: document.getElementById('sqz-format-mode'),
-            qualitySlider: document.getElementById('sqz-quality-slider'),
-            qualityDisplay: document.getElementById('sqz-quality-val'),
-            maxResSelect: document.getElementById('sqz-max-res'),
-            reprocessBtn: document.getElementById('sqz-reprocess-btn'),
-            queueCount: document.getElementById('sqz-queue-count'),
-            totalSavings: document.getElementById('sqz-total-savings'),
-            batchActions: document.getElementById('sqz-batch-actions'),
-            emptyState: document.getElementById('sqz-empty-state'),
-            listContainer: document.getElementById('sqz-list-container'),
-            downloadAllBtn: document.getElementById('sqz-download-all-btn'),
-            clearBtn: document.getElementById('sqz-clear-btn'),
-
-            items: [],
-
-            init: function() {
-                this.dropzone.addEventListener('click', () => this.fileInput.click());
-                this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
-
-                ['dragenter', 'dragover'].forEach(n => this.dropzone.addEventListener(n, (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    this.dropzone.classList.add('border-indigo-400', 'bg-indigo-950/40');
-                }));
-                ['dragleave', 'drop'].forEach(n => this.dropzone.addEventListener(n, (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    this.dropzone.classList.remove('border-indigo-400', 'bg-indigo-950/40');
-                }));
-                this.dropzone.addEventListener('drop', (e) => this.handleFiles(e.dataTransfer.files));
-
-                this.qualitySlider.addEventListener('input', (e) => {
-                    const val = parseInt(e.target.value, 10);
-                    const colors = Math.max(16, Math.min(256, Math.round(val * 2.56)));
-                    this.qualityDisplay.textContent = `${val}% / ${colors} Colors`;
-                });
-
-                this.reprocessBtn.addEventListener('click', () => this.recompressAll());
-                this.clearBtn.addEventListener('click', () => this.clearAll());
-                this.downloadAllBtn.addEventListener('click', () => this.downloadAllZip());
-            },
-
-            handleFiles: async function(fileList) {
-                if (!fileList || fileList.length === 0) return;
-                const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
-                if (newFiles.length === 0) {
-                    showMessage('Please select valid image files (PNG, JPEG, WebP).', true);
-                    return;
-                }
-
-                toggleLoading(true, `Compressing ${newFiles.length} images with SqueezePix...`);
-
-                for (const file of newFiles) {
-                    try {
-                        const compressed = await this.compressFile(file);
-                        this.items.push(compressed);
-                    } catch (err) {
-                        console.error('Compression error:', err);
-                        showMessage(`Failed to compress ${file.name}`, true);
-                    }
-                }
-
-                toggleLoading(false);
-                this.renderQueue();
-                this.fileInput.value = '';
-                showMessage(`Processed ${newFiles.length} files!`);
-            },
-
-            compressFile: async function(file) {
-                const img = new Image();
-                const srcUrl = URL.createObjectURL(file);
-                
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                    img.src = srcUrl;
-                });
-
-                let width = img.naturalWidth;
-                let height = img.naturalHeight;
-
-                const maxRes = this.maxResSelect.value;
-                if (maxRes !== 'original') {
-                    const limit = parseInt(maxRes, 10);
-                    if (width > limit || height > limit) {
-                        if (width > height) {
-                            height = Math.round((height * limit) / width);
-                            width = limit;
-                        } else {
-                            width = Math.round((width * limit) / height);
-                            height = limit;
-                        }
-                    }
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const formatChoice = this.formatSelect.value;
-                const qualityVal = parseInt(this.qualitySlider.value, 10);
-                let targetType = formatChoice === 'auto' ? file.type : formatChoice;
-                if (!['image/png', 'image/jpeg', 'image/webp'].includes(targetType)) {
-                    targetType = 'image/png';
-                }
-
-                let blob;
-                let outExt = 'png';
-
-                if (targetType === 'image/png') {
-                    outExt = 'png';
-                    const numColors = Math.max(16, Math.min(256, Math.round(qualityVal * 2.56)));
-                    const imgData = ctx.getImageData(0, 0, width, height);
-                    
-                    if (window.UPNG && window.UPNG.encode) {
-                        const pngBuffer = UPNG.encode([imgData.data.buffer], width, height, numColors);
-                        blob = new Blob([pngBuffer], { type: 'image/png' });
-                    } else {
-                        blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-                    }
-                } else if (targetType === 'image/jpeg') {
-                    outExt = 'jpg';
-                    blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', qualityVal / 100));
-                } else {
-                    outExt = 'webp';
-                    blob = await new Promise(r => canvas.toBlob(r, 'image/webp', qualityVal / 100));
-                }
-
-                // Preserve exact filename, keeping extension in sync with target format
-                const lastDotIndex = file.name.lastIndexOf('.');
-                const baseName = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
-                const origExt = lastDotIndex !== -1 ? file.name.substring(lastDotIndex + 1).toLowerCase() : '';
-                
-                // If format mode is auto or matches original, maintain exact extension; else use converted extension
-                let finalExt = outExt;
-                if (formatChoice === 'auto' && origExt) {
-                    finalExt = origExt;
-                } else if ((targetType === 'image/jpeg' && (origExt === 'jpeg' || origExt === 'jpg'))) {
-                    finalExt = origExt;
-                }
-                
-                const outName = `${baseName}.${finalExt}`;
-                const previewUrl = URL.createObjectURL(blob);
-
-                return {
-                    id: crypto.randomUUID(),
-                    originalFile: file,
-                    compressedBlob: blob,
-                    originalSize: file.size,
-                    compressedSize: blob.size,
-                    outName,
-                    previewUrl,
-                    width,
-                    height
-                };
-            },
-
-            recompressAll: async function() {
-                if (this.items.length === 0) return;
-                toggleLoading(true, `Recompressing ${this.items.length} images...`);
-
-                const oldFiles = this.items.map(item => item.originalFile);
-                this.items.forEach(i => URL.revokeObjectURL(i.previewUrl));
-                this.items = [];
-
-                for (const file of oldFiles) {
-                    try {
-                        const compressed = await this.compressFile(file);
-                        this.items.push(compressed);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-
-                toggleLoading(false);
-                this.renderQueue();
-                showMessage('Recompression complete.');
-            },
-
-            clearAll: function() {
-                this.items.forEach(i => URL.revokeObjectURL(i.previewUrl));
-                this.items = [];
-                this.renderQueue();
-                showMessage('SqueezePix queue cleared.');
-            },
-
-            renderQueue: function() {
-                this.queueCount.textContent = this.items.length;
-                this.listContainer.innerHTML = '';
-
-                if (this.items.length === 0) {
-                    this.emptyState.classList.remove('hidden');
-                    this.batchActions.classList.add('hidden');
-                    this.totalSavings.textContent = 'Total Saved: 0 KB (0%)';
-                    return;
-                }
-
-                this.emptyState.classList.add('hidden');
-                this.batchActions.classList.remove('hidden');
-
-                let totalOrig = 0;
-                let totalComp = 0;
-
-                this.items.forEach((item, index) => {
-                    totalOrig += item.originalSize;
-                    totalComp += item.compressedSize;
-
-                    const diff = item.originalSize - item.compressedSize;
-                    const pct = Math.round((diff / item.originalSize) * 100);
-                    const isPositive = diff >= 0;
-
-                    const card = document.createElement('div');
-                    card.className = 'flex flex-col sm:flex-row items-center justify-between p-3.5 bg-gray-700 rounded-xl border border-gray-600 gap-3 shadow';
-                    card.innerHTML = `
-                        <div class="flex items-center space-x-3 w-full sm:w-auto">
-                            <img src="${item.previewUrl}" class="w-14 h-14 object-cover rounded-lg border border-gray-500 bg-gray-900" alt="Thumbnail">
-                            <div class="truncate">
-                                <p class="text-sm font-bold text-gray-100 truncate max-w-[200px] sm:max-w-xs">${item.outName}</p>
-                                <p class="text-xs text-gray-400">${item.width}x${item.height} px • ${formatBytes(item.compressedSize)}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between w-full sm:w-auto sm:space-x-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-600">
-                            <div class="text-right">
-                                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${isPositive ? 'bg-green-900/60 text-green-300 border border-green-700' : 'bg-red-900/60 text-red-300 border border-red-700'}">
-                                    ${isPositive ? `-${pct}%` : `+${Math.abs(pct)}%`}
-                                </span>
-                                <p class="text-[11px] text-gray-400 mt-0.5">was ${formatBytes(item.originalSize)}</p>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <button data-index="${index}" class="sqz-single-download bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition" title="Download Image">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                </button>
-                                <button data-index="${index}" class="sqz-single-delete text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/40 transition" title="Remove">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    this.listContainer.appendChild(card);
-                });
-
-                const totalDiff = totalOrig - totalComp;
-                const totalPct = totalOrig > 0 ? Math.round((totalDiff / totalOrig) * 100) : 0;
-                this.totalSavings.textContent = `Total Saved: ${formatBytes(Math.max(0, totalDiff))} (${totalPct}%)`;
-
-                this.listContainer.querySelectorAll('.sqz-single-download').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = parseInt(e.currentTarget.dataset.index, 10);
-                        const item = this.items[idx];
-                        if (item) saveAs(item.compressedBlob, item.outName);
-                    });
-                });
-
-                this.listContainer.querySelectorAll('.sqz-single-delete').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const idx = parseInt(e.currentTarget.dataset.index, 10);
-                        if (this.items[idx]) {
-                            URL.revokeObjectURL(this.items[idx].previewUrl);
-                            this.items.splice(idx, 1);
-                            this.renderQueue();
-                        }
-                    });
-                });
-            },
-
-            downloadAllZip: async function() {
-                if (this.items.length === 0) return;
-                toggleLoading(true, `Creating ZIP with ${this.items.length} optimized images...`);
-                try {
-                    const zip = new JSZip();
-                    this.items.forEach(item => {
-                        zip.file(item.outName, item.compressedBlob);
-                    });
-                    const zipBlob = await zip.generateAsync({ type: 'blob' });
-                    saveAs(zipBlob, 'squeezepix_images.zip');
-                    showMessage(`ZIP downloaded with ${this.items.length} images!`);
-                } catch (err) {
-                    console.error('ZIP compilation error:', err);
-                    showMessage('Failed to generate ZIP archive.', true);
-                } finally {
-                    toggleLoading(false);
-                }
-            }
-        };
-
-        window.App = {
-            currentTool: 'cropper',
-            
-            init: function() {
-                initializeFirebase(); 
-                
-                cropperTool.init();
-                squeezePixTool.init();
-                videoTool.init();
-                textTool.init(); 
-                pngTool.init();
-                this.switchTool(this.currentTool);
-            },
-
-            switchTool: function(toolId) {
-                this.currentTool = toolId;
-                document.querySelectorAll('.tool-container').forEach(el => {
-                    el.classList.add('hidden');
-                });
-                document.getElementById(`${toolId}-app`).classList.remove('hidden');
-
-                document.querySelectorAll('.tool-menu-btn').forEach(btn => {
-                    btn.classList.remove('active-tool');
-                });
-                document.getElementById(`menu-${toolId}`).classList.add('active-tool');
-                
-                if (toolId === 'cropper') {
-                    document.title = 'Batch Cropper | Digital Asset Tools';
-                } else if (toolId === 'squeezepix') {
-                    document.title = 'SqueezePix Compressor | Digital Asset Tools';
-                } else if (toolId === 'video') {
-                    document.title = 'Video Frame Capture | Digital Asset Tools';
-                } else if (toolId === 'text') {
-                    document.title = 'Text Editor | Digital Asset Tools';
-                } else if (toolId === 'png') {
-                    document.title = 'Solid PNG Generator | Digital Asset Tools';
-                    pngTool.render();
-                }
-            }
-        };
-
-        const throttle = (func, delay) => {
-            let timeoutId = null;
-            return function(...args) {
-                const context = this; 
-                if (timeoutId) return;
-                timeoutId = setTimeout(() => {
-                    func.apply(context, args); 
-                    timeoutId = null;
-                }, delay);
-            };
-        };
-
-        const pngTool = {
-            widthInput: document.getElementById('png-width'),
-            heightInput: document.getElementById('png-height'),
-            colorPicker: document.getElementById('png-color-picker'),
-            colorHexInput: document.getElementById('png-color-hex'),
-            filenameInput: document.getElementById('png-filename'),
-            canvas: document.getElementById('solid-png-canvas'),
-            downloadBtn: document.getElementById('png-download-btn'),
-            resBadge: document.getElementById('png-res-badge'),
-            swatchesContainer: document.getElementById('png-swatches-grid'),
-
-            layers: [
-                {
-                    name: "LAYER 1 (Light)",
-                    colors: [
-                        { hex: "#FFCDD2", name: "Red (Light)" },
-                        { hex: "#FFE0B2", name: "Orange (Light)" },
-                        { hex: "#FFF9C4", name: "Yellow (Light)" },
-                        { hex: "#C8E6C9", name: "Green (Light)" },
-                        { hex: "#BBDEFB", name: "Blue (Light)" },
-                        { hex: "#E1BEE7", name: "Purple (Light)" }
-                    ]
-                },
-                {
-                    name: "LAYER 2 (Medium)",
-                    colors: [
-                        { hex: "#E57373", name: "Red (Medium)" },
-                        { hex: "#FFB74D", name: "Orange (Medium)" },
-                        { hex: "#FFF176", name: "Yellow (Medium)" },
-                        { hex: "#81C784", name: "Green (Medium)" },
-                        { hex: "#64B5F6", name: "Blue (Medium)" },
-                        { hex: "#BA68C8", name: "Purple (Medium)" }
-                    ]
-                },
-                {
-                    name: "LAYER 3 (Vivid/Deep)",
-                    colors: [
-                        { hex: "#F44336", name: "Red (Vivid)" },
-                        { hex: "#FF9800", name: "Orange (Vivid)" },
-                        { hex: "#FFEE58", name: "Yellow (Vivid)" },
-                        { hex: "#4CAF50", name: "Green (Vivid)" },
-                        { hex: "#2196F3", name: "Blue (Vivid)" },
-                        { hex: "#9C27B0", name: "Purple (Vivid)" }
-                    ]
-                },
-                {
-                    name: "LAYER 4 (Neon/Electric)",
-                    colors: [
-                        { hex: "#FF0055", name: "Neon Rose" },
-                        { hex: "#FF5500", name: "Electric Orange" },
-                        { hex: "#FFFF00", name: "Electric Yellow" },
-                        { hex: "#00FF66", name: "Neon Mint" },
-                        { hex: "#00FFFF", name: "Cyan Blast" },
-                        { hex: "#CC00FF", name: "Electric Magenta" }
-                    ]
-                },
-                {
-                    name: "LAYER 5 (Cyberpunk/Dark)",
-                    colors: [
-                        { hex: "#4A0033", name: "Deep Burgundy" },
-                        { hex: "#331A00", name: "Dark Bronze" },
-                        { hex: "#1A3300", name: "Olive Shadow" },
-                        { hex: "#00332B", name: "Deep Teal" },
-                        { hex: "#0A0A3D", name: "Midnight Navy" },
-                        { hex: "#2E004F", name: "Dark Indigo" }
-                    ]
-                },
-                {
-                    name: "LAYER 6 (Monochrome/Neutrals)",
-                    colors: [
-                        { hex: "#FFFFFF", name: "Pure White" },
-                        { hex: "#CCCCCC", name: "Light Silver" },
-                        { hex: "#888888", name: "Medium Gray" },
-                        { hex: "#444444", name: "Dark Slate" },
-                        { hex: "#1A1A1A", name: "Charcoal" },
-                        { hex: "#000000", name: "Pure Black" }
-                    ]
-                }
-            ],
-
-            init: function() {
-                this.renderSwatches();
-
-                this.colorPicker.addEventListener('input', (e) => {
-                    this.colorHexInput.value = e.target.value.toUpperCase();
-                    this.render();
-                });
-
-                this.colorHexInput.addEventListener('input', (e) => {
-                    let val = e.target.value.trim();
-                    if (!val.startsWith('#')) val = '#' + val;
-                    if (/^#[0-9A-F]{6}$/i.test(val)) {
-                        this.colorPicker.value = val;
-                        this.render();
-                    }
-                });
-
-                [this.widthInput, this.heightInput].forEach(input => {
-                    input.addEventListener('input', () => this.render());
-                });
-
-                document.querySelectorAll('.png-preset-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        this.widthInput.value = e.currentTarget.dataset.w;
-                        this.heightInput.value = e.currentTarget.dataset.h;
-                        this.render();
-                        showMessage(`Dimension preset set to ${e.currentTarget.dataset.w}x${e.currentTarget.dataset.h} px`);
-                    });
-                });
-
-                this.downloadBtn.addEventListener('click', () => this.downloadPNG());
-                this.render();
-            },
-
-            renderSwatches: function() {
-                if (!this.swatchesContainer) return;
-                this.swatchesContainer.innerHTML = '';
-
-                this.layers.forEach((layer) => {
-                    const layerWrapper = document.createElement('div');
-                    layerWrapper.className = 'bg-gray-800 p-2 rounded border border-gray-700';
-
-                    const label = document.createElement('div');
-                    label.className = 'text-[11px] font-bold text-indigo-300 mb-1';
-                    label.textContent = layer.name;
-                    layerWrapper.appendChild(label);
-
-                    const grid = document.createElement('div');
-                    grid.className = 'grid grid-cols-6 gap-1';
-
-                    layer.colors.forEach((color) => {
-                        const button = document.createElement('button');
-                        button.type = 'button';
-                        button.className = 'color-swatch-btn rounded border border-gray-600 cursor-pointer shadow-sm relative focus:outline-none';
-                        button.style.backgroundColor = color.hex;
-                        button.title = `${color.name} (${color.hex})`;
-
-                        button.addEventListener('click', () => {
-                            this.colorPicker.value = color.hex;
-                            this.colorHexInput.value = color.hex.toUpperCase();
-                            this.render();
-                            showMessage(`Selected ${color.name} (${color.hex})`);
-                        });
-
-                        grid.appendChild(button);
-                    });
-
-                    layerWrapper.appendChild(grid);
-                    this.swatchesContainer.appendChild(layerWrapper);
-                });
-            },
-
-            render: function() {
-                const w = parseInt(this.widthInput.value, 10) || 100;
-                const h = parseInt(this.heightInput.value, 10) || 100;
-                const color = this.colorPicker.value;
-
-                this.canvas.width = w;
-                this.canvas.height = h;
-
-                const ctx = this.canvas.getContext('2d');
-                ctx.fillStyle = color;
-                ctx.fillRect(0, 0, w, h);
-
-                this.resBadge.textContent = `${w} x ${h} px`;
-            },
-
-            downloadPNG: function() {
-                const w = parseInt(this.widthInput.value, 10) || 100;
-                const h = parseInt(this.heightInput.value, 10) || 100;
-                let rawFilename = this.filenameInput.value.trim() || 'solid_color';
-                
-                if (!rawFilename.toLowerCase().endsWith('.png')) {
-                    rawFilename += '.png';
-                }
-
-                this.canvas.toBlob((blob) => {
-                    if (blob) {
-                        saveAs(blob, rawFilename);
-                        showMessage(`Downloaded ${w}x${h} PNG as "${rawFilename}"`);
-                    } else {
-                        showMessage('Failed to generate PNG image.', true);
-                    }
-                }, 'image/png');
-            }
-        };
-
-        const textTool = {
-            contentDiv: document.getElementById('text-editor-content'),
-            downloadBtn: document.getElementById('download-text-btn'),
-            clearBtn: document.getElementById('clear-text-btn'),
-            filenameInput: document.getElementById('filename-input'),
-            wordCountDisplay: document.getElementById('word-count'),
-            charCountDisplay: document.getElementById('char-count'),
-            statusDisplay: document.getElementById('text-editor-status'),
-            copyBtn: document.getElementById('copy-text-btn'), 
-            downloadTxtBtn: document.getElementById('download-txt-btn'),
-            
-            currentNotebook: 'notebook1',
-            unsubscribeListener: null,
-            
-            init: function() {
-                this.contentDiv.addEventListener('input', () => this.updateStatsAndSave());
-                this.clearBtn.addEventListener('click', () => this.clearEditor());
-                this.downloadBtn.addEventListener('click', () => this.downloadText());
-
-                this.copyBtn.addEventListener('click', () => this.copyCleanText());
-                this.downloadTxtBtn.addEventListener('click', () => this.downloadTxt());
-
-                document.querySelectorAll('#text-transform-controls .rich-text-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.handleRichTextCommand(
-                        e.currentTarget.dataset.command,
-                        e.currentTarget.dataset.value
-                    ));
-                });
-                
-                this.updateNotebookTabUI(this.currentNotebook);
-                this.updateStats();
-                this.updateStatus('Waiting for Authentication...');
-            },
-
-            updateNotebookTabUI: function(activeId) {
-                const tabs = ['notebook1', 'notebook2'];
-                tabs.forEach(id => {
-                    const btn = document.getElementById(`notebook-tab-${id}`);
-                    if (btn) {
-                         if (id === activeId) {
-                             btn.classList.remove('bg-gray-600', 'text-gray-300');
-                             btn.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-500');
-                         } else {
-                             btn.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-500');
-                             btn.classList.add('bg-gray-600', 'text-gray-300', 'hover:bg-gray-500');
-                         }
-                    }
-                });
-            },
-
-            switchNotebook: function(notebookId) {
-                if (this.currentNotebook === notebookId) return;
-
-                this.currentNotebook = notebookId;
-                this.updateNotebookTabUI(notebookId);
-                this.loadTextFromFirestore(); 
-                showMessage(`Switched to ${notebookId.replace('notebook', 'Notebook ').replace('2', ' 2')}`);
-            },
-            
-            updateStatus: function(text, isError = false) {
-                 this.statusDisplay.textContent = text;
-                 this.statusDisplay.classList.remove('text-green-400', 'text-red-400', 'text-yellow-400');
-                 if (isError) {
-                     this.statusDisplay.classList.add('text-red-400');
-                 } else if (text.includes('Authenticated')) {
-                     this.statusDisplay.classList.add('text-green-400');
-                 } else {
-                     this.statusDisplay.classList.add('text-yellow-400');
-                 }
-            },
-
-            getDocRef: function() {
-                if (!db || !userId || !isAuthReady) return null;
-                const docPath = `/artifacts/${appId}/users/${userId}/text_scratchpad/${this.currentNotebook}`;
-                return doc(db, docPath);
-            },
-
-            saveTextToFirestore: throttle(async function() {
-                const docRef = this.getDocRef();
-                if (!docRef) return;
-
-                const contentHtml = this.contentDiv.innerHTML;
-
-                try {
-                    await setDoc(docRef, {
-                        content: contentHtml,
-                        updatedAt: new Date().toISOString()
-                    });
-                } catch(e) {
-                    console.error("Firestore save failed:", e);
-                    this.updateStatus('SAVE FAILED!', true);
-                }
-            }, 2000),
-
-            loadTextFromFirestore: function() {
-                if (this.unsubscribeListener) {
-                    this.unsubscribeListener();
-                    this.unsubscribeListener = null;
-                }
-                
-                const docRef = this.getDocRef();
-                if (!docRef) {
-                    this.updateStatus('Cannot load text: Auth not ready.', true);
-                    return;
-                }
-                
-                this.unsubscribeListener = onSnapshot(docRef, (docSnap) => {
-                    if (!isAuthReady) return;
-
-                    if (docSnap.exists() && docSnap.data() && docSnap.data().content !== undefined) {
-                        const loadedHtml = docSnap.data().content;
-                        if (this.contentDiv.innerHTML !== loadedHtml) {
-                            this.contentDiv.innerHTML = loadedHtml;
-                            this.updateStats();
-                            this.updateStatus(`Ready (Minimal Editor).`, false);
-                        }
-                    } else {
-                        const defaultContent = '<p>Welcome to your minimal cloud scratchpad! Start typing here.</p>';
-                        if (this.contentDiv.innerHTML.trim() !== defaultContent) {
-                             this.contentDiv.innerHTML = defaultContent;
-                        }
-                        this.updateStats();
-                        this.updateStatus(`Ready (Minimal Editor).`, false);
-                        this.saveTextToFirestore(); 
-                    }
-                }, (error) => {
-                    console.error("Error listening to scratchpad:", error);
-                    this.updateStatus('Error reading cloud data.', true);
-                });
-            },
-
-            updateStatsAndSave: function() {
-                this.updateStats();
-                this.saveTextToFirestore();
-            },
-
-            updateStats: function() {
-                const text = this.contentDiv.textContent; 
-                const charCount = text.length;
-                
-                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-                const wordCount = words.length;
-
-                this.charCountDisplay.textContent = charCount;
-                this.wordCountDisplay.textContent = wordCount;
-                this.downloadBtn.disabled = charCount === 0;
-                this.copyBtn.disabled = charCount === 0; 
-                this.downloadTxtBtn.disabled = charCount === 0; 
-            },
-
-            clearEditor: async function() {
-                const docRef = this.getDocRef();
-                if (!docRef) return;
-
-                this.contentDiv.innerHTML = '<p><br></p>'; 
-                this.updateStats();
-
-                try {
-                    await deleteDoc(docRef);
-                    showMessage(`Editor for ${this.currentNotebook} cleared and cloud save deleted.`, false);
-                    this.updateStatus('Cleared and deleted from cloud.', false);
-                } catch (e) {
-                    console.warn("Firestore delete attempt finished with warning:", e);
-                    showMessage("Editor cleared locally.", false);
-                    this.updateStatus('Cleared locally.', false);
-                }
-            },
-            
-            copyCleanText: function() {
-                const text = this.contentDiv.textContent;
-                
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed'; 
-                textarea.style.opacity = 0; 
-                document.body.appendChild(textarea);
-                
-                textarea.select();
-                try {
-                    document.execCommand('copy');
-                    showMessage("Clean text copied to clipboard!");
-                } catch (e) {
-                    console.error("Copy command failed:", e);
-                    showMessage("Failed to copy text. Please copy manually.", true);
-                }
-                
-                document.body.removeChild(textarea);
-            },
-
-            downloadTxt: function() {
-                const plainText = this.contentDiv.textContent;
-                if (plainText.length === 0) {
-                    showMessage("Editor is empty. Nothing to download.", true);
-                    return;
-                }
-
-                let filename = this.filenameInput.value.trim() || 'rich_text_document';
-                
-                if (filename.toLowerCase().endsWith('.html')) {
-                    filename = filename.replace(/\.html$/i, '') + '.txt';
-                } else if (!filename.toLowerCase().endsWith('.txt')) {
-                    filename += '.txt';
-                }
-
-                try {
-                    const blob = new Blob([plainText], { type: "text/plain;charset=utf-8" });
-                    saveAs(blob, filename);
-                    showMessage(`Downloaded plain text as "${filename}".`);
-                } catch (e) {
-                    console.error("Error downloading text:", e);
-                    showMessage("Failed to download TXT file.", true);
-                }
-            },
-
-            downloadText: function() {
-                const content = this.contentDiv.innerHTML;
-                const plainText = this.contentDiv.textContent;
-                
-                if (plainText.length === 0) {
-                    showMessage("Editor is empty. Nothing to download.", true);
-                    return;
-                }
-
-                let filename = this.filenameInput.value.trim() || 'rich_text_document';
-                
-                if (!filename.toLowerCase().endsWith('.html')) {
-                    filename = filename.replace(/\.(txt|md)$/i, '') + '.html'; 
-                }
-
-                const htmlContent = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${filename.replace('.html', '')}</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #1f2937; padding: 20px;}
-        h3 { font-size: 1.5rem; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; color: #818cf8; }
-        ul, ol { list-style-position: inside; margin-left: 1.5rem; padding-left: 0.5rem; }
-    </style>
-</head>
-<body>
-${content}
-</body>
-</html>`;
-
-                try {
-                    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-                    saveAs(blob, filename);
-                    showMessage(`Downloaded rich text as "${filename}".`);
-                } catch (e) {
-                    console.error("Error downloading text:", e);
-                    showMessage("Failed to download HTML file.", true);
-                }
-            },
-
-            handleRichTextCommand: function(command, value = null) {
-                this.contentDiv.focus();
-
-                try {
-                    document.execCommand(command, false, value);
-                    this.updateStatsAndSave(); 
-                    showMessage(`Applied format: ${command}.`);
-                } catch (e) {
-                    console.error("ExecCommand failed:", e);
-                    showMessage(`Failed to apply format: ${command}.`, true);
-                }
-            },
-        };
-
-        window.textTool = textTool; 
-        
-        const videoTool = {
-            fileInput: document.getElementById('videoFileInput'),
-            video: document.getElementById('video-preview'),
-            canvas: document.getElementById('frame-canvas'),
-            
-            videoPreviewArea: document.getElementById('video-preview-area'), 
-            controlsArea: document.getElementById('frame-capture-controls'), 
-            
-            durationDisplay: document.getElementById('video-duration'),
-            currentTimeDisplay: document.getElementById('video-current-time'),
-            captureBtn: document.getElementById('capture-frame-btn'),
-            captureMultiBtn: document.getElementById('capture-multiple-frames-btn'),
-            intervalInput: document.getElementById('frame-interval-input'),
-            framesGallery: document.getElementById('frames-gallery'),
-            framesCountDisplay: document.getElementById('frames-count'),
-            downloadBtn: document.getElementById('download-all-frames-btn'),
-            clearBtn: document.getElementById('clear-frames-btn'),
-            placeholder: document.getElementById('frames-placeholder'),
-            errorDisplay: document.getElementById('video-upload-error'),
-            
-            frameCountInput: document.getElementById('frame-count-input'),
-            frameCountDisplay: document.getElementById('capture-frame-count-display'),
-
-            frames: [], 
-
-            init: function() {
-                this.fileInput.addEventListener('change', (e) => this.handleVideoUpload(e.target.files));
-                this.video.addEventListener('loadedmetadata', () => this.handleVideoLoad());
-                this.video.addEventListener('timeupdate', () => this.updateTimeDisplay());
-                this.captureBtn.addEventListener('click', () => this.captureFrame());
-                this.captureMultiBtn.addEventListener('click', () => this.captureMultipleFrames());
-                this.downloadBtn.addEventListener('click', () => this.downloadAllFrames());
-                this.clearBtn.addEventListener('click', () => this.clearFrames());
-                
-                this.frameCountInput.addEventListener('input', () => this.updateFrameCountDisplay());
-
-                this.framesGallery.addEventListener('click', (e) => {
-                    const deleteBtn = e.target.closest('.delete-frame-btn');
-                    if (deleteBtn) {
-                        const indexToDelete = parseInt(deleteBtn.dataset.index, 10);
-                        this.deleteFrame(indexToDelete);
-                    }
-                });
-
-                this.updateUI();
-            },
-
-            updateFrameCountDisplay: function() {
-                let count = parseInt(this.frameCountInput.value, 10);
-                if (isNaN(count) || count < 1) {
-                    count = 1;
-                    this.frameCountInput.value = 1;
-                }
-                this.frameCountDisplay.textContent = count;
-            },
-
-            handleVideoUpload: function(files) {
-                this.errorDisplay.classList.add('hidden');
-                if (files.length === 0 || !files[0].type.startsWith('video/')) {
-                    this.errorDisplay.textContent = 'Please select a valid video file.';
-                    this.errorDisplay.classList.remove('hidden');
-                    this.videoPreviewArea.classList.add('hidden'); 
-                    this.controlsArea.classList.add('hidden'); 
-                    return;
-                }
-                
-                const file = files[0];
-                if (this.video.src) URL.revokeObjectURL(this.video.src);
-                
-                const url = URL.createObjectURL(file);
-                this.video.src = url;
-                this.videoPreviewArea.classList.add('hidden'); 
-                this.controlsArea.classList.add('hidden'); 
-                showMessage(`Video "${file.name}" loaded. Waiting for metadata...`);
-            },
-
-            handleVideoLoad: function() {
-                this.durationDisplay.textContent = this.video.duration.toFixed(2);
-                this.video.currentTime = 0;
-                this.videoPreviewArea.classList.remove('hidden'); 
-                this.controlsArea.classList.remove('hidden'); 
-                this.captureBtn.disabled = false;
-                this.captureMultiBtn.disabled = false;
-                showMessage('Video ready for frame capture.');
-            },
-
-            updateTimeDisplay: function() {
-                this.currentTimeDisplay.textContent = this.video.currentTime.toFixed(2);
-            },
-            
-            getFrameData: function(time, index) {
-                return new Promise(resolve => {
-                    const video = this.video;
-                    const canvas = this.canvas;
-                    const ctx = canvas.getContext('2d');
-                    
-                    video.pause();
-                    video.currentTime = time;
-                    
-                    const onSeeked = () => {
-                        video.removeEventListener('seeked', onSeeked);
-                        
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        
-                        const filename = `frame_${(time * 1000).toFixed(0)}_index_${index}.png`;
-                        const dataUrl = canvas.toDataURL('image/png');
-                        
-                        resolve({ filename, dataUrl });
-                    };
-                    
-                    video.addEventListener('seeked', onSeeked);
-                    if (video.readyState >= 2 && video.currentTime === time) {
-                        onSeeked();
-                    }
-                });
-            },
-
-            captureFrame: async function() {
-                this.captureBtn.disabled = true;
-                this.captureMultiBtn.disabled = true;
-                const time = this.video.currentTime;
-                
-                toggleLoading(true, `Capturing frame at ${time.toFixed(2)}s...`);
-
-                try {
-                    const { filename, dataUrl } = await this.getFrameData(time, this.frames.length);
-                    this.addFrameToGallery(filename, dataUrl);
-                    showMessage(`Captured frame at ${time.toFixed(2)}s.`);
-                } catch (e) {
-                    console.error("Frame capture failed:", e);
-                    showMessage("Failed to capture frame.", true);
-                } finally {
-                    toggleLoading(false);
-                    this.captureBtn.disabled = false;
-                    this.captureMultiBtn.disabled = false;
-                    if (!this.video.paused) this.video.play();
-                }
-            },
-            
-            captureMultipleFrames: async function() {
-                const interval = parseFloat(this.intervalInput.value);
-                const duration = this.video.duration;
-                const totalFramesToCapture = parseInt(this.frameCountInput.value, 10) || 10; 
-                
-                if (isNaN(interval) || interval <= 0) {
-                    showMessage("Please set a valid positive interval in seconds.", true);
-                    return;
-                }
-                
-                this.captureMultiBtn.disabled = true;
-                this.captureBtn.disabled = true;
-                
-                let time = this.video.currentTime;
-                
-                const maxFrames = Math.floor((duration - time) / interval) + 1;
-                const framesToGet = Math.min(totalFramesToCapture, maxFrames);
-                
-                if (framesToGet <= 0) {
-                    showMessage("Not enough video duration remaining to capture frames at this interval.", true);
-                    this.captureMultiBtn.disabled = false;
-                    this.captureBtn.disabled = false;
-                    return;
-                }
-                
-                const wasPaused = this.video.paused;
-                this.video.pause();
-                
-                showMessage(`Starting auto-capture of ${framesToGet} frames...`);
-                
-                for (let i = 0; i < framesToGet; i++) {
-                    toggleLoading(true, `Capturing frame ${i + 1} of ${framesToGet} at ${time.toFixed(2)}s...`);
-                    
-                    try {
-                        const { filename, dataUrl } = await this.getFrameData(time, this.frames.length); 
-                        this.addFrameToGallery(filename, dataUrl);
-                        
-                        time += interval;
-                        if (time > duration) break;
-                        this.video.currentTime = time; 
-                        await new Promise(r => setTimeout(r, 100)); 
-                    } catch(e) {
-                        console.error(`Failed to capture frame ${i + 1}:`, e);
-                        showMessage(`Failed to capture frame ${i + 1}. Stopping batch.`, true);
-                        break;
-                    }
-                }
-                
-                toggleLoading(false);
-                this.captureMultiBtn.disabled = false;
-                this.captureBtn.disabled = false;
-                if (!wasPaused) this.video.play();
-                showMessage(`Finished capturing ${framesToGet} frames.`);
-            },
-
-            addFrameToGallery: function(filename, dataUrl) {
-                this.frames.push({ filename, dataUrl });
-                this.renderGallery(); 
-            },
-            
-            deleteFrame: function(indexToDelete) {
-                if (indexToDelete < 0 || indexToDelete >= this.frames.length) return;
-                this.frames.splice(indexToDelete, 1);
-                this.renderGallery(); 
-                showMessage(`Frame removed.`);
-            },
-
-            renderGallery: function() {
-                this.framesGallery.innerHTML = '';
-                this.frames.forEach((frame, index) => {
-                    const frameElement = document.createElement('div');
-                    frameElement.className = 'flex items-center space-x-3 bg-gray-700 p-2 rounded-lg border border-gray-600';
-                    frameElement.innerHTML = `
-                        <img src="${frame.dataUrl}" class="w-12 h-12 object-cover rounded-md shadow-inner" alt="Captured Frame">
-                        <span class="text-sm font-medium text-gray-300 truncate flex-grow">${frame.filename}</span>
-                        <button data-index="${index}" class="delete-frame-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Remove frame">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 pointer-events-none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0-.93-9m9.22-9a.75.75 0 0 1 .721.706l.732 10.395a3.75.75 0 0 1-3.695 3.513H7.438a3.75.75 0 0 1-3.696-3.513L3.619 1.456a.75.75 0 0 1 .721-.706h1.22l-.15 2.13h12.597l-.15-2.13H15.46Z" />
-                            </svg>
-                        </button>
-                    `;
-                    this.framesGallery.appendChild(frameElement);
-                });
-
-                this.framesGallery.scrollTop = this.framesGallery.scrollHeight;
-                this.updateUI();
-            },
-
-            clearFrames: function() {
-                this.frames = [];
-                this.renderGallery();
-                this.updateUI();
-                showMessage("All captured frames cleared.");
-            },
-            
-            updateUI: function() {
-                const count = this.frames.length;
-                this.framesCountDisplay.textContent = count;
-                this.downloadBtn.disabled = count === 0;
-                this.clearBtn.disabled = count === 0;
-                this.placeholder.classList.toggle('hidden', count > 0);
-            },
-
-            downloadAllFrames: async function() {
-                if (this.frames.length === 0) return;
-                
-                this.downloadBtn.disabled = true;
-                const totalFiles = this.frames.length;
-                const zip = new JSZip();
-
-                for (let i = 0; i < totalFiles; i++) {
-                    const frame = this.frames[i];
-                    toggleLoading(true, `Adding frame ${i + 1} of ${totalFiles} to ZIP...`);
-                    
-                    const dataUrl = frame.dataUrl;
-                    try {
-                        const blob = await fetch(dataUrl).then(res => res.blob());
-                        zip.file(frame.filename, blob);
-                    } catch (e) {
-                        console.error(`Failed to fetch blob for file ${frame.filename}:`, e);
-                    }
-                }
-
-                try {
-                    toggleLoading(true, `Compiling ZIP file with ${totalFiles} frames...`);
-                    const zipBlob = await zip.generateAsync({ type: "blob" });
-                    saveAs(zipBlob, "video_frames.zip");
-                    showMessage(`Batch download complete! ${totalFiles} frames compiled into ZIP.`);
-                } catch (e) {
-                    console.error("Error during ZIP compilation:", e);
-                    showMessage("Error compiling or downloading ZIP file.", true);
-                } finally {
-                    toggleLoading(false);
-                    this.downloadBtn.disabled = false;
-                }
-            }
-        };
-        
         const cropperTool = {
             fileInput: document.getElementById('cropperFileInput'),
             uploadDropZone: document.getElementById('cropperUploadDropZone'),
-            ratioBtns: document.querySelectorAll('#cropper-app .ratio-btn'),
+            ratioBtns: document.querySelectorAll('.ratio-btn'),
             applyCustomRatioBtn: document.getElementById('applyCustomRatio'),
             customWidthInput: document.getElementById('customWidth'),
             customHeightInput: document.getElementById('customHeight'),
@@ -1836,10 +245,8 @@ ${content}
 
             cropperInstances: [], 
             currentAspectRatio: ratioToFloat("9/16"), 
-            currentRatioString: "9/16", 
-            
             globalOutputFormat: 'jpeg', 
-            globalJpegQuality: 0.9, 	
+            globalJpegQuality: 0.9,     
             globalOutputWidth: null, 
             globalOutputHeight: null, 
             
@@ -1880,8 +287,6 @@ ${content}
                 this.globalResolutionSelect.addEventListener('change', () => this.updateGlobalResolution());
                 this.globalWidthInput.addEventListener('input', () => this.updateGlobalResolution());
                 this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
-                this.globalCustomResInputs.classList.toggle('hidden', this.globalResolutionSelect.value !== 'custom');
-                this.globalQualityControl.classList.toggle('hidden', this.globalFormatSelect.value !== 'jpeg');
             },
 
             setGlobalOutputFormat: function(format) {
@@ -1902,617 +307,231 @@ ${content}
             updateGlobalResolution: function() {
                 const value = this.globalResolutionSelect.value;
                 this.globalCustomResInputs.classList.toggle('hidden', value !== 'custom');
-
-                let newWidth = null;
-                let newHeight = null;
-
                 if (value === 'auto') {
-                    newWidth = null;
-                    newHeight = null;
+                    this.globalOutputWidth = null;
+                    this.globalOutputHeight = null;
                 } else if (value === 'custom') {
-                    newWidth = getResolutionValue(this.globalWidthInput);
-                    newHeight = getResolutionValue(this.globalHeightInput);
+                    this.globalOutputWidth = getResolutionValue(this.globalWidthInput);
+                    this.globalOutputHeight = getResolutionValue(this.globalHeightInput);
                 } else {
                     const parts = value.split('x');
-                    newWidth = parseInt(parts[0], 10);
-                    newHeight = parseInt(parts[1], 10);
+                    this.globalOutputWidth = parseInt(parts[0], 10);
+                    this.globalOutputHeight = parseInt(parts[1], 10);
                 }
-
-                this.globalOutputWidth = newWidth;
-                this.globalOutputHeight = newHeight;
-                
-                this.cropperInstances.forEach(item => {
-                    const resSelect = item.card.querySelector('.local-resolution-select');
-                    if (resSelect.value === 'GLOBAL') {
-                        this.updateLocalVisualFeedback(item.card);
-                    }
-                });
-                
-                showMessage(`Global output resolution set to ${value === 'auto' ? 'Auto-size' : (value === 'custom' ? 'Custom' : value)}.`);
+                showMessage(`Global resolution updated.`);
             },
 
             updateLocalVisualFeedback: function(card) {
                 const ratioSelect = card.querySelector('.local-ratio-select');
-                const ratioActiveClasses = ['border-indigo-500', 'ring-2', 'ring-indigo-200'];
-                const toggleClasses = (element, isActive, activeClasses) => {
-                    element.classList.remove(...activeClasses);
-                    element.classList.remove('border-gray-600'); 
-                    
-                    if (isActive) {
-                        element.classList.add(...activeClasses);
-                    } else {
-                        element.classList.add('border-gray-600'); 
-                    }
-                };
-                toggleClasses(ratioSelect, ratioSelect.value !== "GLOBAL", ratioActiveClasses);
-
                 const colorInput = card.querySelector('.local-fill-color');
                 const fillToggle = card.querySelector('.local-fill-toggle');
-                const colorActiveClasses = ['border-pink-500', 'ring-2', 'ring-pink-200']; 
-                toggleClasses(colorInput, fillToggle.checked && colorInput.value.toLowerCase() !== "#ffffff", colorActiveClasses);
-                
                 const resSelect = card.querySelector('.local-resolution-select');
-                const resWidthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
-                const resHeightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
-                const resolutionActiveClasses = ['border-orange-500', 'ring-2', 'ring-orange-200'];
-                
-                let isResolutionActive = false;
-                
-                if (resSelect.value === "GLOBAL") { 
-                    if (cropperTool.globalOutputWidth !== null || cropperTool.globalOutputHeight !== null) {
-                        isResolutionActive = true;
-                    }
-                } else if (resSelect.value === "custom") {
-                    isResolutionActive = getResolutionValue(resWidthInput) !== null || getResolutionValue(resHeightInput) !== null;
-                } else if (resSelect.value !== "auto") { 
-                    isResolutionActive = true;
-                }
-                
-                toggleClasses(resSelect, isResolutionActive, resolutionActiveClasses);
                 card.querySelector('.custom-res-inputs').classList.toggle('hidden', resSelect.value !== 'custom');
-
-                if (resSelect.value === "custom") {
-                    toggleClasses(resWidthInput, getResolutionValue(resWidthInput) !== null, resolutionActiveClasses);
-                    toggleClasses(resHeightInput, getResolutionValue(resHeightInput) !== null, resolutionActiveClasses);
-                }
             },
             
             getOutputResolution: function(card) {
                 const resSelect = card.querySelector('.local-resolution-select');
                 const value = resSelect.value;
-
-                if (value === 'GLOBAL') { 
-                    return { width: this.globalOutputWidth, height: this.globalOutputHeight };
-                }
-                
-                if (value === 'auto') { 
-                    return { width: null, height: null }; 
-                }
-                
+                if (value === 'GLOBAL') return { width: this.globalOutputWidth, height: this.globalOutputHeight };
+                if (value === 'auto') return { width: null, height: null }; 
                 if (value === 'custom') {
-                    const widthInput = card.querySelector('.custom-res-inputs input[data-dim="width"]');
-                    const heightInput = card.querySelector('.custom-res-inputs input[data-dim="height"]');
-                    const targetWidth = getResolutionValue(widthInput);
-                    const targetHeight = getResolutionValue(heightInput);
-                    return { width: targetWidth, height: targetHeight };
+                    return {
+                        width: getResolutionValue(card.querySelector('.custom-res-inputs input[data-dim="width"]')),
+                        height: getResolutionValue(card.querySelector('.custom-res-inputs input[data-dim="height"]'))
+                    };
                 }
-                
                 const parts = value.split('x');
-                const targetWidth = parseInt(parts[0], 10);
-                const targetHeight = parseInt(parts[1], 10);
-                return { 
-                    width: targetWidth > 0 ? targetWidth : null, 
-                    height: targetHeight > 0 ? targetHeight : null 
-                };
+                return { width: parseInt(parts[0], 10), height: parseInt(parts[1], 10) };
             },
 
             applyAutoCenter: function(cropper, ratio, imageWidth, imageHeight) {
-                let cropWidth = imageWidth;
-                let cropHeight = imageHeight;
-
+                let cropWidth = imageWidth, cropHeight = imageHeight;
                 if (!isNaN(ratio) && ratio > 0) {
-                    const imageRatio = imageWidth / imageHeight;
-                    if (imageRatio > ratio) {
-                        cropHeight = imageHeight;
+                    if ((imageWidth / imageHeight) > ratio) {
                         cropWidth = imageHeight * ratio;
                     } else {
-                        cropWidth = imageWidth;
                         cropHeight = imageWidth / ratio;
                     }
                 } 
-                
-                const left = (imageWidth - cropWidth) / 2;
-                const top = (imageHeight - cropHeight) / 2;
-
-                cropWidth = Math.max(1, Math.round(cropWidth));
-                cropHeight = Math.max(1, Math.round(cropHeight));
-
-                cropper.setCropBoxData({ width: cropWidth, height: cropHeight, left: left, top: top });
+                cropper.setCropBoxData({ width: cropWidth, height: cropHeight, left: (imageWidth - cropWidth) / 2, top: (imageHeight - cropHeight) / 2 });
             },
 
             setCropperRatio: function(ratioString) {
                 this.currentAspectRatio = ratioToFloat(ratioString);
-                this.currentRatioString = ratioString; 
-                
                 this.cropperInstances.forEach(item => {
-                    const select = item.card.querySelector('.local-ratio-select');
-                    if (select && select.value === "GLOBAL") { 
-                        if (item.cropper) {
-                            item.cropper.setAspectRatio(this.currentAspectRatio);
-                            const imageElement = item.cropper.element;
-                            const imageWidth = imageElement.naturalWidth;
-                            const imageHeight = imageElement.naturalHeight;
-                            if (imageWidth && imageHeight) {
-                                this.applyAutoCenter(item.cropper, this.currentAspectRatio, imageWidth, imageHeight);
-                            }
-                        }
+                    if (item.card.querySelector('.local-ratio-select').value === "GLOBAL") {
+                        item.cropper.setAspectRatio(this.currentAspectRatio);
+                        this.applyAutoCenter(item.cropper, this.currentAspectRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
                     }
                 });
             },
 
             handleLocalRatioChange: function(ratioValue, item) {
-                const isGlobal = ratioValue === "GLOBAL";
-                let newRatio;
-                
-                if (isGlobal) {
-                    newRatio = this.currentAspectRatio;
-                    showMessage(`Ratio for Image ${item.index + 1} reset to Global Default.`, false);
-                } else {
-                    newRatio = ratioToFloat(ratioValue);
-                    showMessage(`Ratio for Image ${item.index + 1} set to local override: ${ratioValue.replace('/', ':')}.`, false);
-                }
-
-                if (item.cropper) {
-                    item.cropper.setAspectRatio(newRatio);
-                    const imageElement = item.cropper.element;
-                    const imageWidth = imageElement.naturalWidth;
-                    const imageHeight = imageElement.naturalHeight;
-                    if (imageWidth && imageHeight) {
-                        this.applyAutoCenter(item.cropper, newRatio, imageWidth, imageHeight);
-                    }
-                }
-                this.updateLocalVisualFeedback(item.card);
+                const newRatio = ratioValue === "GLOBAL" ? this.currentAspectRatio : ratioToFloat(ratioValue);
+                item.cropper.setAspectRatio(newRatio);
+                this.applyAutoCenter(item.cropper, newRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
             },
             
             updateGalleryIndexAndCount: function() {
                 const count = this.cropperInstances.length;
                 this.fileCountDisplay.textContent = count;
-                
                 this.cropperInstances.forEach((item, newIndex) => {
-                    const card = item.card;
-                    
-                    const deleteBtn = card.querySelector('.delete-btn');
-                    if(deleteBtn) deleteBtn.dataset.index = newIndex;
-
-                    const resetBtn = card.querySelector('.reset-crop-btn');
-                    if(resetBtn) resetBtn.dataset.index = newIndex;
-
-                    const regenBtn = card.querySelector('.regenerate-id-btn');
-                    if(regenBtn) regenBtn.dataset.index = newIndex;
-                    
-                    const rotateBtn = card.querySelector('.rotate-btn');
-                    if(rotateBtn) rotateBtn.dataset.index = newIndex;
-
-                    const flipBtn = card.querySelector('.flip-btn');
-                    if(flipBtn) flipBtn.dataset.index = newIndex;
-
-                    const localDownloadBtn = card.querySelector('.local-download-btn');
-                    if(localDownloadBtn) localDownloadBtn.dataset.index = newIndex;
-
-                    item.index = newIndex; 
+                    item.index = newIndex;
+                    item.card.querySelectorAll('[data-index]').forEach(el => el.dataset.index = newIndex);
                 });
-
-                if (count === 0) {
-                    this.gallerySection.classList.add('hidden');
-                    this.downloadSection.classList.add('hidden');
-                    this.downloadAllBtn.disabled = true;
-                    this.downloadAllBtn.textContent = 'Download Cropped Images';
-                } else {
-                    this.gallerySection.classList.remove('hidden');
-                    this.downloadSection.classList.remove('hidden');
-                    this.downloadAllBtn.disabled = false;
-
-                    if (count === 1) {
-                        this.downloadAllBtn.textContent = 'Download Cropped Image';
-                    } else {
-                        this.downloadAllBtn.textContent = `Download All ${count} Cropped Images (ZIP)`;
-                    }
-                }
+                this.gallerySection.classList.toggle('hidden', count === 0);
+                this.downloadSection.classList.toggle('hidden', count === 0);
+                this.downloadAllBtn.disabled = count === 0;
             },
 
-            createCropperCardHTML: function(file, index, uniqueId) {
-                const iconHtmlBlock = `
-                    <button data-index="${index}" class="rotate-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Rotate 90° clockwise">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9l-3.74 3.74"/></svg>
-                    </button>
-                    <button data-index="${index}" class="flip-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Flip Horizontal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M22 3H2v18h20zM7 12h10M12 7v10"/></svg>
-                    </button>
-                    <button data-index="${index}" class="reset-crop-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Reset crop to auto-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1.09 6.74 2.9L21 8"/><path d="M11 12h10M11 8h10M11 16h10"/></svg>
-                    </button>
-                    <button data-index="${index}" class="regenerate-id-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Regenerate unique ID">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.79l-3 3"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.79l3-3"/></svg>
-                    </button>
-                    <button data-index="${index}" class="delete-btn text-red-400 hover:text-red-300 transition p-1 rounded-full hover:bg-red-900/50" type="button" title="Remove image">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 pointer-events-none"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                    </button>
-                `;
-                
+            createCardHTML: function(file, index, uniqueId) {
                 return `
                     <div class="bg-gray-800 shadow-xl rounded-xl flex flex-col border border-gray-700" data-unique-id="${uniqueId}">
-                        <div class="px-4 py-3 bg-gray-700 border-b border-gray-700 flex justify-between items-center"></div>
                         <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
-                            <select class="local-ratio-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none">
+                            <select class="local-ratio-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100">
                                 ${this.RATIO_PRESETS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
                             </select>
                         </div>
                         <div class="px-4 py-2 border-b border-gray-700 bg-gray-800">
-                            <select class="local-resolution-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 focus:outline-none mb-2">
+                            <select class="local-resolution-select w-full p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 mb-2">
                                 ${this.RESOLUTION_PRESETS.map(p => `<option value="${p.value}" ${p.value === 'GLOBAL' ? 'selected' : ''}>${p.label}</option>`).join('')}
                             </select>
                             <div class="custom-res-inputs flex space-x-2 items-center hidden">
-                                <input type="number" data-dim="width" placeholder="Width (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                <input type="number" data-dim="width" placeholder="W" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center">
                                 <span class="text-gray-400">x</span>
-                                <input type="number" data-dim="height" placeholder="Height (px)" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center" min="1">
+                                <input type="number" data-dim="height" placeholder="H" class="local-output-res w-1/2 p-1 border border-gray-600 rounded text-sm bg-gray-700 text-gray-100 text-center">
                             </div>
                         </div>
                         <div class="flex-grow p-1">
-                            <div class="gallery-item">
-                                <img id="image-cropper-${index}" src="" alt="Image ${index + 1}" class="cropper-hidden">
-                            </div>
+                            <div class="gallery-item"><img id="image-cropper-${index}" src="" class="cropper-hidden"></div>
                         </div>
-                        <div class="px-4 py-2 border-t border-gray-700 bg-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label class="flex items-center space-x-2 text-xs font-medium text-gray-300">
-                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-500 border-gray-600 rounded focus:ring-pink-500" checked>
-                                <span class="text-xs">Fill Empty Area:</span>
+                        <div class="px-4 py-2 border-t border-gray-700 bg-gray-800 flex justify-between items-center">
+                            <label class="flex items-center space-x-2 text-xs text-gray-300">
+                                <input type="checkbox" class="local-fill-toggle h-4 w-4 text-pink-500 rounded" checked>
+                                <span>Fill Area</span>
                             </label>
-                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-600 rounded-lg cursor-pointer focus:outline-none bg-gray-700">
+                            <input type="color" value="#ffffff" class="local-fill-color h-8 w-12 p-1 border border-gray-600 rounded cursor-pointer bg-gray-700">
                         </div>
-                        <div class="px-4 py-2 border-t border-gray-700 border-b flex justify-end">
-                            <div class="flex items-center space-x-2">
-                                ${iconHtmlBlock}
-                            </div>
+                        <div class="px-4 py-2 border-t border-gray-700 flex justify-end space-x-2">
+                            <button data-index="${index}" class="rotate-btn text-gray-300 hover:text-white p-1" title="Rotate">🔄</button>
+                            <button data-index="${index}" class="reset-crop-btn text-gray-300 hover:text-white p-1" title="Reset">🎯</button>
+                            <button data-index="${index}" class="delete-btn text-red-400 hover:text-red-300 p-1" title="Delete">❌</button>
                         </div>
                         <div class="p-4 pt-0">
-                            <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full font-semibold px-4 py-2 text-sm rounded-lg hover:bg-indigo-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed" type="button">
-                                Download
-                            </button>
+                            <button data-index="${index}" class="local-download-btn bg-indigo-600 text-white w-full py-2 text-sm rounded-lg hover:bg-indigo-700 transition">Download</button>
                         </div>
                     </div>
                 `;
             },
 
             processFiles: async function(files) {
-                this.uploadError.classList.add('hidden');
-                if (files.length === 0) { 
-                    if (this.fileInput.files.length === 0) this.fileInput.value = ''; 
-                    return; 
-                }
-
-                if (this.cropperInstances.length > 0) {
-                    this.cropperInstances.forEach(item => item.cropper?.destroy());
-                    this.cropperInstances = [];
-                    this.galleryContainer.innerHTML = '';
-                }
-
-                const validFiles = Array.from(files).filter(file => 
-                    ['image/png', 'image/jpeg'].includes(file.type) && file.size <= 5 * 1024 * 1024
-                );
-                
-                if (validFiles.length === 0) {
-                    toggleLoading(false);
-                    this.uploadError.textContent = 'No valid PNG or JPEG files (Max 5MB) were found.';
-                    this.uploadError.classList.remove('hidden');
-                    this.fileInput.value = '';
-                    return;
-                }
-                
-                toggleLoading(true, `Loading ${validFiles.length} images...`);
-                this.fileInput.value = '';
-                
-                let fileLoadPromises = [];
-
-                validFiles.forEach((file, index) => {
-                    const uniqueId = crypto.randomUUID().substring(0, 8); 
-                    const cardHTML = this.createCropperCardHTML(file, index, uniqueId);
-                    
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = cardHTML;
-                    const card = tempDiv.children[0]; 
+                if (!files.length) return;
+                toggleLoading(true, `Loading ${files.length} images...`);
+                Array.from(files).forEach((file, index) => {
+                    const uniqueId = crypto.randomUUID().substring(0, 8);
+                    const cardDiv = document.createElement('div');
+                    cardDiv.innerHTML = this.createCardHTML(file, index, uniqueId);
+                    const card = cardDiv.children[0];
                     this.galleryContainer.appendChild(card);
 
-                    const loadPromise = new Promise(resolve => {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            const imageElement = card.querySelector(`#image-cropper-${index}`);
-                            imageElement.src = event.target.result;
-                            imageElement.classList.remove('cropper-hidden');
-                            
-                            const cropper = new Cropper(imageElement, {
-                                aspectRatio: this.currentAspectRatio,
-                                viewMode: 0, dragMode: 'move', background: false, movable: true, zoomable: true, zoomOnWheel: true, 
-                                cropmove: () => {},
-                                ready: () => {
-                                    const ratio = cropper.options.aspectRatio;
-                                    const imageElement = cropper.element;
-                                    const imageWidth = imageElement.naturalWidth;
-                                    const imageHeight = imageElement.naturalHeight;
-                                    this.applyAutoCenter(cropper, ratio, imageWidth, imageHeight);
-                                    
-                                    const item = { 
-                                        file, cropper, index, card, uniqueId, 
-                                        ratioSelectElement: card.querySelector('.local-ratio-select')
-                                    };
-                                    resolve(item);
-                                }
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    });
-
-                    fileLoadPromises.push(loadPromise);
-                });
-
-                const results = await Promise.allSettled(fileLoadPromises);
-                
-                results.forEach(result => {
-                    if (result.status === 'fulfilled' && result.value) {
-                        const item = result.value;
-                        
-                        item.card.querySelector('.gallery-item').addEventListener('wheel', (e) => { e.preventDefault(); }, { passive: false }); 
-                        item.ratioSelectElement.addEventListener('change', (e) => this.handleLocalRatioChange(e.target.value, item));
-                        
-                        const localFillColor = item.card.querySelector('.local-fill-color');
-                        const localFillToggle = item.card.querySelector('.local-fill-toggle');
-                        [localFillColor, localFillToggle].forEach(el => el.addEventListener('change', () => this.updateLocalVisualFeedback(item.card)));
-                        
-                        const resolutionSelect = item.card.querySelector('.local-resolution-select');
-                        resolutionSelect.addEventListener('change', (e) => {
-                            this.updateLocalVisualFeedback(item.card);
-                            showMessage(`Output resolution for Image ${item.index + 1} set to ${e.target.value === 'GLOBAL' ? 'Global Default' : e.target.value === 'auto' ? 'Auto-size' : e.target.value}.`, false);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = card.querySelector(`#image-cropper-${index}`);
+                        img.src = e.target.result;
+                        img.classList.remove('cropper-hidden');
+                        const cropper = new Cropper(img, {
+                            aspectRatio: this.currentAspectRatio,
+                            viewMode: 0,
+                            ready: () => {
+                                this.applyAutoCenter(cropper, this.currentAspectRatio, img.naturalWidth, img.naturalHeight);
+                                this.cropperInstances.push({ file, cropper, index, card, uniqueId });
+                                this.updateGalleryIndexAndCount();
+                                toggleLoading(false);
+                            }
                         });
 
-                        item.card.querySelectorAll('.local-output-res').forEach(input => input.addEventListener('input', () => this.updateLocalVisualFeedback(item.card)));
-                        
-                        this.updateLocalVisualFeedback(item.card);
-                        this.cropperInstances.push(item);
-
-                    } else if (result.status === 'rejected') {
-                        console.error("Failed to load a file or initialize cropper:", result.reason);
-                    }
+                        card.querySelector('.local-ratio-select').addEventListener('change', (ev) => {
+                            this.handleLocalRatioChange(ev.target.value, this.cropperInstances.find(i => i.index === index));
+                        });
+                    };
+                    reader.readAsDataURL(file);
                 });
-
-                this.updateGalleryIndexAndCount();
-                toggleLoading(false);
             },
 
             setupDragDrop: function() {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    this.uploadDropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-                });
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.add('drop-active'), false);
-                });
-                ['dragleave', 'drop'].forEach(eventName => {
-                    this.uploadDropZone.addEventListener(eventName, () => this.uploadDropZone.classList.remove('drop-active'), false);
-                });
-                this.uploadDropZone.addEventListener('drop', (e) => this.processFiles(e.dataTransfer.files), false);
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(n => this.uploadDropZone.addEventListener(n, e => { e.preventDefault(); e.stopPropagation(); }));
+                this.uploadDropZone.addEventListener('drop', e => this.processFiles(e.dataTransfer.files));
             },
 
             setupGlobalRatioHandlers: function() {
                 this.ratioBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        const ratioString = btn.dataset.ratio;
-                        this.setCropperRatio(ratioString);
-                        document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                        document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
                         btn.classList.add('active-ratio');
-                        this.customWidthInput.value = '';
-                        this.customHeightInput.value = '';
-                        this.ratioError.classList.add('hidden');
-                        showMessage(`Global ratio set to ${ratioString.replace('/', ':')}`);
+                        this.setCropperRatio(btn.dataset.ratio);
                     });
-                });
-                this.applyCustomRatioBtn.addEventListener('click', () => {
-                    this.ratioError.classList.add('hidden');
-                    const width = parseInt(this.customWidthInput.value, 10);
-                    const height = parseInt(this.customHeightInput.value, 10);
-                    if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-                        this.ratioError.textContent = 'Please enter valid positive numbers.';
-                        this.ratioError.classList.remove('hidden');
-                        return;
-                    }
-                    const ratioString = `${width}/${height}`;
-                    this.setCropperRatio(ratioString);
-                    document.querySelector('#cropper-app .ratio-btn.active-ratio')?.classList.remove('active-ratio');
-                    showMessage(`Custom ratio ${width}:${height} applied to all images.`);
                 });
             },
 
             setupGalleryDelegation: function() {
                 this.galleryContainer.addEventListener('click', (e) => {
-                    const deleteBtn = e.target.closest('.delete-btn');
-                    const resetCropBtn = e.target.closest('.reset-crop-btn');
-                    const regenerateIdBtn = e.target.closest('.regenerate-id-btn');
-                    const rotateBtn = e.target.closest('.rotate-btn'); 
-                    const flipBtn = e.target.closest('.flip-btn');     
-                    const localDownloadBtn = e.target.closest('.local-download-btn');
-
-                    const index = deleteBtn?.dataset.index || resetCropBtn?.dataset.index || regenerateIdBtn?.dataset.index || rotateBtn?.dataset.index || flipBtn?.dataset.index || localDownloadBtn?.dataset.index;
-                    const indexVal = parseInt(index, 10);
-                    const item = this.cropperInstances.find(i => i.index === indexVal); 
-
+                    const idx = parseInt(e.target.dataset.index, 10);
+                    const item = this.cropperInstances.find(i => i.index === idx);
                     if (!item) return;
 
-                    if (deleteBtn) {
+                    if (e.target.closest('.delete-btn')) {
                         item.cropper.destroy();
                         item.card.remove();
-                        this.cropperInstances = this.cropperInstances.filter(i => i.index !== indexVal);
-                        this.cropperInstances = this.cropperInstances.map((i, newIndex) => ({ ...i, index: newIndex }));
+                        this.cropperInstances = this.cropperInstances.filter(i => i !== item);
                         this.updateGalleryIndexAndCount();
-                        showMessage(`Image ${indexVal + 1} removed from batch.`);
-                        return;
-                    }
-                    
-                    if (resetCropBtn) {
-                        const localRatioValue = item.card.querySelector('.local-ratio-select').value;
-                        let ratio = localRatioValue === 'GLOBAL' ? this.currentAspectRatio : ratioToFloat(localRatioValue);
-                        const imageElement = item.cropper.element;
-                        this.applyAutoCenter(item.cropper, ratio, imageElement.naturalWidth, imageElement.naturalHeight);
-                        showMessage(`Crop for Image ${item.index + 1} reset to auto-center.`);
-                        return;
-                    }
-
-                    if (rotateBtn) { 
+                    } else if (e.target.closest('.rotate-btn')) {
                         item.cropper.rotate(90);
-                        showMessage(`Image ${item.index + 1} rotated 90° clockwise.`);
-                        return;
-                    }
-
-                    if (flipBtn) { 
-                        const scaleX = item.cropper.getData().scaleX || 1;
-                        const newScaleX = scaleX === 1 ? -1 : 1;
-                        item.cropper.scaleX(newScaleX);
-                        showMessage(`Image ${item.index + 1} flipped horizontally.`);
-                        return;
-                    }
-
-                    if (regenerateIdBtn) {
-                        const newUniqueId = crypto.randomUUID().substring(0, 8);
-                        item.uniqueId = newUniqueId;
-                        showMessage(`New ID assigned to Image ${item.index + 1}: ${newUniqueId}.`);
-                        return;
-                    }
-
-                    if (localDownloadBtn) {
-                        cropperTool.processAndDownloadSingle(item, false);
-                        return;
+                    } else if (e.target.closest('.reset-crop-btn')) {
+                        this.applyAutoCenter(item.cropper, item.cropper.options.aspectRatio, item.cropper.element.naturalWidth, item.cropper.element.naturalHeight);
+                    } else if (e.target.closest('.local-download-btn')) {
+                        this.processAndDownloadSingle(item, false);
                     }
                 });
             },
 
             processAndDownloadSingle: async function(item, isBatch = false) {
-                if (!isBatch) toggleLoading(true, `Processing single file...`);
-                try {
-                    const cropper = item.cropper;
-                    const card = item.card;
-                    const localFillToggle = card.querySelector('.local-fill-toggle');
-                    const localFillColor = card.querySelector('.local-fill-color');
-                    
-                    const { width: targetWidth, height: targetHeight } = this.getOutputResolution(card); 
+                const canvas = item.cropper.getCroppedCanvas();
+                const res = this.getOutputResolution(item.card);
+                let finalCanvas = canvas;
 
-                    let useSolidFill = localFillToggle.checked;
-                    const finalFillColor = localFillColor.value; 
-                    
-                    let outputFormat = this.globalOutputFormat; 
-                    const jpegQuality = this.globalJpegQuality; 	
-
-                    if (!useSolidFill) outputFormat = 'png'; 
-                    
-                    const mimeType = outputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
-                    const extension = outputFormat === 'jpeg' ? 'jpeg' : 'png';
-                    const uniqueBaseName = item.uniqueId; 
-
-                    const croppedCanvas = cropper.getCroppedCanvas();
-                    const sourceWidth = croppedCanvas.width;
-                    const sourceHeight = croppedCanvas.height;
-                    
-                    let finalWidth = targetWidth || sourceWidth;
-                    let finalHeight = targetHeight || sourceHeight;
-                    
-                    if (targetWidth && !targetHeight) finalHeight = Math.round(sourceHeight * (targetWidth / sourceWidth));
-                    else if (targetHeight && !targetWidth) finalWidth = Math.round(sourceWidth * (targetHeight / sourceHeight));
-                    
-                    const dimW = finalWidth;
-                    const dimH = finalHeight;
-                    let filename = `img_${uniqueBaseName}_${dimW}x${dimH}.${extension}`;
-                    
-                    const requiresResizingOrFill = (finalWidth !== sourceWidth) || (finalHeight !== sourceHeight) || useSolidFill;
-                    let canvasToBlob = croppedCanvas;
-
-                    if (requiresResizingOrFill) {
-                        canvasToBlob = document.createElement('canvas');
-                        canvasToBlob.width = finalWidth;
-                        canvasToBlob.height = finalHeight;
-                        const ctx = canvasToBlob.getContext('2d');
-                        
-                        if (useSolidFill) {
-                            ctx.fillStyle = finalFillColor;
-                            ctx.fillRect(0, 0, finalWidth, finalHeight);
-                        }
-                        
-                        ctx.drawImage(croppedCanvas, 0, 0, finalWidth, finalHeight);
+                if (res.width || res.height) {
+                    finalCanvas = document.createElement('canvas');
+                    finalCanvas.width = res.width || canvas.width;
+                    finalCanvas.height = res.height || canvas.height;
+                    const ctx = finalCanvas.getContext('2d');
+                    if (item.card.querySelector('.local-fill-toggle').checked) {
+                        ctx.fillStyle = item.card.querySelector('.local-fill-color').value;
+                        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
                     }
-                    
-                    if (isBatch) {
-                        return new Promise(resolve => canvasToBlob.toBlob((blob) => resolve({ filename, blob }), mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0));
-                    }
-                    
-                    await new Promise(resolve => {
-                        canvasToBlob.toBlob((blob) => {
-                            if (blob) { saveAs(blob, filename); showMessage(`Single file downloaded as ${filename}.`); } 
-                            else { showMessage("Failed to create image blob.", true); }
-                            resolve();
-                        }, mimeType, outputFormat === 'jpeg' ? jpegQuality : 1.0);
-                    });
-                    
-                } catch (e) {
-                    console.error("Error processing and downloading file:", e);
-                    if (!isBatch) showMessage("Error downloading the image. Check console for details.", true);
-                    throw e; 
-                } finally {
-                    if (!isBatch) toggleLoading(false);
+                    ctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
                 }
+
+                const mime = this.globalOutputFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const filename = `img_${item.uniqueId}.${this.globalOutputFormat}`;
+
+                if (isBatch) {
+                    return new Promise(res => finalCanvas.toBlob(blob => res({ filename, blob }), mime, this.globalJpegQuality));
+                }
+                finalCanvas.toBlob(blob => saveAs(blob, filename), mime, this.globalJpegQuality);
             },
 
             downloadAllBatch: async function() {
-                if (this.cropperInstances.length === 0) return;
-
-                this.downloadAllBtn.disabled = true;
-                const totalFiles = this.cropperInstances.length;
-                
-                if (totalFiles === 1) {
-                    try { await this.processAndDownloadSingle(this.cropperInstances[0], false); } 
-                    catch (e) { } 
-                    finally { this.downloadAllBtn.disabled = false; }
-                    return; 
-                }
-
-                let successfulFiles = [];
-                let tasks = [];
+                if (!this.cropperInstances.length) return;
+                toggleLoading(true, "Compiling ZIP archive...");
                 const zip = new JSZip();
-
                 for (const item of this.cropperInstances) {
-                    toggleLoading(true, `Processing file ${tasks.length + 1} of ${totalFiles}...`);
-                    const task = this.processAndDownloadSingle(item, true)
-                        .then(({ filename, blob }) => { if (blob) { zip.file(filename, blob); successfulFiles.push(filename); } })
-                        .catch(e => console.error(`Error processing file index ${item.index} for ZIP:`, e));
-                    tasks.push(task);
+                    const res = await this.processAndDownloadSingle(item, true);
+                    zip.file(res.filename, res.blob);
                 }
-                
-                await Promise.allSettled(tasks);
-
-                let failureCount = totalFiles - successfulFiles.length;
-                
-                if (successfulFiles.length > 0) {
-                    try {
-                        toggleLoading(true, `Compiling ZIP file with ${successfulFiles.length} images...`);
-                        const zipBlob = await zip.generateAsync({ type: "blob" });
-                        saveAs(zipBlob, "batch_cropped_images.zip");
-                        toggleLoading(false);
-                        this.downloadAllBtn.disabled = false;
-                        showMessage(`Batch download complete! ${successfulFiles.length} files compiled into ZIP.${failureCount > 0 ? ` (${failureCount} failed).` : ''}`);
-                    } catch (e) {
-                        toggleLoading(false);
-                        this.downloadAllBtn.disabled = false;
-                        console.error("Error during ZIP compilation:", e);
-                        showMessage("Error compiling or downloading ZIP file.", true);
-                    }
-                } else {
-                    toggleLoading(false);
-                    this.downloadAllBtn.disabled = false;
-                    showMessage("Batch failed: Could not process any images.", true);
-                }
+                const content = await zip.generateAsync({ type: 'blob' });
+                saveAs(content, 'batch_cropped_images.zip');
+                toggleLoading(false);
+                showMessage("Batch download complete!");
             }
         };
     </script>
