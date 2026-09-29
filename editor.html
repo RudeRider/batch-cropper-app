@@ -205,11 +205,10 @@
         <aside id="left-dock" class="w-12 bg-[#323232] border-r border-[#1c1c1c] flex flex-col items-center py-2 space-y-1 shrink-0 z-20 shadow-lg">
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)"><i class="fa-solid fa-arrow-pointer text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="rect-select" title="Rectangular Marquee (F)"><i class="fa-regular fa-square text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee (Shift+F)"><i class="fa-regular fa-circle text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (L)"><i class="fa-solid fa-lasso text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee"><i class="fa-regular fa-circle text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (Shift+F)"><i class="fa-solid fa-circle-notch text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="magic-wand" title="Magic Wand Tool (W)"><i class="fa-solid fa-wand-magic text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eyedropper" title="Eyedropper Tool (I)"><i class="fa-solid fa-eye-dropper text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="bucket" title="Paint Bucket Tool (G)"><i class="fa-solid fa-fill-drip text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (B)"><i class="fa-solid fa-paintbrush text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (J)"><i class="fa-solid fa-palette text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (R)"><i class="fa-solid fa-fingerprint text-xs"></i></button>
@@ -242,7 +241,7 @@
             <div class="absolute bottom-3 right-3 bg-[#262626]/90 backdrop-blur px-2.5 py-1.5 rounded border border-[#1e1e1e] text-[11px] text-gray-300 flex items-center space-x-2 z-10 shadow">
                 <button id="zoom-out" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-minus text-[9px]"></i></button>
                 <span id="zoom-val" class="font-mono text-indigo-400 w-10 text-center">100%</span>
-                <button id="zoom-in" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-plus text-[9px]"></i></button>
+                <button id="zoom-in" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-plus text-[9px]"><</i></button>
                 <div class="w-[1px] h-3 bg-gray-600"></div>
                 <button id="reset-view" class="hover:text-white flex items-center space-x-1"><span>Fit Screen (Ctrl+0)</span></button>
             </div>
@@ -265,7 +264,7 @@
                 </div>
                 <div class="p-3 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Stack & Blend Modes</span>
+                        <span class="text-[11px] text-gray-400">Stack & Blend Modes (Delete Key to Delete)</span>
                         <button id="add-layer-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 border border-[#555] rounded text-[11px] font-medium flex items-center space-x-1"><i class="fa-solid fa-plus text-[9px]"></i><span>New</span></button>
                     </div>
                     <div id="layers-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
@@ -475,8 +474,10 @@
             <div class="bg-[#2c2c2c] px-4 py-2.5 flex justify-between items-center border-t border-[#1c1c1c]">
                 <button id="ps-cp-add-swatch" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] font-medium transition">Add to Swatches</button>
                 <div class="flex space-x-2">
-                    <button id="ps-cp-cancel" class="px-4 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition">Cancel</button>
-                    <button id="ps-cp-ok" class="px-4 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded font-medium transition shadow">OK</button>
+                    <button id="ps-cp-apply-fg" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition font-medium">Apply to Foreground</button>
+                    <button id="ps-cp-apply-bg" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition font-medium">Apply to Background</button>
+                    <button id="ps-cp-cancel" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition">Cancel</button>
+                    <button id="ps-cp-ok" class="px-3 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded font-medium transition shadow">OK</button>
                 </div>
             </div>
         </div>
@@ -791,6 +792,29 @@
 
         document.getElementById('ps-cp-close').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
         document.getElementById('ps-cp-cancel').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
+        
+        // Apply to Foreground Button inside popup
+        document.getElementById('ps-cp-apply-fg').addEventListener('click', () => {
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            fgColor = hex;
+            swatchFg.style.backgroundColor = fgColor;
+            const colorBtn = document.getElementById('opt-brush-color-btn');
+            if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+            psCpCurrPreview.style.backgroundColor = fgColor;
+        });
+
+        // Apply to Background Button inside popup
+        document.getElementById('ps-cp-apply-bg').addEventListener('click', () => {
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            bgColor = hex;
+            swatchBg.style.backgroundColor = bgColor;
+            if (!psTargetFgRadio.checked) {
+                psCpCurrPreview.style.backgroundColor = bgColor;
+            }
+        });
+
         document.getElementById('ps-cp-ok').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -1289,11 +1313,10 @@
             const toolNamesMap = {
                 'move': 'Move (V)',
                 'rect-select': 'Rectangular Marquee (F)',
-                'circle-select': 'Elliptical Marquee (Shift+F)',
-                'lasso-select': 'Lasso (L)',
+                'circle-select': 'Elliptical Marquee',
+                'lasso-select': 'Lasso Tool (Shift+F)',
                 'magic-wand': 'Magic Wand (W)',
                 'eyedropper': 'Eyedropper (I)',
-                'bucket': 'Paint Bucket (G)',
                 'brush': 'Brush (B)',
                 'mixer-brush': 'Mixer Brush (J)',
                 'smudge': 'Smudge (R)',
@@ -1309,7 +1332,7 @@
                 brushCursor.classList.remove('hidden');
             } else {
                 brushCursor.classList.add('hidden');
-                if (['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'bucket'].includes(currentTool)) {
+                if (['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper'].includes(currentTool)) {
                     canvasWrapper.style.cursor = 'crosshair';
                 } else {
                     canvasWrapper.style.cursor = 'grab';
@@ -1364,6 +1387,15 @@
             if (e.key === 'Shift') isShiftPressed = true;
             if (e.key === 'Alt') isAltPressed = true;
 
+            // Delete Layer Shortcut (Delete Key)
+            if (e.key === 'Delete') {
+                e.preventDefault();
+                if (activeLayerId && layers.length > 1) {
+                    deleteLayer(activeLayerId);
+                }
+                return;
+            }
+
             if (e.ctrlKey || e.metaKey || e.key === 'F5' || e.key === 'F11' || e.key === 'F12') {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1406,8 +1438,11 @@
 
             if (key === 'f') {
                 e.preventDefault();
-                if (e.shiftKey || currentTool === 'rect-select') {
-                    setTool(currentTool === 'rect-select' ? 'circle-select' : 'rect-select');
+                if (e.shiftKey) {
+                    // Cycle through: rect-select -> circle-select -> lasso-select -> rect-select
+                    if (currentTool === 'rect-select') setTool('circle-select');
+                    else if (currentTool === 'circle-select') setTool('lasso-select');
+                    else setTool('rect-select');
                 } else {
                     setTool('rect-select');
                 }
@@ -1415,12 +1450,10 @@
             }
 
             if (key === 'v') setTool('move');
-            else if (key === 'l') setTool('lasso-select');
             else if (key === 'w') setTool('magic-wand');
             else if (key === 'j') setTool('mixer-brush');
             else if (key === 'r') setTool('smudge');
             else if (key === 'i') setTool('eyedropper');
-            else if (key === 'g') setTool('bucket');
             else if (key === 'b') setTool('brush');
             else if (key === 'e') setTool('eraser');
             else if (key === 'f7') { e.preventDefault(); document.getElementById('layers-panel').classList.toggle('hidden'); }
@@ -1489,7 +1522,7 @@
                             </button>
                             <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', 1)"><i class="fa-solid fa-chevron-up text-[9px]"></i></button>
                             <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', -1)"><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
-                            ${!layer.isBase && layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="deleteLayer('${layer.id}')"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
+                            ${!layer.isBase && layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="deleteLayer('${layer.id}')" title="Delete Layer (Delete Key)"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center space-x-2 text-[10px] text-gray-400 pt-1 border-t border-[#333]">
@@ -1771,56 +1804,6 @@
             };
         }
 
-        function floodFill(startX, startY, fillColor) {
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
-            const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
-            const data = imgData.data;
-            const w = active.canvas.width;
-            const h = active.canvas.height;
-
-            const sx = Math.floor(startX);
-            const sy = Math.floor(startY);
-            if (sx < 0 || sx >= w || sy < 0 || sy >= h) return;
-
-            const startIdx = (sy * w + sx) * 4;
-            const sr = data[startIdx], sg = data[startIdx + 1], sb = data[startIdx + 2], sa = data[startIdx + 3];
-
-            const hex = fillColor.replace('#', '');
-            const tr = parseInt(hex.substring(0, 2), 16);
-            const tg = parseInt(hex.substring(2, 4), 16);
-            const tb = parseInt(hex.substring(4, 6), 16);
-
-            if (sr === tr && sg === tg && sb === tb && sa === 255) return;
-
-            const queue = [[sx, sy]];
-            const visited = new Uint8Array(w * h);
-
-            while (queue.length > 0) {
-                const [x, y] = queue.pop();
-                const idx = y * w + x;
-                if (visited[idx]) continue;
-                visited[idx] = 1;
-
-                const pIdx = idx * 4;
-                if (Math.abs(data[pIdx] - sr) < 15 && 
-                    Math.abs(data[pIdx+1] - sg) < 15 && 
-                    Math.abs(data[pIdx+2] - sb) < 15 && 
-                    Math.abs(data[pIdx+3] - sa) < 15) {
-                    data[pIdx] = tr; data[pIdx+1] = tg; data[pIdx+2] = tb; data[pIdx+3] = 255;
-                    if (x > 0) queue.push([x - 1, y]);
-                    if (x < w - 1) queue.push([x + 1, y]);
-                    if (y > 0) queue.push([x, y - 1]);
-                    if (y < h - 1) queue.push([x, y + 1]);
-                }
-            }
-
-            lCtx.putImageData(imgData, 0, 0);
-            compositeCanvas();
-            saveHistoryState("Paint Bucket Fill");
-        }
-
         function magicWandSelect(startX, startY) {
             const w = canvas.width;
             const h = canvas.height;
@@ -2005,7 +1988,7 @@
                 return;
             }
 
-            const isToolActive = ['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'bucket', 'brush', 'mixer-brush', 'smudge', 'eraser'].includes(currentTool);
+            const isToolActive = ['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'brush', 'mixer-brush', 'smudge', 'eraser'].includes(currentTool);
             
             if (isSpacePressed || currentTool === 'move' || e.button === 1 || e.target === viewportContainer || !isToolActive) {
                 isPanning = true;
@@ -2023,9 +2006,6 @@
                 swatchFg.style.backgroundColor = fgColor;
                 const colorBtn = document.getElementById('opt-brush-color-btn');
                 if (colorBtn) colorBtn.style.backgroundColor = fgColor;
-                return;
-            } else if (currentTool === 'bucket') {
-                floodFill(pos.x, pos.y, fgColor);
                 return;
             } else if (currentTool === 'magic-wand') {
                 magicWandSelect(pos.x, pos.y);
