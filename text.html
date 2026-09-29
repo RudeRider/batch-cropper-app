@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Editor | Digital Asset Tools</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load FileSaver for cross-browser file downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <style>
+        .editor-container {
+            position: relative;
+            min-height: 50vh;
+            border-radius: 0.5rem;
+            border: 1px solid #4b5563;
+            background-color: #374151;
+            padding: 0;
+        }
+        #text-editor-content {
+            padding: 2rem;
+            min-height: 50vh;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+            background-color: #1f2937;
+            color: #f3f4f6;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3); 
+            white-space: normal; 
+            overflow-y: auto;
+        }
+        #text-editor-content:focus { outline: none; }
+        #text-editor-content h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #818cf8;
+        }
+        #text-editor-content ul, #text-editor-content ol {
+            list-style-position: inside;
+            margin-left: 1.5rem;
+            padding-left: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="textTool.init()">
+
+    <!-- SHARED NAVIGATION BAR -->
+    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
+        <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
+            <nav class="flex flex-wrap justify-center gap-2">
+                <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Batch Cropper</a>
+                <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
+                <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
+                <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Text Editor</a>
+                <a href="png.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Solid PNG</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
+        <p id="messageText"></p>
+    </div>
+
+    <!-- Text Editor Tab -->
+    <div class="w-full p-4 sm:p-8">
+        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
+        
+        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
+                <div class="flex flex-col space-y-1 text-sm text-gray-300">
+                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
+                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
+                    <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Ready</span></p>
+                </div>
+                <div class="flex space-x-3 flex-wrap justify-end">
+                    <input type="text" id="filename-input" placeholder="filename.html" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 w-full md:w-40">
+                    <button id="copy-text-btn" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition" disabled type="button">Copy Clean</button>
+                    <button id="download-txt-btn" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition" disabled type="button">Download TXT</button>
+                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition" disabled type="button">Download HTML</button>
+                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="bg-gray-700 rounded-xl p-2 border border-gray-600 flex gap-2">
+                    <button onclick="textTool.switchNotebook('notebook1')" id="notebook-tab-notebook1" class="px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white">Notebook 1</button>
+                    <button onclick="textTool.switchNotebook('notebook2')" id="notebook-tab-notebook2" class="px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300">Scratchpad 2</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-4">
+                <div id="text-transform-controls" class="flex-shrink-0 flex flex-row md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700">
+                    <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded font-extrabold">B</button>
+                    <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded italic">I</button>
+                    <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded underline">U</button>
+                    <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded">• List</button>
+                    <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded">H3</button>
+                </div>
+                
+                <div class="editor-container flex-grow">
+                    <div id="text-editor-content" contenteditable="true">
+                        <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+        let userId = 'anonymous';
+        let isAuthReady = false;
+
+        const showMessage = (text, isError = false) => {
+            const box = document.getElementById('messageBox');
+            box.textContent = text;
+            box.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
+            box.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
+            setTimeout(() => box.classList.add('hidden'), 5000);
+        };
+
+        const throttle = (func, delay) => {
+            let timeoutId = null;
+            return function(...args) {
+                if (timeoutId) return;
+                timeoutId = setTimeout(() => { func.apply(this, args); timeoutId = null; }, delay);
+            };
+        };
+
+        window.textTool = {
+            contentDiv: document.getElementById('text-editor-content'),
+            downloadBtn: document.getElementById('download-text-btn'),
+            clearBtn: document.getElementById('clear-text-btn'),
+            filenameInput: document.getElementById('filename-input'),
+            wordCountDisplay: document.getElementById('word-count'),
+            charCountDisplay: document.getElementById('char-count'),
+            statusDisplay: document.getElementById('text-editor-status'),
+            copyBtn: document.getElementById('copy-text-btn'),
+            downloadTxtBtn: document.getElementById('download-txt-btn'),
+            currentNotebook: 'notebook1',
+            unsubscribeListener: null,
+
+            init: function() {
+                this.contentDiv.addEventListener('input', () => this.updateStatsAndSave());
+                this.clearBtn.addEventListener('click', () => this.clearEditor());
+                this.downloadBtn.addEventListener('click', () => this.downloadText());
+                this.copyBtn.addEventListener('click', () => this.copyCleanText());
+                this.downloadTxtBtn.addEventListener('click', () => this.downloadTxt());
+
+                document.querySelectorAll('.rich-text-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleCommand(e.currentTarget.dataset.command, e.currentTarget.dataset.value));
+                });
+
+                this.updateStats();
+                this.initFirebase();
+            },
+
+            initFirebase: async function() {
+                if (!firebaseConfig) return;
+                try {
+                    app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    onAuthStateChanged(auth, user => {
+                        if (user) {
+                            userId = user.uid;
+                            isAuthReady = true;
+                            this.loadTextFromFirestore();
+                            this.statusDisplay.textContent = 'Cloud Connected';
+                        }
+                    });
+                    if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                    else await signInAnonymously(auth);
+                } catch(e) {
+                    this.statusDisplay.textContent = 'Offline Mode';
+                }
+            },
+
+            switchNotebook: function(id) {
+                this.currentNotebook = id;
+                document.getElementById('notebook-tab-notebook1').className = id === 'notebook1' ? 'px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white' : 'px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300';
+                document.getElementById('notebook-tab-notebook2').className = id === 'notebook2' ? 'px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white' : 'px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300';
+                this.loadTextFromFirestore();
+            },
+
+            getDocRef: function() {
+                if (!db || !userId || !isAuthReady) return null;
+                return doc(db, `/artifacts/${appId}/users/${userId}/text_scratchpad/${this.currentNotebook}`);
+            },
+
+            saveTextToFirestore: throttle(async function() {
+                const docRef = this.getDocRef();
+                if (!docRef) return;
+                try {
+                    await setDoc(docRef, { content: this.contentDiv.innerHTML, updatedAt: new Date().toISOString() });
+                } catch(e) { console.error(e); }
+            }, 2000),
+
+            loadTextFromFirestore: function() {
+                if (this.unsubscribeListener) this.unsubscribeListener();
+                const docRef = this.getDocRef();
+                if (!docRef) return;
+                this.unsubscribeListener = onSnapshot(docRef, snap => {
+                    if (snap.exists() && snap.data().content) {
+                        this.contentDiv.innerHTML = snap.data().content;
+                        this.updateStats();
+                    }
+                });
+            },
+
+            updateStatsAndSave: function() {
+                this.updateStats();
+                this.saveTextToFirestore();
+            },
+
+            updateStats: function() {
+                const text = this.contentDiv.textContent;
+                this.charCountDisplay.textContent = text.length;
+                this.wordCountDisplay.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+                const active = text.length > 0;
+                this.downloadBtn.disabled = !active;
+                this.copyBtn.disabled = !active;
+                this.downloadTxtBtn.disabled = !active;
+            },
+
+            clearEditor: async function() {
+                this.contentDiv.innerHTML = '<p><br></p>';
+                this.updateStats();
+                const docRef = this.getDocRef();
+                if (docRef) await deleteDoc(docRef).catch(() => {});
+                showMessage("Editor cleared.");
+            },
+
+            copyCleanText: function() {
+                navigator.clipboard.writeText(this.contentDiv.textContent);
+                showMessage("Clean text copied to clipboard!");
+            },
+
+            downloadTxt: function() {
+                saveAs(new Blob([this.contentDiv.textContent], { type: "text/plain;charset=utf-8" }), `${this.filenameInput.value || 'document'}.txt`);
+            },
+
+            downloadText: function() {
+                const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Document</title></head><body>${this.contentDiv.innerHTML}</body></html>`;
+                saveAs(new Blob([html], { type: "text/html;charset=utf-8" }), `${this.filenameInput.value || 'document'}.html`);
+            },
+
+            handleCommand: function(cmd, val) {
+                this.contentDiv.focus();
+                document.execCommand(cmd, false, val);
+                this.updateStatsAndSave();
+            }
+        };
+    </script>
+</body>
+</html>

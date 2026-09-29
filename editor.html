@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelCraft - Basic Image Editor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            800: '#1e1e24',
+                            900: '#121216',
+                            950: '#0a0a0c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        input[type="range"] {
+            accent-color: #6366f1;
+        }
+        /* Custom scrollbar for control panel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-dark-900 text-gray-100 h-full flex flex-col overflow-hidden">
+
+    <header class="bg-dark-950 border-b border-gray-800 px-6 py-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide text-white">PixelCraft</h1>
+                <p class="text-xs text-gray-400">Lightweight Online Image Editor</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="reset-btn" class="px-4 py-2 bg-dark-800 hover:bg-gray-700 text-gray-300 rounded-xl font-medium text-sm transition-all flex items-center space-x-2 border border-gray-700">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Reset</span>
+            </button>
+            <button id="download-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fa-solid fa-download"></i>
+                <span>Download</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        
+        <!-- Upload State Overlay / Dropzone -->
+        <div id="upload-overlay" class="absolute inset-0 z-20 bg-dark-900/95 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+            <div class="max-w-md w-full border-2 border-dashed border-gray-700 hover:border-indigo-500 rounded-2xl p-10 text-center bg-dark-800/50 backdrop-blur transition-all group cursor-pointer" id="drop-zone">
+                <div class="w-16 h-16 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-1">Upload your image</h3>
+                <p class="text-sm text-gray-400 mb-6">Drag and drop your photo here, or browse from your device</p>
+                <label class="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm rounded-xl cursor-pointer shadow-lg shadow-indigo-600/20 transition-all">
+                    <span>Browse Image</span>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden">
+                </label>
+                <div class="mt-6 flex justify-center gap-3">
+                    <button type="button" id="load-sample-btn" class="px-4 py-2 bg-dark-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg border border-gray-700 transition">
+                        Try Sample Image
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas / Image Viewer Area -->
+        <div class="flex-1 bg-dark-950 flex items-center justify-center p-6 relative overflow-hidden">
+            <div id="canvas-container" class="relative max-w-full max-h-full flex items-center justify-center overflow-auto shadow-2xl rounded-xl border border-gray-800/80 bg-black/40 p-4">
+                <canvas id="image-canvas" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-inner block"></canvas>
+            </div>
+            
+            <!-- Quick Image Info Bar -->
+            <div id="image-info" class="absolute bottom-4 left-4 bg-dark-800/80 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-700 text-xs text-gray-400 flex items-center space-x-3 hidden">
+                <span id="info-name">image.jpg</span>
+                <span>•</span>
+                <span id="info-dims">800 × 600 px</span>
+            </div>
+        </div>
+
+        <aside class="w-full lg:w-96 bg-dark-800 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col shrink-0">
+            <!-- Tabs Header -->
+            <div class="flex border-b border-gray-700/60 bg-dark-900/40">
+                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center space-x-2 tab-btn" data-target="adjust-panel">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Adjust</span>
+                </button>
+                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center justify-center space-x-2 tab-btn" data-target="filters-panel">
+                    <i class="fa-solid fa-wand-magic"></i>
+                    <span>Filters</span>
+                </button>
+                <button class="flex-1 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 border-b-2 border-transparent flex items-center justify-center space-x-2 tab-btn" data-target="transform-panel">
+                    <i class="fa-solid fa-crop-simple"></i>
+                    <span>Transform</span>
+                </button>
+            </div>
+
+            <!-- Tab Contents Container -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                <!-- Adjustments Panel -->
+                <div id="adjust-panel" class="space-y-5 control-panel">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Basic Adjustments</h3>
+                    
+                    <!-- Brightness -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-sun w-5 text-indigo-400"></i><span>Brightness</span></span>
+                            <span id="brightness-val" class="text-gray-400 text-xs font-mono">100%</span>
+                        </div>
+                        <input type="range" id="brightness" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Contrast -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-circle-half-stroke w-5 text-indigo-400"></i><span>Contrast</span></span>
+                            <span id="contrast-val" class="text-gray-400 text-xs font-mono">100%</span>
+                        </div>
+                        <input type="range" id="contrast" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Saturation -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-droplet w-5 text-indigo-400"></i><span>Saturation</span></span>
+                            <span id="saturation-val" class="text-gray-400 text-xs font-mono">100%</span>
+                        </div>
+                        <input type="range" id="saturation" min="0" max="200" value="100" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Blur -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-300 font-medium flex items-center space-x-2"><i class="fa-solid fa-water w-5 text-indigo-400"></i><span>Blur</span></span>
+                            <span id="blur-val" class="text-gray-400 text-xs font-mono">0px</span>
+                        </div>
+                        <input type="range" id="blur" min="0" max="20" value="0" class="w-full bg-dark-900 h-2 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- Filters Panel -->
+                <div id="filters-panel" class="space-y-5 control-panel hidden">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Preset Filters</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="normal">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Normal</span>
+                        </button>
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="grayscale">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative grayscale">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Grayscale</span>
+                        </button>
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="sepia">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative sepia">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span>
+                        </button>
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="vintage">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative contrast-125 sepia-[.3]">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Vintage</span>
+                        </button>
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="invert">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative invert">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Invert</span>
+                        </button>
+                        <button class="filter-preset p-3 rounded-xl bg-dark-900 hover:bg-indigo-950/40 border border-gray-700/60 hover:border-indigo-500 text-left transition group" data-filter="kodak">
+                            <div class="w-full h-12 bg-gray-800 rounded-lg mb-2 overflow-hidden relative saturate-150 contrast-110">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-70 sample-thumb"></div>
+                            </div>
+                            <span class="text-xs font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transform Panel -->
+                <div id="transform-panel" class="space-y-6 control-panel hidden">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Rotate & Flip</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="rotate-left" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Rotate Left</span>
+                            </button>
+                            <button id="rotate-right" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-rotate-right"></i>
+                                <span>Rotate Right</span>
+                            </button>
+                            <button id="flip-h" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-arrows-left-right"></i>
+                                <span>Flip Horizontal</span>
+                            </button>
+                            <button id="flip-v" class="p-3 bg-dark-900 hover:bg-gray-700 text-gray-200 rounded-xl border border-gray-700/60 text-xs font-medium flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-arrows-up-down"></i>
+                                <span>Flip Vertical</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resize / Dimensions -->
+                    <div class="pt-4 border-t border-gray-700/60">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Resize Image</h3>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] text-gray-400 mb-1">Width (px)</label>
+                                    <input type="number" id="resize-w" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-400 mb-1">Height (px)</label>
+                                    <input type="number" id="resize-h" class="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <label class="flex items-center space-x-2 cursor-pointer text-xs text-gray-300">
+                                    <input type="checkbox" id="lock-aspect" checked class="rounded bg-dark-900 border-gray-700 text-indigo-600 focus:ring-0">
+                                    <span>Maintain Aspect Ratio</span>
+                                </label>
+                                <button id="apply-resize" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-medium transition">
+                                    Apply Resize
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Replace Image Bar at bottom of sidebar -->
+            <div class="p-4 bg-dark-950 border-t border-gray-800 flex items-center justify-between">
+                <span class="text-xs text-gray-400">Want to change image?</span>
+                <label class="px-3 py-1.5 bg-dark-800 hover:bg-gray-700 text-xs font-medium text-gray-200 rounded-lg cursor-pointer border border-gray-700 transition">
+                    <span>Upload New</span>
+                    <input type="file" id="image-upload-alt" accept="image/*" class="hidden">
+                </label>
+            </div>
+        </aside>
+
+    </main>
+
+    <script>
+        const canvas = document.getElementById('image-canvas');
+        const ctx = canvas.getContext('2d');
+        const uploadOverlay = document.getElementById('upload-overlay');
+        const dropZone = document.getElementById('drop-zone');
+        const downloadBtn = document.getElementById('download-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const imageInfo = document.getElementById('image-info');
+        const infoName = document.getElementById('info-name');
+        const infoDims = document.getElementById('info-dims');
+        
+        // Controls
+        const brightnessInput = document.getElementById('brightness');
+        const contrastInput = document.getElementById('contrast');
+        const saturationInput = document.getElementById('saturation');
+        const blurInput = document.getElementById('blur');
+        
+        const brightnessVal = document.getElementById('brightness-val');
+        const contrastVal = document.getElementById('contrast-val');
+        const saturationVal = document.getElementById('saturation-val');
+        const blurVal = document.getElementById('blur-val');
+
+        const resizeWInput = document.getElementById('resize-w');
+        const resizeHInput = document.getElementById('resize-h');
+        const lockAspectCheckbox = document.getElementById('lock-aspect');
+        const applyResizeBtn = document.getElementById('apply-resize');
+
+        // State variables
+        let originalImage = null;
+        let imageName = "image.jpg";
+        let rotationAngle = 0;
+        let flipH = false;
+        let flipV = false;
+        let activeFilter = 'normal';
+        let originalWidth = 0;
+        let originalHeight = 0;
+
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Update tab buttons style
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-indigo-400', 'border-indigo-500');
+                    btn.classList.add('text-gray-400', 'border-transparent');
+                });
+                button.classList.remove('text-gray-400', 'border-transparent');
+                button.classList.add('text-indigo-400', 'border-indigo-500');
+
+                // Hide all panels
+                document.querySelectorAll('.control-panel').forEach(panel => {
+                    panel.classList.add('hidden');
+                });
+
+                // Show target panel
+                const targetId = button.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        function handleImageLoad(src, name = "uploaded-image.jpg") {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                originalImage = img;
+                imageName = name;
+                originalWidth = img.naturalWidth;
+                originalHeight = img.naturalHeight;
+                
+                resizeWInput.value = originalWidth;
+                resizeHInput.value = originalHeight;
+                
+                // Hide upload overlay
+                uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
+                downloadBtn.removeAttribute('disabled');
+                imageInfo.classList.remove('hidden');
+                infoName.textContent = imageName;
+                
+                resetEdits();
+                applyEdits();
+            };
+            img.src = src;
+        }
+
+        // File inputs listener
+        document.querySelectorAll('#image-upload, #image-upload-alt').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        handleImageLoad(event.target.result, file.name);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Drag and drop listeners
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-dark-800');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-indigo-500', 'bg-dark-800');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-dark-800');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    handleImageLoad(event.target.result, file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Sample image loader for immediate testing
+        document.getElementById('load-sample-btn').addEventListener('click', () => {
+            const sampleUrl = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+            handleImageLoad(sampleUrl, 'tropical-beach-sample.jpg');
+            
+            // Populate filter thumbnails with sample image
+            setTimeout(() => {
+                document.querySelectorAll('.sample-thumb').forEach(thumb => {
+                    thumb.style.backgroundImage = `url('${sampleUrl}')`;
+                });
+            }, 500);
+        });
+
+        function applyEdits() {
+            if (!originalImage) return;
+
+            const brightness = brightnessInput.value;
+            const contrast = contrastInput.value;
+            const saturation = saturationInput.value;
+            const blur = blurInput.value;
+
+            // Update range text indicators
+            brightnessVal.textContent = `${brightness}%`;
+            contrastVal.textContent = `${contrast}%`;
+            saturationVal.textContent = `${saturation}%`;
+            blurVal.textContent = `${blur}px`;
+
+            // Compute dimensions based on rotation
+            let w = parseInt(resizeWInput.value) || originalImage.naturalWidth;
+            let h = parseInt(resizeHInput.value) || originalImage.naturalHeight;
+
+            // Set canvas dimensions
+            if (rotationAngle === 90 || rotationAngle === 270) {
+                canvas.width = h;
+                canvas.height = w;
+            } else {
+                canvas.width = w;
+                canvas.height = h;
+            }
+
+            infoDims.textContent = `${canvas.width} × ${canvas.height} px`;
+
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move to center for transformations
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((rotationAngle * Math.PI) / 180);
+            ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+
+            // Construct filter string
+            let filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) blur(${blur}px)`;
+            
+            if (activeFilter === 'grayscale') filterString += ' grayscale(100%)';
+            if (activeFilter === 'sepia') filterString += ' sepia(100%)';
+            if (activeFilter === 'vintage') filterString += ' sepia(40%) contrast(120%) brightness(95%)';
+            if (activeFilter === 'invert') filterString += ' invert(100%)';
+            if (activeFilter === 'kodak') filterString += ' saturate(150%) contrast(110%)';
+
+            ctx.filter = filterString;
+
+            // Draw image centered
+            const drawW = (rotationAngle === 90 || rotationAngle === 270) ? h : w;
+            const drawH = (rotationAngle === 90 || rotationAngle === 270) ? w : h;
+            ctx.drawImage(originalImage, -drawW / 2, -drawH / 2, drawW, drawH);
+
+            ctx.restore();
+        }
+
+        [brightnessInput, contrastInput, saturationInput, blurInput].forEach(input => {
+            input.addEventListener('input', applyEdits);
+        });
+
+        // Preset filters click handler
+        document.querySelectorAll('.filter-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-preset').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-950/20'));
+                btn.classList.add('border-indigo-500', 'bg-indigo-950/20');
+                activeFilter = btn.getAttribute('data-filter');
+                applyEdits();
+            });
+        });
+
+        // Rotation and Flip controls
+        document.getElementById('rotate-left').addEventListener('click', () => {
+            rotationAngle = (rotationAngle - 90 + 360) % 360;
+            applyEdits();
+        });
+
+        document.getElementById('rotate-right').addEventListener('click', () => {
+            rotationAngle = (rotationAngle + 90) % 360;
+            applyEdits();
+        });
+
+        document.getElementById('flip-h').addEventListener('click', () => {
+            flipH = !flipH;
+            applyEdits();
+        });
+
+        document.getElementById('flip-v').addEventListener('click', () => {
+            flipV = !flipV;
+            applyEdits();
+        });
+
+        // Aspect ratio lock during resize calculation
+        let aspectRatio = 1;
+        resizeWInput.addEventListener('input', () => {
+            if (lockAspectCheckbox.checked && originalWidth > 0) {
+                aspectRatio = originalHeight / originalWidth;
+                resizeHInput.value = Math.round(resizeWInput.value * aspectRatio);
+            }
+        });
+
+        resizeHInput.addEventListener('input', () => {
+            if (lockAspectCheckbox.checked && originalHeight > 0) {
+                aspectRatio = originalWidth / originalHeight;
+                resizeWInput.value = Math.round(resizeHInput.value * aspectRatio);
+            }
+        });
+
+        applyResizeBtn.addEventListener('click', () => {
+            applyEdits();
+        });
+
+        function resetEdits() {
+            brightnessInput.value = 100;
+            contrastInput.value = 100;
+            saturationInput.value = 100;
+            blurInput.value = 0;
+            rotationAngle = 0;
+            flipH = false;
+            flipV = false;
+            activeFilter = 'normal';
+            
+            if (originalImage) {
+                resizeWInput.value = originalImage.naturalWidth;
+                resizeHInput.value = originalImage.naturalHeight;
+            }
+
+            document.querySelectorAll('.filter-preset').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-950/20'));
+            const normalPreset = document.querySelector('[data-filter="normal"]');
+            if (normalPreset) normalPreset.classList.add('border-indigo-500', 'bg-indigo-950/20');
+
+            applyEdits();
+        }
+
+        resetBtn.addEventListener('click', resetEdits);
+
+        downloadBtn.addEventListener('click', () => {
+            if (!originalImage) return;
+            const link = document.createElement('a');
+            link.download = `edited-${imageName.replace(/\.[^/.]+$/, "")}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+    </script>
+</body>
+</html>
