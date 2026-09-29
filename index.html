@@ -56,7 +56,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="cropperTool.init()">
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="initApp()">
 
     <!-- SHARED NAVIGATION BAR -->
     <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
@@ -64,6 +64,7 @@
             <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
             <nav class="flex flex-wrap justify-center gap-2">
                 <a href="index.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-md">Batch Cropper</a>
+                <a href="editor.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Image Editor</a>
                 <a href="squeezepix.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">SqueezePix</a>
                 <a href="video.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Video Frames</a>
                 <a href="text.html" class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600">Text Editor</a>
@@ -287,6 +288,22 @@
                 this.globalResolutionSelect.addEventListener('change', () => this.updateGlobalResolution());
                 this.globalWidthInput.addEventListener('input', () => this.updateGlobalResolution());
                 this.globalHeightInput.addEventListener('input', () => this.updateGlobalResolution());
+
+                // Custom Ratio Button Handler
+                this.applyCustomRatioBtn.addEventListener('click', () => {
+                    const w = parseFloat(this.customWidthInput.value);
+                    const h = parseFloat(this.customHeightInput.value);
+                    if (isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
+                        this.ratioError.textContent = "Please enter valid positive numbers for width and height.";
+                        this.ratioError.classList.remove('hidden');
+                        return;
+                    }
+                    this.ratioError.classList.add('hidden');
+                    document.querySelector('.ratio-btn.active-ratio')?.classList.remove('active-ratio');
+                    const customRatioStr = `${w}/${h}`;
+                    this.setCropperRatio(customRatioStr);
+                    showMessage(`Applied custom ratio ${w}:${h}`);
+                });
             },
 
             setGlobalOutputFormat: function(format) {
@@ -321,14 +338,6 @@
                 showMessage(`Global resolution updated.`);
             },
 
-            updateLocalVisualFeedback: function(card) {
-                const ratioSelect = card.querySelector('.local-ratio-select');
-                const colorInput = card.querySelector('.local-fill-color');
-                const fillToggle = card.querySelector('.local-fill-toggle');
-                const resSelect = card.querySelector('.local-resolution-select');
-                card.querySelector('.custom-res-inputs').classList.toggle('hidden', resSelect.value !== 'custom');
-            },
-            
             getOutputResolution: function(card) {
                 const resSelect = card.querySelector('.local-resolution-select');
                 const value = resSelect.value;
@@ -453,6 +462,10 @@
                         card.querySelector('.local-ratio-select').addEventListener('change', (ev) => {
                             this.handleLocalRatioChange(ev.target.value, this.cropperInstances.find(i => i.index === index));
                         });
+
+                        card.querySelector('.local-resolution-select').addEventListener('change', (ev) => {
+                            card.querySelector('.custom-res-inputs').classList.toggle('hidden', ev.target.value !== 'custom');
+                        });
                     };
                     reader.readAsDataURL(file);
                 });
@@ -534,6 +547,10 @@
                 showMessage("Batch download complete!");
             }
         };
+
+        function initApp() {
+            cropperTool.init();
+        }
     </script>
 </body>
 </html>
