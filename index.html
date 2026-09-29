@@ -12,6 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Engines for SqueezePix Quantization (Pako + UPNG) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
         .tool-menu-btn {
@@ -24,7 +27,7 @@
         }
         .tool-menu-btn:not(.active-tool) {
             background-color: #374151;
-            color: #f87171;
+            color: #d1d5db;
         }
         .tool-menu-btn:not(.active-tool):hover {
             background-color: #4b5563;
@@ -161,29 +164,35 @@
     <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
         <div class="max-w-full mx-auto p-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
             <h1 class="text-2xl font-extrabold text-white">🧰 Digital Asset Tools</h1>
-            <nav class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
-                <button onclick="App.switchTool('cropper')" id="menu-cropper" class="tool-menu-btn active-tool px-4 py-2 rounded-xl text-base font-semibold shadow-md">
+            <nav class="flex flex-wrap justify-center gap-2">
+                <button onclick="App.switchTool('cropper')" id="menu-cropper" class="tool-menu-btn active-tool px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
                     <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L1 6.13"/><path d="M14 6h3a2 2 0 0 1 2 2v3"/><path d="M19 17v3a2 2 0 0 1-2 2h-3"/><path d="M10 17H7a2 2 0 0 1-2-2V8"/><path d="M14 10h-4v4h4z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.13 1L1 6.13"/><path d="M14 6h3a2 2 0 0 1 2 2v3"/><path d="M19 17v3a2 2 0 0 1-2 2h-3"/><path d="M10 17H7a2 2 0 0 1-2-2V8"/><path d="M14 10h-4v4h4z"/></svg>
                         <span>Batch Cropper</span>
                     </span>
                 </button>
-                <button onclick="App.switchTool('video')" id="menu-video" class="tool-menu-btn px-4 py-2 rounded-xl text-base font-semibold shadow-md">
+                <button onclick="App.switchTool('squeezepix')" id="menu-squeezepix" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
                     <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><path d="M14 12c0-2.4-.23-4.81-1.42-6.75C11.66 3.1 9.4 2 7 2H3a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4c2.4 0 4.66-1.1 5.58-3.25C13.77 16.81 14 14.4 14 12z"/></svg>
-                        <span>Video Frame Capture</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                        <span>SqueezePix</span>
                     </span>
                 </button>
-                <button onclick="App.switchTool('text')" id="menu-text" class="tool-menu-btn px-4 py-2 rounded-xl text-base font-semibold shadow-md">
+                <button onclick="App.switchTool('video')" id="menu-video" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
                     <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><path d="M14 12c0-2.4-.23-4.81-1.42-6.75C11.66 3.1 9.4 2 7 2H3a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4c2.4 0 4.66-1.1 5.58-3.25C13.77 16.81 14 14.4 14 12z"/></svg>
+                        <span>Video Frames</span>
+                    </span>
+                </button>
+                <button onclick="App.switchTool('text')" id="menu-text" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
+                    <span class="flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg>
                         <span>Text Editor</span>
                     </span>
                 </button>
-                <button onclick="App.switchTool('png')" id="menu-png" class="tool-menu-btn px-4 py-2 rounded-xl text-base font-semibold shadow-md">
+                <button onclick="App.switchTool('png')" id="menu-png" class="tool-menu-btn px-3.5 py-2 rounded-xl text-sm font-semibold shadow-md">
                     <span class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                        <span>Solid PNG Generator</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                        <span>Solid PNG</span>
                     </span>
                 </button>
             </nav>
@@ -204,6 +213,108 @@
         <p id="messageText"></p>
     </div>
 
+    <!-- SqueezePix Application Tab -->
+    <div id="squeezepix-app" class="tool-container w-full p-4 sm:p-8 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-50 flex items-center gap-2">
+                    <span>🗜️ SqueezePix Compressor</span>
+                    <span class="text-xs bg-indigo-900 text-indigo-300 font-mono px-2 py-0.5 rounded-full border border-indigo-700">UPNG Quantizer Engine</span>
+                </h2>
+                <p class="text-sm text-gray-400 mt-1">Smart color quantization & lossy downsampling. All compression runs 100% locally in your browser.</p>
+            </div>
+            <div id="sqz-batch-actions" class="hidden flex gap-3">
+                <button id="sqz-clear-btn" class="bg-red-900/60 hover:bg-red-800 text-red-200 text-sm font-semibold px-4 py-2.5 rounded-xl border border-red-700 transition">
+                    Clear List
+                </button>
+                <button id="sqz-download-all-btn" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Download All (ZIP)</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Controls / Dropzone -->
+            <div class="lg:col-span-5 space-y-6">
+                <div id="sqz-dropzone" class="p-8 bg-gray-800 shadow-xl rounded-xl border-4 border-dashed border-gray-600 hover:border-indigo-400 transition-all duration-300 text-center cursor-pointer">
+                    <input type="file" id="sqz-file-input" accept="image/png, image/jpeg, image/webp" multiple class="hidden">
+                    <div class="flex flex-col items-center pointer-events-none">
+                        <svg class="w-14 h-14 text-indigo-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p class="text-lg font-bold text-gray-100">Drop PNG, JPEG, or WebP files here</p>
+                        <p class="text-sm text-gray-400 mt-1">or click to browse files from your computer</p>
+                    </div>
+                </div>
+
+                <!-- Settings Box -->
+                <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 shadow-xl space-y-5">
+                    <h3 class="text-base font-bold text-indigo-300 uppercase tracking-wider">Compression Engine Settings</h3>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Target Format Mode</label>
+                        <select id="sqz-format-mode" class="w-full p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="auto" selected>Auto Match (Quantize PNG to 8-bit, Squeeze JPEG/WebP)</option>
+                            <option value="image/png">Force Quantized PNG (UPNG Palette)</option>
+                            <option value="image/webp">Force WebP (Maximum byte savings)</option>
+                            <option value="image/jpeg">Force JPEG (Standard photographic)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm font-semibold text-gray-300">Quality / Color Fidelity</label>
+                            <span id="sqz-quality-val" class="text-xs font-mono bg-indigo-900/60 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700">80% / 256 Colors</span>
+                        </div>
+                        <input type="range" id="sqz-quality-slider" min="10" max="100" value="80" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                        <p class="text-[11px] text-gray-400 mt-1">Controls lossy quality for WebP/JPEG, and palette depth (32–256 indexed colors) for PNGs.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Max Dimension Boundary</label>
+                        <select id="sqz-max-res" class="w-full p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="original" selected>Keep Original Dimensions</option>
+                            <option value="3840">Clamp to 4K UHD (3840px max)</option>
+                            <option value="2560">Clamp to 2K QHD (2560px max)</option>
+                            <option value="1920">Clamp to Full HD (1920px max)</option>
+                            <option value="1280">Clamp to Web Standard (1280px max)</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2">
+                        <button id="sqz-reprocess-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition">
+                            Apply & Recompress All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Results Queue -->
+            <div class="lg:col-span-7">
+                <div class="bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 min-h-[420px] flex flex-col">
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
+                        <h3 class="text-lg font-bold text-gray-100">Processed Output Queue (<span id="sqz-queue-count">0</span>)</h3>
+                        <span id="sqz-total-savings" class="text-xs font-semibold text-green-400">Total Saved: 0 KB (0%)</span>
+                    </div>
+
+                    <div id="sqz-empty-state" class="flex-grow flex flex-col items-center justify-center text-center p-8 text-gray-500 space-y-2">
+                        <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-sm">No images in compression queue.</p>
+                        <p class="text-xs">Drag and drop images onto the left pane to compress.</p>
+                    </div>
+
+                    <div id="sqz-list-container" class="space-y-3 overflow-y-auto max-h-[600px] pr-1">
+                        <!-- Squeeze item cards inserted dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Cropper App -->
     <div id="cropper-app" class="tool-container w-full p-4 sm:p-8">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">Batch Cropper</h2>
         
@@ -296,6 +407,7 @@
         </div>
     </div>
     
+    <!-- Video Frame Capture Tab -->
     <div id="video-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎥 Video Frame Capture</h2>
         
@@ -370,6 +482,7 @@
         </div>
     </div>
     
+    <!-- Text Editor Tab -->
     <div id="text-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
         
@@ -434,11 +547,11 @@
         </div>
     </div>
 
+    <!-- Solid Color PNG Generator Tab -->
     <div id="png-app" class="tool-container w-full p-4 sm:p-8 hidden">
         <h2 class="text-3xl font-extrabold text-gray-50 mb-6">🎨 Solid Color PNG Generator</h2>
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Controls Area (Left Side) -->
             <div class="lg:col-span-4 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 space-y-6 self-start">
                 <div>
                     <label class="block text-sm font-bold text-gray-200 mb-2">1. Quick Resolution Presets</label>
@@ -489,7 +602,6 @@
                 </button>
             </div>
 
-            <!-- Preview Canvas Area (Right Side with EXACT layers & shades layout) -->
             <div class="lg:col-span-8 bg-gray-800 shadow-2xl rounded-xl p-6 border border-gray-700 flex flex-col justify-between min-h-[450px]">
                 <div class="flex justify-between items-center w-full mb-3 border-b border-gray-700 pb-2">
                     <h3 class="text-lg font-bold text-gray-200">Live Canvas Area</h3>
@@ -500,7 +612,6 @@
                     <canvas id="solid-png-canvas" class="max-w-full max-h-[280px] shadow-2xl rounded border border-gray-600 transition-all duration-200"></canvas>
                 </div>
 
-                <!-- Color Palettes embedded directly inside live canvas area without scroll bars -->
                 <div class="bg-gray-900/90 p-2.5 rounded-xl border border-gray-700 space-y-2">
                     <div class="flex justify-between items-center mb-0.5">
                         <span class="text-xs font-bold text-indigo-300">Color Palette Layers (6 Total Layers)</span>
@@ -592,6 +703,14 @@
             loadingOverlay.classList.toggle('hidden', !isVisible);
         };
 
+        const formatBytes = (bytes) => {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+
         const getResolutionValue = (input) => {
             const value = parseInt(input.value, 10);
             return (isNaN(value) || value <= 0) ? null : value;
@@ -609,7 +728,296 @@
                 }
             }
             return NaN;
-        }
+        };
+
+        // --- SqueezePix Tool Implementation ---
+        const squeezePixTool = {
+            dropzone: document.getElementById('sqz-dropzone'),
+            fileInput: document.getElementById('sqz-file-input'),
+            formatSelect: document.getElementById('sqz-format-mode'),
+            qualitySlider: document.getElementById('sqz-quality-slider'),
+            qualityDisplay: document.getElementById('sqz-quality-val'),
+            maxResSelect: document.getElementById('sqz-max-res'),
+            reprocessBtn: document.getElementById('sqz-reprocess-btn'),
+            queueCount: document.getElementById('sqz-queue-count'),
+            totalSavings: document.getElementById('sqz-total-savings'),
+            batchActions: document.getElementById('sqz-batch-actions'),
+            emptyState: document.getElementById('sqz-empty-state'),
+            listContainer: document.getElementById('sqz-list-container'),
+            downloadAllBtn: document.getElementById('sqz-download-all-btn'),
+            clearBtn: document.getElementById('sqz-clear-btn'),
+
+            items: [],
+
+            init: function() {
+                this.dropzone.addEventListener('click', () => this.fileInput.click());
+                this.fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+
+                ['dragenter', 'dragover'].forEach(n => this.dropzone.addEventListener(n, (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    this.dropzone.classList.add('border-indigo-400', 'bg-indigo-950/40');
+                }));
+                ['dragleave', 'drop'].forEach(n => this.dropzone.addEventListener(n, (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    this.dropzone.classList.remove('border-indigo-400', 'bg-indigo-950/40');
+                }));
+                this.dropzone.addEventListener('drop', (e) => this.handleFiles(e.dataTransfer.files));
+
+                this.qualitySlider.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value, 10);
+                    const colors = Math.max(16, Math.min(256, Math.round(val * 2.56)));
+                    this.qualityDisplay.textContent = `${val}% / ${colors} Colors`;
+                });
+
+                this.reprocessBtn.addEventListener('click', () => this.recompressAll());
+                this.clearBtn.addEventListener('click', () => this.clearAll());
+                this.downloadAllBtn.addEventListener('click', () => this.downloadAllZip());
+            },
+
+            handleFiles: async function(fileList) {
+                if (!fileList || fileList.length === 0) return;
+                const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+                if (newFiles.length === 0) {
+                    showMessage('Please select valid image files (PNG, JPEG, WebP).', true);
+                    return;
+                }
+
+                toggleLoading(true, `Compressing ${newFiles.length} images with SqueezePix...`);
+
+                for (const file of newFiles) {
+                    try {
+                        const compressed = await this.compressFile(file);
+                        this.items.push(compressed);
+                    } catch (err) {
+                        console.error('Compression error:', err);
+                        showMessage(`Failed to compress ${file.name}`, true);
+                    }
+                }
+
+                toggleLoading(false);
+                this.renderQueue();
+                this.fileInput.value = '';
+                showMessage(`Processed ${newFiles.length} files!`);
+            },
+
+            compressFile: async function(file) {
+                const img = new Image();
+                const srcUrl = URL.createObjectURL(file);
+                
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = srcUrl;
+                });
+
+                let width = img.naturalWidth;
+                let height = img.naturalHeight;
+
+                const maxRes = this.maxResSelect.value;
+                if (maxRes !== 'original') {
+                    const limit = parseInt(maxRes, 10);
+                    if (width > limit || height > limit) {
+                        if (width > height) {
+                            height = Math.round((height * limit) / width);
+                            width = limit;
+                        } else {
+                            width = Math.round((width * limit) / height);
+                            height = limit;
+                        }
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const formatChoice = this.formatSelect.value;
+                const qualityVal = parseInt(this.qualitySlider.value, 10);
+                let targetType = formatChoice === 'auto' ? file.type : formatChoice;
+                if (!['image/png', 'image/jpeg', 'image/webp'].includes(targetType)) {
+                    targetType = 'image/png';
+                }
+
+                let blob;
+                let outExt = 'png';
+
+                if (targetType === 'image/png') {
+                    outExt = 'png';
+                    const numColors = Math.max(16, Math.min(256, Math.round(qualityVal * 2.56)));
+                    const imgData = ctx.getImageData(0, 0, width, height);
+                    
+                    if (window.UPNG && window.UPNG.encode) {
+                        const pngBuffer = UPNG.encode([imgData.data.buffer], width, height, numColors);
+                        blob = new Blob([pngBuffer], { type: 'image/png' });
+                    } else {
+                        blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                    }
+                } else if (targetType === 'image/jpeg') {
+                    outExt = 'jpg';
+                    blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', qualityVal / 100));
+                } else {
+                    outExt = 'webp';
+                    blob = await new Promise(r => canvas.toBlob(r, 'image/webp', qualityVal / 100));
+                }
+
+                // Preserve exact filename, keeping extension in sync with target format
+                const lastDotIndex = file.name.lastIndexOf('.');
+                const baseName = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
+                const origExt = lastDotIndex !== -1 ? file.name.substring(lastDotIndex + 1).toLowerCase() : '';
+                
+                // If format mode is auto or matches original, maintain exact extension; else use converted extension
+                let finalExt = outExt;
+                if (formatChoice === 'auto' && origExt) {
+                    finalExt = origExt;
+                } else if ((targetType === 'image/jpeg' && (origExt === 'jpeg' || origExt === 'jpg'))) {
+                    finalExt = origExt;
+                }
+                
+                const outName = `${baseName}.${finalExt}`;
+                const previewUrl = URL.createObjectURL(blob);
+
+                return {
+                    id: crypto.randomUUID(),
+                    originalFile: file,
+                    compressedBlob: blob,
+                    originalSize: file.size,
+                    compressedSize: blob.size,
+                    outName,
+                    previewUrl,
+                    width,
+                    height
+                };
+            },
+
+            recompressAll: async function() {
+                if (this.items.length === 0) return;
+                toggleLoading(true, `Recompressing ${this.items.length} images...`);
+
+                const oldFiles = this.items.map(item => item.originalFile);
+                this.items.forEach(i => URL.revokeObjectURL(i.previewUrl));
+                this.items = [];
+
+                for (const file of oldFiles) {
+                    try {
+                        const compressed = await this.compressFile(file);
+                        this.items.push(compressed);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                toggleLoading(false);
+                this.renderQueue();
+                showMessage('Recompression complete.');
+            },
+
+            clearAll: function() {
+                this.items.forEach(i => URL.revokeObjectURL(i.previewUrl));
+                this.items = [];
+                this.renderQueue();
+                showMessage('SqueezePix queue cleared.');
+            },
+
+            renderQueue: function() {
+                this.queueCount.textContent = this.items.length;
+                this.listContainer.innerHTML = '';
+
+                if (this.items.length === 0) {
+                    this.emptyState.classList.remove('hidden');
+                    this.batchActions.classList.add('hidden');
+                    this.totalSavings.textContent = 'Total Saved: 0 KB (0%)';
+                    return;
+                }
+
+                this.emptyState.classList.add('hidden');
+                this.batchActions.classList.remove('hidden');
+
+                let totalOrig = 0;
+                let totalComp = 0;
+
+                this.items.forEach((item, index) => {
+                    totalOrig += item.originalSize;
+                    totalComp += item.compressedSize;
+
+                    const diff = item.originalSize - item.compressedSize;
+                    const pct = Math.round((diff / item.originalSize) * 100);
+                    const isPositive = diff >= 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'flex flex-col sm:flex-row items-center justify-between p-3.5 bg-gray-700 rounded-xl border border-gray-600 gap-3 shadow';
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-3 w-full sm:w-auto">
+                            <img src="${item.previewUrl}" class="w-14 h-14 object-cover rounded-lg border border-gray-500 bg-gray-900" alt="Thumbnail">
+                            <div class="truncate">
+                                <p class="text-sm font-bold text-gray-100 truncate max-w-[200px] sm:max-w-xs">${item.outName}</p>
+                                <p class="text-xs text-gray-400">${item.width}x${item.height} px • ${formatBytes(item.compressedSize)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between w-full sm:w-auto sm:space-x-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-600">
+                            <div class="text-right">
+                                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${isPositive ? 'bg-green-900/60 text-green-300 border border-green-700' : 'bg-red-900/60 text-red-300 border border-red-700'}">
+                                    ${isPositive ? `-${pct}%` : `+${Math.abs(pct)}%`}
+                                </span>
+                                <p class="text-[11px] text-gray-400 mt-0.5">was ${formatBytes(item.originalSize)}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button data-index="${index}" class="sqz-single-download bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition" title="Download Image">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                </button>
+                                <button data-index="${index}" class="sqz-single-delete text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/40 transition" title="Remove">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    this.listContainer.appendChild(card);
+                });
+
+                const totalDiff = totalOrig - totalComp;
+                const totalPct = totalOrig > 0 ? Math.round((totalDiff / totalOrig) * 100) : 0;
+                this.totalSavings.textContent = `Total Saved: ${formatBytes(Math.max(0, totalDiff))} (${totalPct}%)`;
+
+                this.listContainer.querySelectorAll('.sqz-single-download').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = parseInt(e.currentTarget.dataset.index, 10);
+                        const item = this.items[idx];
+                        if (item) saveAs(item.compressedBlob, item.outName);
+                    });
+                });
+
+                this.listContainer.querySelectorAll('.sqz-single-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = parseInt(e.currentTarget.dataset.index, 10);
+                        if (this.items[idx]) {
+                            URL.revokeObjectURL(this.items[idx].previewUrl);
+                            this.items.splice(idx, 1);
+                            this.renderQueue();
+                        }
+                    });
+                });
+            },
+
+            downloadAllZip: async function() {
+                if (this.items.length === 0) return;
+                toggleLoading(true, `Creating ZIP with ${this.items.length} optimized images...`);
+                try {
+                    const zip = new JSZip();
+                    this.items.forEach(item => {
+                        zip.file(item.outName, item.compressedBlob);
+                    });
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    saveAs(zipBlob, 'squeezepix_images.zip');
+                    showMessage(`ZIP downloaded with ${this.items.length} images!`);
+                } catch (err) {
+                    console.error('ZIP compilation error:', err);
+                    showMessage('Failed to generate ZIP archive.', true);
+                } finally {
+                    toggleLoading(false);
+                }
+            }
+        };
 
         window.App = {
             currentTool: 'cropper',
@@ -618,6 +1026,7 @@
                 initializeFirebase(); 
                 
                 cropperTool.init();
+                squeezePixTool.init();
                 videoTool.init();
                 textTool.init(); 
                 pngTool.init();
@@ -638,6 +1047,8 @@
                 
                 if (toolId === 'cropper') {
                     document.title = 'Batch Cropper | Digital Asset Tools';
+                } else if (toolId === 'squeezepix') {
+                    document.title = 'SqueezePix Compressor | Digital Asset Tools';
                 } else if (toolId === 'video') {
                     document.title = 'Video Frame Capture | Digital Asset Tools';
                 } else if (toolId === 'text') {
