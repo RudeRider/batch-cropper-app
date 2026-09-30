@@ -86,6 +86,16 @@
                 </div>
             </div>
 
+            <!-- Select Menu -->
+            <div class="relative menu-item-group">
+                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Select</button>
+                <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
+                    <button id="menu-select-all" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>All</span><span class="text-[10px] text-gray-400">Ctrl+A</span></button>
+                    <button id="menu-deselect" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Deselect</span><span class="text-[10px] text-gray-400">Ctrl+D</span></button>
+                    <button id="menu-invert-select" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Inverse</span><span class="text-[10px] text-gray-400">Ctrl+Shift+Q</span></button>
+                </div>
+            </div>
+
             <div class="relative menu-item-group">
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Image</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
@@ -1113,9 +1123,16 @@
                 sCtx.beginPath();
                 reg.points.forEach((p, idx) => idx === 0 ? sCtx.moveTo(p.x, p.y) : sCtx.lineTo(p.x, p.y));
                 sCtx.stroke();
-            } else if (reg.type === 'magic-wand') {
+            } else if (reg.type === 'magic-wand' && reg.mask) {
                 sCtx.fillStyle = 'rgba(0, 88, 208, 0.25)';
                 sCtx.fillRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+            } else if (reg.type === 'inverse') {
+                // Draw marching ants around the outer canvas border (Photoshop style)
+                sCtx.strokeRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+                // Draw marching ants around all original selection shapes
+                if (reg.baseRegions) {
+                    reg.baseRegions.forEach(subReg => drawRegionOutline(sCtx, subReg));
+                }
             }
         }
 
@@ -1374,6 +1391,65 @@
             openPhotoshopColorPicker('fg');
         });
 
+        // --- Photoshop-Style Universal Invert Selection ---
+        function invertSelection() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const totalPixels = w * h;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w; tempCanvas.height = h;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.fillStyle = '#ffffff';
+
+            if (selectionRegions.length > 0) {
+                selectionRegions.forEach(reg => {
+                    if (reg.type === 'rect') {
+                        tCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
+                    } else if (reg.type === 'circle') {
+                        tCtx.beginPath();
+                        tCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
+                        tCtx.fill();
+                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
+                        tCtx.beginPath();
+                        reg.points.forEach((p, idx) => idx === 0 ? tCtx.moveTo(p.x, p.y) : tCtx.lineTo(p.x, p.y));
+                        tCtx.closePath();
+                        tCtx.fill();
+                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                        const imgData = tCtx.getImageData(0, 0, w, h);
+                        for (let i = 0; i < reg.mask.length; i++) {
+                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
+                        }
+                        tCtx.putImageData(imgData, 0, 0);
+                    } else if (reg.type === 'inverse' && reg.mask) {
+                        const imgData = tCtx.getImageData(0, 0, w, h);
+                        for (let i = 0; i < reg.mask.length; i++) {
+                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
+                        }
+                        tCtx.putImageData(imgData, 0, 0);
+                    }
+                });
+            } else {
+                selectionRegions = [{ type: 'rect', x: 0, y: 0, w: w, h: h }];
+                redrawSelectionOverlay();
+                return;
+            }
+
+            const imgData = tCtx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const inverseMask = new Uint8Array(totalPixels);
+
+            for (let i = 0; i < totalPixels; i++) {
+                if (data[i * 4 + 3] === 0) {
+                    inverseMask[i] = 1;
+                }
+            }
+
+            // Store baseRegions so vector outlines (like circles and rectangles) render with smooth marching ants
+            selectionRegions = [{ type: 'inverse', baseRegions: [...selectionRegions], mask: inverseMask }];
+            redrawSelectionOverlay();
+        }
+
         // --- Clipboard & Selection Utility Functions ---
         function copySelectionOrLayer() {
             const active = layers.find(l => l.id === activeLayerId);
@@ -1402,7 +1478,7 @@
                         reg.points.forEach((p, idx) => idx === 0 ? mCtx.moveTo(p.x, p.y) : mCtx.lineTo(p.x, p.y));
                         mCtx.closePath();
                         mCtx.fill();
-                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
                         const imgData = mCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
                         for (let i = 0; i < reg.mask.length; i++) {
                             if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
@@ -1436,10 +1512,10 @@
                         lCtx.fill();
                     } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
                         lCtx.beginPath();
-                        reg.points.forEach((p, idx) => idx === 0 ? mCtx.moveTo(p.x, p.y) : mCtx.lineTo(p.x, p.y));
+                        reg.points.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
                         lCtx.closePath();
                         lCtx.fill();
-                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
                         const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
                         for (let i = 0; i < reg.mask.length; i++) {
                             if (reg.mask[i]) imgData.data[i * 4 + 3] = 0;
@@ -1500,6 +1576,13 @@
                 if (activeLayerId && layers.length > 1) {
                     deleteLayer(activeLayerId);
                 }
+                return;
+            }
+
+            // Ctrl + Shift + Q Shortcut for Invert Selection
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'q') {
+                e.preventDefault();
+                invertSelection();
                 return;
             }
 
@@ -1835,6 +1918,15 @@
         document.getElementById('menu-undo').addEventListener('click', () => undoLastAction());
         document.getElementById('menu-fill-fg').addEventListener('click', () => performSelectionFill(fgColor));
         document.getElementById('menu-fill-bg').addEventListener('click', () => performSelectionFill(bgColor));
+        document.getElementById('menu-select-all').addEventListener('click', () => {
+            selectionRegions = [{ type: 'rect', x: 0, y: 0, w: canvas.width, h: canvas.height }];
+            redrawSelectionOverlay();
+        });
+        document.getElementById('menu-deselect').addEventListener('click', () => {
+            selectionRegions = []; currentDragSelection = null;
+            selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+        });
+        document.getElementById('menu-invert-select').addEventListener('click', () => invertSelection());
 
         document.getElementById('load-sample-btn').addEventListener('click', () => {
             const url = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
@@ -2372,7 +2464,7 @@
                         reg.points.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
                         lCtx.closePath(); 
                         lCtx.fill();
-                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
                         const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
                         const data = imgData.data;
                         const hex = colorToFill.replace('#', '');
