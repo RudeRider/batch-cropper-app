@@ -143,8 +143,8 @@
                     <span id="opt-brush-size-val" class="font-mono text-indigo-300 w-8">15px</span>
                 </div>
                 <div class="flex items-center space-x-2" id="color-option-wrapper">
-                    <span>Color (Q):</span>
-                    <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" title="Press Q to open Photoshop Color Picker"></button>
+                    <span>Color (TAB):</span>
+                    <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" title="Press TAB to open Photoshop Color Picker"></button>
                 </div>
             </div>
         </div>
@@ -209,14 +209,15 @@
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (Shift+F)"><i class="fa-solid fa-circle-notch text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="magic-wand" title="Magic Wand Tool (W)"><i class="fa-solid fa-wand-magic text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eyedropper" title="Eyedropper Tool (I)"><i class="fa-solid fa-eye-dropper text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (B)"><i class="fa-solid fa-paintbrush text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (J)"><i class="fa-solid fa-palette text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (R)"><i class="fa-solid fa-fingerprint text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eraser" title="Eraser Tool (E)"><i class="fa-solid fa-eraser text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="pen" title="Pen Tool (Shift+E)"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (E)"><i class="fa-solid fa-paintbrush text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (Shift+S)"><i class="fa-solid fa-palette text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (S)"><i class="fa-solid fa-fingerprint text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eraser" title="Eraser Tool (Q)"><i class="fa-solid fa-eraser text-xs"></i></button>
 
             <div class="w-8 h-[1px] bg-[#444] my-2"></div>
 
-            <div id="swatch-container" class="relative w-8 h-8 my-1 cursor-pointer" title="Foreground / Background Swatches (Press X to Swap, Q for Color Picker)">
+            <div id="swatch-container" class="relative w-8 h-8 my-1 cursor-pointer" title="Foreground / Background Swatches (Press X to Swap, TAB for Color Picker)">
                 <div id="swatch-bg" class="absolute bottom-0 right-0 w-5 h-5 bg-white border border-black rounded-sm" title="Background color swatch"></div>
                 <div id="swatch-fg" class="absolute top-0 left-0 w-5 h-5 bg-indigo-600 border border-black rounded-sm shadow" title="Foreground color swatch"></div>
             </div>
@@ -241,7 +242,7 @@
             <div class="absolute bottom-3 right-3 bg-[#262626]/90 backdrop-blur px-2.5 py-1.5 rounded border border-[#1e1e1e] text-[11px] text-gray-300 flex items-center space-x-2 z-10 shadow">
                 <button id="zoom-out" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-minus text-[9px]"></i></button>
                 <span id="zoom-val" class="font-mono text-indigo-400 w-10 text-center">100%</span>
-                <button id="zoom-in" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-plus text-[9px]"><</i></button>
+                <button id="zoom-in" class="w-5 h-5 bg-[#363636] hover:bg-[#464646] rounded flex items-center justify-center text-gray-300"><i class="fa-solid fa-plus text-[9px]"></i></button>
                 <div class="w-[1px] h-3 bg-gray-600"></div>
                 <button id="reset-view" class="hover:text-white flex items-center space-x-1"><span>Fit Screen (Ctrl+0)</span></button>
             </div>
@@ -471,8 +472,7 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-[#2c2c2c] px-4 py-2.5 flex justify-between items-center border-t border-[#1c1c1c]">
-                <button id="ps-cp-add-swatch" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] font-medium transition">Add to Swatches</button>
+            <div class="bg-[#2c2c2c] px-4 py-2.5 flex justify-end items-center border-t border-[#1c1c1c]">
                 <div class="flex space-x-2">
                     <button id="ps-cp-apply-fg" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition font-medium">Apply to Foreground</button>
                     <button id="ps-cp-apply-bg" class="px-3 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 rounded border border-[#555] transition font-medium">Apply to Background</button>
@@ -514,6 +514,7 @@
         let isAltPressed = false;
         let badgeTimeout = null;
         let dashOffset = 0;
+        let internalClipboard = null; // Internal clipboard for copy/cut/paste
 
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
@@ -568,6 +569,9 @@
         let brushStrength = 30;
         let brushWetness = 30;
         let wandTolerance = 32;
+
+        // Smudge Carried Paint Buffer State
+        let smudgeCarriedR = 0, smudgeCarriedG = 0, smudgeCarriedB = 0, smudgeCarriedA = 0;
 
         // Marquee Advanced Options State
         let marqueeMode = 'new';
@@ -830,15 +834,6 @@
             psColorPickerModal.classList.add('hidden');
         });
 
-        document.getElementById('ps-cp-add-swatch').addEventListener('click', () => {
-            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
-            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            if (!swatchesList.includes(hex)) {
-                swatchesList.push(hex);
-                renderSwatchesUI();
-            }
-        });
-
         psCpFieldCanvas.addEventListener('pointerdown', (e) => {
             isDraggingField = true;
             handleFieldPointer(e);
@@ -1050,7 +1045,7 @@
         }
 
         window.addEventListener('pointermove', (e) => {
-            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
+            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'];
             if (activeBrushes.includes(currentTool)) {
                 const rect = canvas.getBoundingClientRect();
                 if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
@@ -1227,8 +1222,8 @@
                         <span id="opt-wetness-val" class="font-mono text-indigo-300 w-7">${brushWetness}%</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span>Color (Q):</span>
-                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press Q to open Color Picker"></button>
+                        <span>Color (TAB):</span>
+                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press TAB to open Color Picker"></button>
                     </div>
                 `;
                 document.getElementById('opt-wetness').addEventListener('input', (e) => {
@@ -1278,8 +1273,8 @@
                         <span id="opt-brush-size-val" class="font-mono text-indigo-300 w-8">${brushSize}px</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span>Color (Q):</span>
-                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press Q to open Color Picker"></button>
+                        <span>Color (TAB):</span>
+                        <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press TAB to open Color Picker"></button>
                     </div>
                 `;
                 document.getElementById('brush-increase').addEventListener('click', () => changeBrushSize(5));
@@ -1317,15 +1312,16 @@
                 'lasso-select': 'Lasso Tool (Shift+F)',
                 'magic-wand': 'Magic Wand (W)',
                 'eyedropper': 'Eyedropper (I)',
-                'brush': 'Brush (B)',
-                'mixer-brush': 'Mixer Brush (J)',
-                'smudge': 'Smudge (R)',
-                'eraser': 'Eraser (E)'
+                'pen': 'Pen Tool (Shift+E)',
+                'brush': 'Brush Tool (E)',
+                'mixer-brush': 'Mixer Brush (Shift+S)',
+                'smudge': 'Smudge Tool (S)',
+                'eraser': 'Eraser Tool (Q)'
             };
             currentToolIndicator.textContent = `Tool: ${toolNamesMap[toolName] || toolName}`;
             updateOptionsBarForTool(toolName);
 
-            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
+            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'];
             if (activeBrushes.includes(currentTool)) {
                 canvasWrapper.style.cursor = 'none';
                 updateBrushCursorSize();
@@ -1378,6 +1374,117 @@
             openPhotoshopColorPicker('fg');
         });
 
+        // --- Clipboard & Selection Utility Functions ---
+        function copySelectionOrLayer() {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+
+            if (selectionRegions.length > 0) {
+                tCtx.drawImage(active.canvas, 0, 0);
+                const maskCanvas = document.createElement('canvas');
+                maskCanvas.width = canvas.width;
+                maskCanvas.height = canvas.height;
+                const mCtx = maskCanvas.getContext('2d');
+                mCtx.fillStyle = '#ffffff';
+                selectionRegions.forEach(reg => {
+                    if (reg.type === 'rect') {
+                        mCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
+                    } else if (reg.type === 'circle') {
+                        mCtx.beginPath();
+                        mCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
+                        mCtx.fill();
+                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
+                        mCtx.beginPath();
+                        reg.points.forEach((p, idx) => idx === 0 ? mCtx.moveTo(p.x, p.y) : mCtx.lineTo(p.x, p.y));
+                        mCtx.closePath();
+                        mCtx.fill();
+                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                        const imgData = mCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+                        for (let i = 0; i < reg.mask.length; i++) {
+                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
+                        }
+                        mCtx.putImageData(imgData, 0, 0);
+                    }
+                });
+                tCtx.globalCompositeOperation = 'destination-in';
+                tCtx.drawImage(maskCanvas, 0, 0);
+            } else {
+                tCtx.drawImage(active.canvas, 0, 0);
+            }
+            internalClipboard = tempCanvas;
+        }
+
+        function cutSelectionOrLayer() {
+            copySelectionOrLayer();
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
+            const lCtx = active.canvas.getContext('2d');
+            lCtx.save();
+            lCtx.globalCompositeOperation = 'destination-out';
+
+            if (selectionRegions.length > 0) {
+                selectionRegions.forEach(reg => {
+                    if (reg.type === 'rect') {
+                        lCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
+                    } else if (reg.type === 'circle') {
+                        lCtx.beginPath();
+                        lCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
+                        lCtx.fill();
+                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
+                        lCtx.beginPath();
+                        reg.points.forEach((p, idx) => idx === 0 ? mCtx.moveTo(p.x, p.y) : mCtx.lineTo(p.x, p.y));
+                        lCtx.closePath();
+                        lCtx.fill();
+                    } else if (reg.type === 'magic-wand' && reg.mask) {
+                        const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
+                        for (let i = 0; i < reg.mask.length; i++) {
+                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 0;
+                        }
+                        lCtx.putImageData(imgData, 0, 0);
+                    }
+                });
+            } else {
+                lCtx.clearRect(0, 0, active.canvas.width, active.canvas.height);
+            }
+            lCtx.restore();
+            compositeCanvas();
+            saveHistoryState("Cut");
+        }
+
+        function pasteClipboard() {
+            if (!internalClipboard) return;
+            const newId = 'layer-' + Date.now();
+            const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
+            const nCtx = newCanvas.getContext('2d');
+            nCtx.drawImage(internalClipboard, 0, 0);
+
+            const activeIdx = layers.findIndex(l => l.id === activeLayerId);
+            const insertIdx = activeIdx !== -1 ? activeIdx + 1 : layers.length;
+
+            const newLayer = {
+                id: newId,
+                name: `Layer ${layers.length + 1}`,
+                visible: true,
+                canvas: newCanvas,
+                isBase: false,
+                opacity: 1,
+                blendMode: 'source-over',
+                lockTransparency: false,
+                brightness: 100, contrast: 100, saturation: 100, blur: 0
+            };
+
+            layers.splice(insertIdx, 0, newLayer);
+            activeLayerId = newId;
+            renderLayersUI();
+            syncAdjustmentsUI();
+            compositeCanvas();
+            saveHistoryState("Paste");
+        }
+
         window.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -1403,6 +1510,13 @@
 
                 if (e.ctrlKey || e.metaKey) {
                     if (key === 'z') { undoLastAction(); }
+                    else if (key === 'a') {
+                        selectionRegions = [{ type: 'rect', x: 0, y: 0, w: canvas.width, h: canvas.height }];
+                        redrawSelectionOverlay();
+                    }
+                    else if (key === 'c') { copySelectionOrLayer(); }
+                    else if (key === 'x') { cutSelectionOrLayer(); }
+                    else if (key === 'v') { pasteClipboard(); }
                     else if (key === 'o') { document.getElementById('image-upload').click(); }
                     else if (key === 'n') {
                         if (e.shiftKey) addLayerBtn.click();
@@ -1427,7 +1541,7 @@
             }
 
             if (key === 'x') { e.preventDefault(); swapColors(); return; }
-            if (key === 'q') {
+            if (e.key === 'Tab') {
                 e.preventDefault();
                 openPhotoshopColorPicker('fg');
                 return;
@@ -1439,7 +1553,6 @@
             if (key === 'f') {
                 e.preventDefault();
                 if (e.shiftKey) {
-                    // Cycle through: rect-select -> circle-select -> lasso-select -> rect-select
                     if (currentTool === 'rect-select') setTool('circle-select');
                     else if (currentTool === 'circle-select') setTool('lasso-select');
                     else setTool('rect-select');
@@ -1451,11 +1564,16 @@
 
             if (key === 'v') setTool('move');
             else if (key === 'w') setTool('magic-wand');
-            else if (key === 'j') setTool('mixer-brush');
-            else if (key === 'r') setTool('smudge');
+            else if (key === 's') {
+                if (e.shiftKey) setTool('mixer-brush');
+                else setTool('smudge');
+            }
             else if (key === 'i') setTool('eyedropper');
-            else if (key === 'b') setTool('brush');
-            else if (key === 'e') setTool('eraser');
+            else if (key === 'e') {
+                if (e.shiftKey) setTool('pen');
+                else setTool('brush');
+            }
+            else if (key === 'q') setTool('eraser');
             else if (key === 'f7') { e.preventDefault(); document.getElementById('layers-panel').classList.toggle('hidden'); }
         }, { capture: true });
 
@@ -1517,6 +1635,9 @@
                             <button class="p-1 ${layer.lockTransparency ? 'text-indigo-400 bg-[#333]' : 'text-gray-500 hover:text-gray-300'} rounded" title="Lock Transparent Pixels" onclick="event.stopPropagation(); toggleLockTransparency('${layer.id}')">
                                 <i class="fa-solid fa-chess-board text-[10px]"></i>
                             </button>
+                            <button class="p-1 text-gray-400 hover:text-white rounded" title="Duplicate Layer" onclick="event.stopPropagation(); duplicateLayer('${layer.id}')">
+                                <i class="fa-solid fa-clone text-[9px]"></i>
+                            </button>
                             <button class="p-1 text-gray-400 hover:text-white rounded" title="Merge Down (Ctrl+E)" onclick="event.stopPropagation(); mergeLayerDown('${layer.id}')">
                                 <i class="fa-solid fa-down-long text-[9px]"></i>
                             </button>
@@ -1548,6 +1669,38 @@
         window.updateLayerOpacity = (id, val) => { const l = layers.find(x => x.id === id); if (l) { l.opacity = parseFloat(val); compositeCanvas(); } };
         window.updateLayerBlendMode = (id, mode) => { const l = layers.find(x => x.id === id); if (l) { l.blendMode = mode; compositeCanvas(); saveHistoryState("Blend Mode Change"); } };
         
+        window.duplicateLayer = (id) => {
+            const idx = layers.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const original = layers[idx];
+            const newId = 'layer-' + Date.now();
+            const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
+            const nCtx = newCanvas.getContext('2d');
+            nCtx.drawImage(original.canvas, 0, 0);
+
+            const duplicated = {
+                id: newId,
+                name: `${original.name} copy`,
+                visible: original.visible,
+                canvas: newCanvas,
+                isBase: false,
+                opacity: original.opacity ?? 1,
+                blendMode: original.blendMode ?? 'source-over',
+                lockTransparency: original.lockTransparency ?? false,
+                brightness: original.brightness,
+                contrast: original.contrast,
+                saturation: original.saturation,
+                blur: original.blur
+            };
+
+            layers.splice(idx + 1, 0, duplicated);
+            activeLayerId = newId;
+            renderLayersUI();
+            syncAdjustmentsUI();
+            compositeCanvas();
+            saveHistoryState("Duplicate Layer");
+        };
+
         window.mergeLayerDown = (id) => {
             const idx = layers.findIndex(x => x.id === id);
             if (idx <= 0) return;
@@ -1913,15 +2066,29 @@
             compositeCanvas();
         }
 
+        function startSmudge(cx, cy) {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
+            const lCtx = active.canvas.getContext('2d');
+            const sampleX = Math.min(Math.max(0, Math.floor(cx)), active.canvas.width - 1);
+            const sampleY = Math.min(Math.max(0, Math.floor(cy)), active.canvas.height - 1);
+            const layerImg = lCtx.getImageData(sampleX, sampleY, 1, 1).data;
+            
+            smudgeCarriedR = layerImg[0];
+            smudgeCarriedG = layerImg[1];
+            smudgeCarriedB = layerImg[2];
+            smudgeCarriedA = layerImg[3];
+        }
+
         function applySmudge(x1, y1, x2, y2) {
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
             const lCtx = active.canvas.getContext('2d');
             const radius = brushSize / 2;
-            const strength = (brushStrength / 100) * 0.4;
+            const strengthFactor = (brushStrength / 100);
 
             const dist = Math.hypot(x2 - x1, y2 - y1);
-            const steps = Math.max(1, Math.floor(dist / (radius * 0.4)));
+            const steps = Math.max(1, Math.floor(dist / (radius * 0.25)));
 
             lCtx.save();
             lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
@@ -1931,6 +2098,16 @@
                 const cx = x1 + (x2 - x1) * t;
                 const cy = y1 + (y2 - y1) * t;
 
+                const sampleX = Math.min(Math.max(0, Math.floor(cx)), active.canvas.width - 1);
+                const sampleY = Math.min(Math.max(0, Math.floor(cy)), active.canvas.height - 1);
+                const currentLayerData = lCtx.getImageData(sampleX, sampleY, 1, 1).data;
+
+                const mixRate = strengthFactor * 0.35;
+                smudgeCarriedR = Math.round(smudgeCarriedR * (1 - mixRate) + currentLayerData[0] * mixRate);
+                smudgeCarriedG = Math.round(smudgeCarriedG * (1 - mixRate) + currentLayerData[1] * mixRate);
+                smudgeCarriedB = Math.round(smudgeCarriedB * (1 - mixRate) + currentLayerData[2] * mixRate);
+                smudgeCarriedA = Math.round(smudgeCarriedA * (1 - mixRate) + currentLayerData[3] * mixRate);
+
                 const x0 = Math.max(0, Math.floor(cx - radius));
                 const y0 = Math.max(0, Math.floor(cy - radius));
                 const x1_box = Math.min(active.canvas.width, Math.ceil(cx + radius));
@@ -1939,12 +2116,8 @@
                 const rh = y1_box - y0;
                 if (rw <= 0 || rh <= 0) continue;
 
-                const compositeData = ctx.getImageData(x0, y0, rw, rh).data;
                 const layerImgData = lCtx.getImageData(x0, y0, rw, rh);
                 const lData = layerImgData.data;
-
-                const dx = (x2 - x1) * 0.15;
-                const dy = (y2 - y1) * 0.15;
 
                 for (let py = 0; py < rh; py++) {
                     for (let px = 0; px < rw; px++) {
@@ -1952,17 +2125,13 @@
                         const absY = y0 + py;
                         const dCenter = Math.hypot(absX - cx, absY - cy);
                         if (dCenter <= radius) {
-                            const falloff = (1 - (dCenter / radius)) * strength;
+                            const falloff = (1 - (dCenter / radius)) * strengthFactor;
                             const idx = (py * rw + px) * 4;
 
-                            const sampleX = Math.min(Math.max(0, Math.floor(px - dx)), rw - 1);
-                            const sampleY = Math.min(Math.max(0, Math.floor(py - dy)), rh - 1);
-                            const sIdx = (sampleY * rw + sampleX) * 4;
-
-                            lData[idx] = Math.round(lData[idx] * (1 - falloff) + compositeData[sIdx] * falloff);
-                            lData[idx+1] = Math.round(lData[idx+1] * (1 - falloff) + compositeData[sIdx+1] * falloff);
-                            lData[idx+2] = Math.round(lData[idx+2] * (1 - falloff) + compositeData[sIdx+2] * falloff);
-                            lData[idx+3] = Math.max(lData[idx+3], compositeData[sIdx+3] * falloff);
+                            lData[idx] = Math.round(lData[idx] * (1 - falloff) + smudgeCarriedR * falloff);
+                            lData[idx+1] = Math.round(lData[idx+1] * (1 - falloff) + smudgeCarriedG * falloff);
+                            lData[idx+2] = Math.round(lData[idx+2] * (1 - falloff) + smudgeCarriedB * falloff);
+                            lData[idx+3] = Math.max(lData[idx+3], smudgeCarriedA * falloff);
                         }
                     }
                 }
@@ -1988,7 +2157,7 @@
                 return;
             }
 
-            const isToolActive = ['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'brush', 'mixer-brush', 'smudge', 'eraser'].includes(currentTool);
+            const isToolActive = ['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'brush', 'mixer-brush', 'smudge', 'eraser', 'pen'].includes(currentTool);
             
             if (isSpacePressed || currentTool === 'move' || e.button === 1 || e.target === viewportContainer || !isToolActive) {
                 isPanning = true;
@@ -2034,16 +2203,18 @@
                 startSelX = pos.x; 
                 startSelY = pos.y;
                 lassoPoints = [pos];
-            } else if (['brush', 'eraser', 'mixer-brush', 'smudge'].includes(currentTool)) {
+            } else if (['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'].includes(currentTool)) {
                 const active = layers.find(l => l.id === activeLayerId);
                 if (!active) return;
                 activeAction = 'draw';
                 lastX = pos.x; lastY = pos.y;
                 
-                if (currentTool === 'brush' || currentTool === 'eraser') {
+                if (currentTool === 'brush' || currentTool === 'eraser' || currentTool === 'pen') {
                     const lCtx = active.canvas.getContext('2d');
                     lCtx.save();
-                    lCtx.lineWidth = brushSize; lCtx.lineCap = 'round'; lCtx.lineJoin = 'round';
+                    lCtx.lineWidth = currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize; 
+                    lCtx.lineCap = 'round'; 
+                    lCtx.lineJoin = 'round';
                     if (currentTool === 'eraser') { 
                         lCtx.globalCompositeOperation = 'destination-out'; 
                         lCtx.strokeStyle = 'rgba(0,0,0,1)'; 
@@ -2052,12 +2223,13 @@
                         lCtx.strokeStyle = fgColor; 
                         lCtx.fillStyle = fgColor; 
                     }
-                    lCtx.beginPath(); lCtx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2); lCtx.fill();
+                    lCtx.beginPath(); lCtx.arc(pos.x, pos.y, (currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize) / 2, 0, Math.PI * 2); lCtx.fill();
                     lCtx.restore();
                     compositeCanvas();
                 } else if (currentTool === 'mixer-brush') {
                     applyMixerBrush(pos.x, pos.y);
                 } else if (currentTool === 'smudge') {
+                    startSmudge(pos.x, pos.y);
                     applySmudge(pos.x, pos.y, pos.x, pos.y);
                 }
             }
@@ -2137,10 +2309,10 @@
                 const active = layers.find(l => l.id === activeLayerId);
                 if (!active) return;
                 
-                if (currentTool === 'brush' || currentTool === 'eraser') {
+                if (currentTool === 'brush' || currentTool === 'eraser' || currentTool === 'pen') {
                     const lCtx = active.canvas.getContext('2d');
                     lCtx.save();
-                    lCtx.lineWidth = brushSize; 
+                    lCtx.lineWidth = currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize; 
                     lCtx.lineCap = 'round'; 
                     lCtx.lineJoin = 'round';
                     
@@ -2173,7 +2345,7 @@
                 applySelectionCombination(currentDragSelection);
                 currentDragSelection = null;
             } else if (activeAction === 'draw') {
-                saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : 'Brush'} Stroke`);
+                saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : currentTool === 'pen' ? 'Pen' : 'Brush'} Stroke`);
             }
             activeAction = null;
         });
