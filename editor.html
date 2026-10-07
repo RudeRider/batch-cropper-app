@@ -48,7 +48,7 @@
     <!-- SHARED NAVIGATION BAR -->
     <header class="bg-[#2c2c2c] border-b border-[#1c1c1c] px-4 py-2 flex items-center justify-between shrink-0 z-40 text-gray-300">
         <div class="flex items-center space-x-3">
-            <a href="index.html" class="text-base font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
+            <a href="index.html" class="base font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
                 <span>🧰 Digital Asset Tools</span>
             </a>
             <div class="flex items-center space-x-1.5 px-2 py-0.5 bg-[#0058d0] text-white rounded font-bold tracking-wider">
@@ -72,6 +72,10 @@
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-new" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>New Document...</span><span class="text-[10px] text-gray-400">Ctrl+N</span></button>
                     <button id="menu-open" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Open...</span><span class="text-[10px] text-gray-400">Ctrl+O</span></button>
+                    <div class="border-t border-[#3c3c3c] my-1"></div>
+                    <button id="menu-place-embedded" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Place Embedded...</span></button>
+                    <button id="menu-place-linked" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Place Linked...</span></button>
+                    <div class="border-t border-[#3c3c3c] my-1"></div>
                     <button id="menu-save" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Export As...</span><span class="text-[10px] text-gray-400">Ctrl+S</span></button>
                 </div>
             </div>
@@ -82,7 +86,6 @@
                     <button id="menu-undo" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Undo</span><span class="text-[10px] text-gray-400">Ctrl+Z</span></button>
                     <button id="menu-fill-fg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill FG</span><span class="text-[10px] text-gray-400">Ctrl+Backspace</span></button>
                     <button id="menu-fill-bg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill BG</span><span class="text-[10px] text-gray-400">Alt+Backspace</span></button>
-                    <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="transform-panel"><span>Free Transform</span><span class="text-[10px] text-gray-400">Ctrl+T</span></button>
                 </div>
             </div>
 
@@ -167,6 +170,10 @@
 
     <main class="flex-1 flex overflow-hidden relative">
         
+        <!-- Hidden Inputs for File Loading & Placing -->
+        <input type="file" id="image-upload" accept="image/*" class="hidden">
+        <input type="file" id="place-file-input" accept="image/*" class="hidden">
+
         <!-- New Document / Upload Modal Overlay -->
         <div id="upload-overlay" class="absolute inset-0 z-50 bg-[#353535] flex flex-col items-center justify-center p-6 transition-opacity duration-300">
             <div class="max-w-md w-full rounded-lg p-6 bg-[#262626] border border-[#1a1a1a] shadow-2xl space-y-5">
@@ -202,7 +209,7 @@
                     <button id="create-blank-btn" class="flex-1 py-2 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded font-medium text-xs transition shadow">Create Blank Canvas</button>
                     <label class="flex-1 py-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 text-center rounded font-medium text-xs cursor-pointer transition border border-[#555]">
                         <span>Open Image...</span>
-                        <input type="file" id="image-upload" accept="image/*" class="hidden">
+                        <input type="file" id="image-upload-modal" accept="image/*" class="hidden">
                     </label>
                 </div>
                 <div class="flex justify-center pt-2">
@@ -340,32 +347,6 @@
                         <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="sepia"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Sepia</span></button>
                         <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="invert"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Invert</span></button>
                         <button class="filter-preset p-2 rounded bg-[#1e1e1e] hover:bg-[#333] border border-[#333] hover:border-indigo-500 text-left transition group" data-filter="kodak"><span class="text-[11px] font-medium text-gray-200 group-hover:text-indigo-400">Vibrant</span></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Transform Panel -->
-            <div id="transform-panel" class="floating-panel pointer-events-auto absolute top-72 right-80 w-72 bg-[#262626] border border-[#1a1a1a] rounded flex flex-col shadow-2xl overflow-hidden hidden">
-                <div class="panel-header bg-[#323232] px-3 py-2 flex items-center justify-between cursor-move border-b border-[#1c1c1c]">
-                    <span class="text-xs font-bold uppercase tracking-wider text-gray-200 flex items-center space-x-1.5"><i class="fa-solid fa-crop-simple text-indigo-400"></i><span>Free Transform (Ctrl+T)</span></span>
-                    <button class="close-panel text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="p-3 space-y-3 max-h-60 overflow-y-auto">
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="rotate-left" class="p-2 bg-[#1e1e1e] hover:bg-[#333] text-gray-200 rounded border border-[#333] text-[11px] font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-rotate-left"></i><span>Left 90°</span></button>
-                        <button id="rotate-right" class="p-2 bg-[#1e1e1e] hover:bg-[#333] text-gray-200 rounded border border-[#333] text-[11px] font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-rotate-right"></i><span>Right 90°</span></button>
-                        <button id="flip-h" class="p-2 bg-[#1e1e1e] hover:bg-[#333] text-gray-200 rounded border border-[#333] text-[11px] font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-arrows-left-right"></i><span>Flip H</span></button>
-                        <button id="flip-v" class="p-2 bg-[#1e1e1e] hover:bg-[#333] text-gray-200 rounded border border-[#333] text-[11px] font-medium flex items-center justify-center space-x-1.5 transition"><i class="fa-solid fa-arrows-up-down"></i><span>Flip V</span></button>
-                    </div>
-                    <div class="pt-2 border-t border-[#333] space-y-2">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="block text-[10px] text-gray-400 mb-0.5">Width (px)</label><input type="number" id="resize-w" class="w-full bg-[#1e1e1e] border border-[#444] rounded px-2 py-1 text-xs text-white font-mono"></div>
-                            <div><label class="block text-[10px] text-gray-400 mb-0.5">Height (px)</label><input type="number" id="resize-h" class="w-full bg-[#1e1e1e] border border-[#444] rounded px-2 py-1 text-xs text-white font-mono"></div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <label class="flex items-center space-x-1.5 text-[11px] text-gray-300 cursor-pointer"><input type="checkbox" id="lock-aspect" checked class="rounded bg-[#1e1e1e] border-[#444] text-[#0058d0]"><span>Constrain Proportions</span></label>
-                            <button id="apply-resize" class="px-3 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded text-[11px] font-medium">Apply</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -513,7 +494,6 @@
         const canvasWrapper = document.getElementById('canvas-wrapper');
         let zoomLevel = 1;
         let panX = 0, panY = 0;
-        let canvasRotation = 0;
         let isPanning = false;
         let isZoomingScrub = false;
         let startPanX = 0, startPanY = 0;
@@ -524,7 +504,14 @@
         let isAltPressed = false;
         let badgeTimeout = null;
         let dashOffset = 0;
-        let internalClipboard = null; // Internal clipboard for copy/cut/paste
+        let internalClipboard = null;
+
+        // --- Photoshop-Style Pen Tool State ---
+        let penPaths = [];
+        let currentPenPath = { points: [], closed: false };
+        let selectedAnchorIndex = null;
+        let isDrawingPenBezier = false;
+        let penAnchorPointBeingCreated = null;
 
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
@@ -535,11 +522,6 @@
         const saturationVal = document.getElementById('saturation-val');
         const blurVal = document.getElementById('blur-val');
         const activeLayerIndicator = document.getElementById('active-layer-indicator');
-
-        const resizeWInput = document.getElementById('resize-w');
-        const resizeHInput = document.getElementById('resize-h');
-        const lockAspectCheckbox = document.getElementById('lock-aspect');
-        const applyResizeBtn = document.getElementById('apply-resize');
 
         const dynamicOptionsContainer = document.getElementById('dynamic-options-container');
         const optionsTitle = document.getElementById('options-title');
@@ -557,7 +539,6 @@
         const fillBgBtn = document.getElementById('fill-bg-btn');
         const clearSelectionBtn = document.getElementById('clear-selection-btn');
 
-        // Swatches Palette State
         let swatchesList = [
             '#000000', '#ffffff', '#6366f1', '#ef4444', '#10b981', '#f59e0b',
             '#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#84cc16',
@@ -566,9 +547,6 @@
 
         let originalImage = null;
         let imageName = "document.png";
-        let rotationAngle = 0;
-        let flipH = false;
-        let flipV = false;
         let originalWidth = 512;
         let originalHeight = 512;
 
@@ -580,10 +558,8 @@
         let brushWetness = 30;
         let wandTolerance = 32;
 
-        // Smudge Carried Paint Buffer State
         let smudgeCarriedR = 0, smudgeCarriedG = 0, smudgeCarriedB = 0, smudgeCarriedA = 0;
 
-        // Marquee Advanced Options State
         let marqueeMode = 'new';
         let marqueeFeather = 0;
         let marqueeAntialias = true;
@@ -644,7 +620,6 @@
         let isDraggingField = false;
         let isDraggingSlider = false;
 
-        // Color Math Helpers
         function rgbToHex(r, g, b) {
             return "#" + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
         }
@@ -807,7 +782,6 @@
         document.getElementById('ps-cp-close').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
         document.getElementById('ps-cp-cancel').addEventListener('click', () => psColorPickerModal.classList.add('hidden'));
         
-        // Apply to Foreground Button inside popup
         document.getElementById('ps-cp-apply-fg').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -818,7 +792,6 @@
             psCpCurrPreview.style.backgroundColor = fgColor;
         });
 
-        // Apply to Background Button inside popup
         document.getElementById('ps-cp-apply-bg').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -1014,7 +987,7 @@
         }
 
         function updateViewportTransform() {
-            transformContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel}) rotate(${canvasRotation}deg)`;
+            transformContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
             document.getElementById('zoom-val').textContent = `${Math.round(zoomLevel * 100)}%`;
             updateBrushCursorSize();
         }
@@ -1032,7 +1005,7 @@
 
         document.getElementById('zoom-in').addEventListener('click', () => { zoomLevel = Math.min(zoomLevel * 1.2, 5); updateViewportTransform(); });
         document.getElementById('zoom-out').addEventListener('click', () => { zoomLevel = Math.max(zoomLevel / 1.2, 0.2); updateViewportTransform(); });
-        document.getElementById('reset-view').addEventListener('click', () => { zoomLevel = 1; panX = 0; panY = 0; canvasRotation = 0; updateViewportTransform(); });
+        document.getElementById('reset-view').addEventListener('click', () => { zoomLevel = 1; panX = 0; panY = 0; updateViewportTransform(); });
 
         function showSizeBadge() {
             badgeSizeVal.textContent = brushSize;
@@ -1055,7 +1028,7 @@
         }
 
         window.addEventListener('pointermove', (e) => {
-            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'];
+            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
             if (activeBrushes.includes(currentTool)) {
                 const rect = canvas.getBoundingClientRect();
                 if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
@@ -1065,6 +1038,8 @@
                 } else {
                     brushCursor.classList.add('hidden');
                 }
+            } else if (currentTool === 'pen') {
+                brushCursor.classList.add('hidden');
             }
 
             if (isZoomingScrub) {
@@ -1086,7 +1061,7 @@
         });
 
         function animateMarchingAnts() {
-            if (selectionRegions.length > 0 || currentDragSelection) {
+            if (selectionRegions.length > 0 || currentDragSelection || currentPenPath.points.length > 0) {
                 dashOffset = (dashOffset - 0.5) % 10;
                 redrawSelectionOverlay();
             }
@@ -1096,20 +1071,25 @@
 
         function redrawSelectionOverlay() {
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-            if (selectionRegions.length === 0 && !currentDragSelection) return;
+            
+            if (selectionRegions.length > 0 || currentDragSelection) {
+                selectionCtx.lineWidth = 1;
+                selectionCtx.setLineDash([4, 4]);
+                selectionCtx.lineDashOffset = dashOffset;
 
-            selectionCtx.lineWidth = 1;
-            selectionCtx.setLineDash([4, 4]);
-            selectionCtx.lineDashOffset = dashOffset;
+                selectionCtx.strokeStyle = '#000000';
+                selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
+                if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
 
-            selectionCtx.strokeStyle = '#000000';
-            selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-            if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
+                selectionCtx.strokeStyle = '#ffffff';
+                selectionCtx.lineDashOffset = dashOffset + 4;
+                selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
+                if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
+            }
 
-            selectionCtx.strokeStyle = '#ffffff';
-            selectionCtx.lineDashOffset = dashOffset + 4;
-            selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-            if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
+            if (currentTool === 'pen') {
+                drawPenPathsOverlay();
+            }
         }
 
         function drawRegionOutline(sCtx, reg) {
@@ -1124,16 +1104,158 @@
                 reg.points.forEach((p, idx) => idx === 0 ? sCtx.moveTo(p.x, p.y) : sCtx.lineTo(p.x, p.y));
                 sCtx.stroke();
             } else if (reg.type === 'magic-wand' && reg.mask) {
-                sCtx.fillStyle = 'rgba(0, 88, 208, 0.25)';
-                sCtx.fillRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+                const w = selectionCanvas.width;
+                const h = selectionCanvas.height;
+                const imgData = sCtx.createImageData(w, h);
+                const data = imgData.data;
+                const mask = reg.mask;
+                
+                for (let i = 0; i < mask.length; i++) {
+                    if (mask[i]) {
+                        const x = i % w;
+                        const y = Math.floor(i / w);
+                        const isBorder = (x === 0 || y === 0 || x === w - 1 || y === h - 1 || 
+                                          !mask[i - 1] || !mask[i + 1] || !mask[i - w] || !mask[i + w]);
+                        if (isBorder) {
+                            const idx = i * 4;
+                            data[idx] = 0; data[idx+1] = 88; data[idx+2] = 208; data[idx+3] = 255;
+                        }
+                    }
+                }
+                sCtx.putImageData(imgData, 0, 0);
             } else if (reg.type === 'inverse') {
-                // Draw marching ants around the outer canvas border (Photoshop style)
                 sCtx.strokeRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-                // Draw marching ants around all original selection shapes
                 if (reg.baseRegions) {
                     reg.baseRegions.forEach(subReg => drawRegionOutline(sCtx, subReg));
                 }
             }
+        }
+
+        // --- Photoshop-Style Pen Path & Selection Conversion ---
+        function renderPenPathToLayer() {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || currentPenPath.points.length < 2) return;
+            const lCtx = active.canvas.getContext('2d');
+            lCtx.save();
+            lCtx.lineWidth = brushSize;
+            lCtx.strokeStyle = fgColor;
+            lCtx.fillStyle = fgColor;
+            lCtx.lineCap = 'round';
+            lCtx.lineJoin = 'round';
+            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
+
+            lCtx.beginPath();
+            const pts = currentPenPath.points;
+            lCtx.moveTo(pts[0].x, pts[0].y);
+
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i];
+                const p1 = pts[i + 1];
+                const cp1x = p0.outHandle ? p0.outHandle.x : p0.x;
+                const cp1y = p0.outHandle ? p0.outHandle.y : p0.y;
+                const cp2x = p1.inHandle ? p1.inHandle.x : p1.x;
+                const cp2y = p1.inHandle ? p1.inHandle.y : p1.y;
+                lCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p1.x, p1.y);
+            }
+
+            if (currentPenPath.closed) {
+                lCtx.closePath();
+            }
+            lCtx.stroke();
+            lCtx.restore();
+            compositeCanvas();
+            saveHistoryState("Pen Path Stroke");
+        }
+
+        function convertPathToSelection() {
+            if (currentPenPath.points.length < 3) return;
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w; tempCanvas.height = h;
+            const tCtx = tempCanvas.getContext('2d');
+            
+            tCtx.clearRect(0, 0, w, h);
+            tCtx.fillStyle = '#ffffff';
+            tCtx.beginPath();
+            const pts = currentPenPath.points;
+            tCtx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i];
+                const p1 = pts[i + 1];
+                tCtx.bezierCurveTo(
+                    p0.outHandle ? p0.outHandle.x : p0.x, p0.outHandle ? p0.outHandle.y : p0.y,
+                    p1.inHandle ? p1.inHandle.x : p1.x, p1.inHandle ? p1.inHandle.y : p1.y,
+                    p1.x, p1.y
+                );
+            }
+            tCtx.closePath();
+            tCtx.fill('nonzero');
+
+            const imgData = tCtx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const selectionMask = new Uint8Array(w * h);
+
+            for (let i = 0; i < w * h; i++) {
+                if (data[i * 4 + 3] > 128) {
+                    selectionMask[i] = 1;
+                }
+            }
+
+            selectionRegions = [{ type: 'magic-wand', mask: selectionMask }];
+            
+            // ** FULLY RESET PEN PATH STATE AFTER CONVERSION **
+            currentPenPath = { points: [], closed: false };
+            selectedAnchorIndex = null;
+            isDrawingPenBezier = false;
+            penAnchorPointBeingCreated = null;
+
+            redrawSelectionOverlay();
+        }
+
+        function drawPenPathsOverlay() {
+            selectionCtx.save();
+            selectionCtx.strokeStyle = '#0058d0';
+            selectionCtx.fillStyle = '#ffffff';
+            selectionCtx.lineWidth = 1.5;
+
+            const pts = currentPenPath.points;
+            if (pts.length > 0) {
+                selectionCtx.beginPath();
+                selectionCtx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const p0 = pts[i];
+                    const p1 = pts[i + 1];
+                    selectionCtx.bezierCurveTo(
+                        p0.outHandle ? p0.outHandle.x : p0.x, p0.outHandle ? p0.outHandle.y : p0.y,
+                        p1.inHandle ? p1.inHandle.x : p1.x, p1.inHandle ? p1.inHandle.y : p1.y,
+                        p1.x, p1.y
+                    );
+                }
+                if (currentPenPath.closed) selectionCtx.closePath();
+                selectionCtx.stroke();
+
+                pts.forEach((p, idx) => {
+                    if (p.inHandle) {
+                        selectionCtx.strokeStyle = '#0058d0';
+                        selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.inHandle.x, p.inHandle.y); selectionCtx.stroke();
+                        selectionCtx.fillRect(p.inHandle.x - 3, p.inHandle.y - 3, 6, 6);
+                        selectionCtx.strokeRect(p.inHandle.x - 3, p.inHandle.y - 3, 6, 6);
+                    }
+                    if (p.outHandle) {
+                        selectionCtx.strokeStyle = '#0058d0';
+                        selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.outHandle.x, p.outHandle.y); selectionCtx.stroke();
+                        selectionCtx.fillRect(p.outHandle.x - 3, p.outHandle.y - 3, 6, 6);
+                        selectionCtx.strokeRect(p.outHandle.x - 3, p.outHandle.y - 3, 6, 6);
+                    }
+
+                    selectionCtx.fillStyle = (idx === selectedAnchorIndex) ? '#0058d0' : '#ffffff';
+                    selectionCtx.fillRect(p.x - 4, p.y - 4, 8, 8);
+                    selectionCtx.strokeRect(p.x - 4, p.y - 4, 8, 8);
+                });
+            }
+            selectionCtx.restore();
         }
 
         document.querySelectorAll('.floating-panel').forEach(panel => {
@@ -1224,6 +1346,36 @@
                 const featherInput = document.getElementById('opt-feather');
                 if (featherInput) {
                     featherInput.addEventListener('input', (e) => marqueeFeather = Math.max(0, parseInt(e.target.value) || 0));
+                }
+            } else if (toolName === 'pen') {
+                optionsTitle.textContent = "Pen Tool Options:";
+                dynamicOptionsContainer.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span>Stroke:</span>
+                        <input type="range" id="opt-pen-size" min="1" max="50" value="${brushSize}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
+                        <span id="opt-pen-size-val" class="font-mono text-indigo-300 w-7">${brushSize}px</span>
+                    </div>
+                    <button id="pen-complete-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white rounded text-[11px] border border-gray-600 transition">Complete Path</button>
+                    <button id="pen-select-btn" class="px-2.5 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded text-[11px] border border-blue-600 transition" title="Ctrl+Enter">Make Selection (Ctrl+Enter)</button>
+                `;
+                document.getElementById('pen-complete-btn').addEventListener('click', () => {
+                    if (currentPenPath.points.length > 1) {
+                        renderPenPathToLayer();
+                        penPaths.push(currentPenPath);
+                        currentPenPath = { points: [], closed: false };
+                        redrawSelectionOverlay();
+                    }
+                });
+                document.getElementById('pen-select-btn').addEventListener('click', () => {
+                    convertPathToSelection();
+                });
+                const penSizeInput = document.getElementById('opt-pen-size');
+                if (penSizeInput) {
+                    penSizeInput.addEventListener('input', (e) => {
+                        brushSize = parseInt(e.target.value);
+                        document.getElementById('opt-pen-size-val').textContent = `${brushSize}px`;
+                        updateBrushCursorSize();
+                    });
                 }
             } else if (toolName === 'mixer-brush') {
                 optionsTitle.textContent = "Mixer Brush Options:";
@@ -1338,14 +1490,14 @@
             currentToolIndicator.textContent = `Tool: ${toolNamesMap[toolName] || toolName}`;
             updateOptionsBarForTool(toolName);
 
-            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'];
+            const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
             if (activeBrushes.includes(currentTool)) {
                 canvasWrapper.style.cursor = 'none';
                 updateBrushCursorSize();
                 brushCursor.classList.remove('hidden');
             } else {
                 brushCursor.classList.add('hidden');
-                if (['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper'].includes(currentTool)) {
+                if (['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'pen'].includes(currentTool)) {
                     canvasWrapper.style.cursor = 'crosshair';
                 } else {
                     canvasWrapper.style.cursor = 'grab';
@@ -1391,7 +1543,6 @@
             openPhotoshopColorPicker('fg');
         });
 
-        // --- Photoshop-Style Universal Invert Selection ---
         function invertSelection() {
             const w = canvas.width;
             const h = canvas.height;
@@ -1445,12 +1596,10 @@
                 }
             }
 
-            // Store baseRegions so vector outlines (like circles and rectangles) render with smooth marching ants
             selectionRegions = [{ type: 'inverse', baseRegions: [...selectionRegions], mask: inverseMask }];
             redrawSelectionOverlay();
         }
 
-        // --- Clipboard & Selection Utility Functions ---
         function copySelectionOrLayer() {
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
@@ -1561,6 +1710,73 @@
             saveHistoryState("Paste");
         }
 
+        const placeFileInput = document.getElementById('place-file-input');
+        let currentPlaceType = 'embedded';
+
+        document.getElementById('menu-place-embedded').addEventListener('click', () => {
+            currentPlaceType = 'embedded';
+            placeFileInput.click();
+        });
+
+        document.getElementById('menu-place-linked').addEventListener('click', () => {
+            currentPlaceType = 'linked';
+            placeFileInput.click();
+        });
+
+        placeFileInput.addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const newId = 'layer-' + Date.now();
+                    const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
+                    const nCtx = newCanvas.getContext('2d');
+                    
+                    let dw = img.naturalWidth;
+                    let dh = img.naturalHeight;
+                    const maxW = canvas.width * 0.8;
+                    const maxH = canvas.height * 0.8;
+                    if (dw > maxW || dh > maxH) {
+                        const scale = Math.min(maxW / dw, maxH / dh);
+                        dw *= scale;
+                        dh *= scale;
+                    }
+                    const dx = (canvas.width - dw) / 2;
+                    const dy = (canvas.height - dh) / 2;
+                    
+                    nCtx.drawImage(img, dx, dy, dw, dh);
+
+                    const activeIdx = layers.findIndex(l => l.id === activeLayerId);
+                    const insertIdx = activeIdx !== -1 ? activeIdx + 1 : layers.length;
+
+                    const prefix = currentPlaceType === 'linked' ? 'Linked: ' : 'Embedded: ';
+                    const newLayer = {
+                        id: newId,
+                        name: prefix + f.name,
+                        visible: true,
+                        canvas: newCanvas,
+                        isBase: false,
+                        opacity: 1,
+                        blendMode: 'source-over',
+                        lockTransparency: false,
+                        brightness: 100, contrast: 100, saturation: 100, blur: 0
+                    };
+
+                    layers.splice(insertIdx, 0, newLayer);
+                    activeLayerId = newId;
+                    renderLayersUI();
+                    syncAdjustmentsUI();
+                    compositeCanvas();
+                    saveHistoryState(`Place ${currentPlaceType === 'linked' ? 'Linked' : 'Embedded'}`);
+                };
+                img.src = ev.target.result;
+            };
+            r.readAsDataURL(f);
+            placeFileInput.value = '';
+        });
+
         window.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -1570,7 +1786,6 @@
             if (e.key === 'Shift') isShiftPressed = true;
             if (e.key === 'Alt') isAltPressed = true;
 
-            // Delete Layer Shortcut (Delete Key)
             if (e.key === 'Delete') {
                 e.preventDefault();
                 if (activeLayerId && layers.length > 1) {
@@ -1579,7 +1794,14 @@
                 return;
             }
 
-            // Ctrl + Shift + Q Shortcut for Invert Selection
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (currentTool === 'pen' && currentPenPath.points.length > 2) {
+                    convertPathToSelection();
+                }
+                return;
+            }
+
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'q') {
                 e.preventDefault();
                 invertSelection();
@@ -1605,7 +1827,6 @@
                         if (e.shiftKey) addLayerBtn.click();
                         else uploadOverlay.classList.remove('opacity-0', 'pointer-events-none');
                     } else if (key === 's') { downloadBtn.click(); }
-                    else if (key === 't') { document.getElementById('transform-panel').classList.toggle('hidden'); }
                     else if (key === 'e') { mergeLayerDown(activeLayerId); }
                     else if (key === '0') { document.getElementById('reset-view').click(); }
                     else if (key === 'd') {
@@ -1851,7 +2072,6 @@
         function setupNewDocument(w, h, name = "document.png") {
             originalWidth = w; originalHeight = h;
             imageName = name;
-            resizeWInput.value = originalWidth; resizeHInput.value = originalHeight;
             uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
             downloadBtn.removeAttribute('disabled');
             imageInfo.classList.remove('hidden');
@@ -1885,7 +2105,6 @@
             img.onload = () => {
                 originalImage = img; imageName = name;
                 originalWidth = img.naturalWidth; originalHeight = img.naturalHeight;
-                resizeWInput.value = originalWidth; resizeHInput.value = originalHeight;
                 uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
                 downloadBtn.removeAttribute('disabled');
                 imageInfo.classList.remove('hidden');
@@ -1907,6 +2126,11 @@
         }
 
         document.getElementById('image-upload').addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if (f) { const r = new FileReader(); r.onload = (ev) => handleImageLoad(ev.target.result, f.name); r.readAsDataURL(f); }
+        });
+
+        document.getElementById('image-upload-modal').addEventListener('change', (e) => {
             const f = e.target.files[0];
             if (f) { const r = new FileReader(); r.onload = (ev) => handleImageLoad(ev.target.result, f.name); r.readAsDataURL(f); }
         });
@@ -1935,28 +2159,16 @@
 
         function updateLayerContent(layer) {
             const ctxLayer = layer.canvas.getContext('2d');
-            ctxLayer.save();
             ctxLayer.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-
             if (layer.isBase && originalImage) {
-                ctxLayer.save();
-                ctxLayer.translate(layer.canvas.width / 2, layer.canvas.height / 2);
-                ctxLayer.rotate((rotationAngle * Math.PI) / 180);
-                ctxLayer.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-
-                const dw = (rotationAngle === 90 || rotationAngle === 270) ? layer.canvas.height : layer.canvas.width;
-                const dh = (rotationAngle === 90 || rotationAngle === 270) ? layer.canvas.width : layer.canvas.height;
-                ctxLayer.drawImage(originalImage, -dw / 2, -dh / 2, dw, dh);
-                ctxLayer.restore();
+                ctxLayer.drawImage(originalImage, 0, 0);
             }
-            ctxLayer.restore();
         }
 
         function compositeCanvas() {
-            let w = parseInt(resizeWInput.value) || originalWidth;
-            let h = parseInt(resizeHInput.value) || originalHeight;
-            if (rotationAngle === 90 || rotationAngle === 270) { canvas.width = h; canvas.height = w; selectionCanvas.width = h; selectionCanvas.height = w; }
-            else { canvas.width = w; canvas.height = h; selectionCanvas.width = w; selectionCanvas.height = h; }
+            let w = originalWidth;
+            let h = originalHeight;
+            canvas.width = w; canvas.height = h; selectionCanvas.width = w; selectionCanvas.height = h;
             infoDims.textContent = `${canvas.width} × ${canvas.height} px`;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2295,16 +2507,28 @@
                 startSelX = pos.x; 
                 startSelY = pos.y;
                 lassoPoints = [pos];
-            } else if (['brush', 'eraser', 'mixer-brush', 'smudge', 'pen'].includes(currentTool)) {
+            } else if (currentTool === 'pen') {
+                activeAction = 'pen-draw';
+                penAnchorPointBeingCreated = {
+                    x: pos.x,
+                    y: pos.y,
+                    inHandle: null,
+                    outHandle: null
+                };
+                currentPenPath.points.push(penAnchorPointBeingCreated);
+                selectedAnchorIndex = currentPenPath.points.length - 1;
+                isDrawingPenBezier = true;
+                redrawSelectionOverlay();
+            } else if (['brush', 'eraser', 'mixer-brush', 'smudge'].includes(currentTool)) {
                 const active = layers.find(l => l.id === activeLayerId);
                 if (!active) return;
                 activeAction = 'draw';
                 lastX = pos.x; lastY = pos.y;
                 
-                if (currentTool === 'brush' || currentTool === 'eraser' || currentTool === 'pen') {
+                if (currentTool === 'brush' || currentTool === 'eraser') {
                     const lCtx = active.canvas.getContext('2d');
                     lCtx.save();
-                    lCtx.lineWidth = currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize; 
+                    lCtx.lineWidth = brushSize; 
                     lCtx.lineCap = 'round'; 
                     lCtx.lineJoin = 'round';
                     if (currentTool === 'eraser') { 
@@ -2315,7 +2539,7 @@
                         lCtx.strokeStyle = fgColor; 
                         lCtx.fillStyle = fgColor; 
                     }
-                    lCtx.beginPath(); lCtx.arc(pos.x, pos.y, (currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize) / 2, 0, Math.PI * 2); lCtx.fill();
+                    lCtx.beginPath(); lCtx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2); lCtx.fill();
                     lCtx.restore();
                     compositeCanvas();
                 } else if (currentTool === 'mixer-brush') {
@@ -2397,14 +2621,24 @@
                     currentDragSelection = { type: 'lasso', points: lassoPoints };
                 }
                 redrawSelectionOverlay();
+            } else if (activeAction === 'pen-draw' && isDrawingPenBezier && penAnchorPointBeingCreated) {
+                const dx = pos.x - penAnchorPointBeingCreated.x;
+                const dy = pos.y - penAnchorPointBeingCreated.y;
+                
+                penAnchorPointBeingCreated.outHandle = { x: pos.x, y: pos.y };
+                penAnchorPointBeingCreated.inHandle = { 
+                    x: penAnchorPointBeingCreated.x - dx, 
+                    y: penAnchorPointBeingCreated.y - dy 
+                };
+                redrawSelectionOverlay();
             } else if (activeAction === 'draw') {
                 const active = layers.find(l => l.id === activeLayerId);
                 if (!active) return;
                 
-                if (currentTool === 'brush' || currentTool === 'eraser' || currentTool === 'pen') {
+                if (currentTool === 'brush' || currentTool === 'eraser') {
                     const lCtx = active.canvas.getContext('2d');
                     lCtx.save();
-                    lCtx.lineWidth = currentTool === 'pen' ? Math.max(1, brushSize * 0.4) : brushSize; 
+                    lCtx.lineWidth = brushSize; 
                     lCtx.lineCap = 'round'; 
                     lCtx.lineJoin = 'round';
                     
@@ -2436,12 +2670,15 @@
             if (activeAction === 'select' && currentDragSelection) {
                 applySelectionCombination(currentDragSelection);
                 currentDragSelection = null;
+            } else if (activeAction === 'pen-draw') {
+                isDrawingPenBezier = false;
+                penAnchorPointBeingCreated = null;
             } else if (activeAction === 'draw') {
-                saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : currentTool === 'pen' ? 'Pen' : 'Brush'} Stroke`);
+                saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : 'Brush'} Stroke`);
             }
             activeAction = null;
         });
-        window.addEventListener('pointercancel', () => { activeAction = null; currentDragSelection = null; });
+        window.addEventListener('pointercancel', () => { activeAction = null; currentDragSelection = null; isDrawingPenBezier = false; });
 
         function performSelectionFill(colorToFill) {
             const active = layers.find(l => l.id === activeLayerId);
@@ -2497,28 +2734,7 @@
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
         });
 
-        document.getElementById('rotate-left').addEventListener('click', () => { rotationAngle = (rotationAngle - 90 + 360) % 360; applyEdits(); saveHistoryState("Rotate Left 90°"); });
-        document.getElementById('rotate-right').addEventListener('click', () => { rotationAngle = (rotationAngle + 90) % 360; applyEdits(); saveHistoryState("Rotate Right 90°"); });
-        document.getElementById('flip-h').addEventListener('click', () => { flipH = !flipH; applyEdits(); saveHistoryState("Flip Horizontal"); });
-        document.getElementById('flip-v').addEventListener('click', () => { flipV = !flipV; applyEdits(); saveHistoryState("Flip Vertical"); });
-
-        applyResizeBtn.addEventListener('click', () => {
-            const w = parseInt(resizeWInput.value) || originalWidth;
-            const h = parseInt(resizeHInput.value) || originalHeight;
-            layers.forEach(l => {
-                const tc = document.createElement('canvas'); tc.width = w; tc.height = h;
-                tc.getContext('2d').drawImage(l.canvas, 0, 0, w, h); l.canvas = tc;
-            });
-            applyEdits();
-            saveHistoryState("Resize Canvas");
-        });
-
         function resetEdits() {
-            rotationAngle = 0; flipH = false; flipV = false;
-            if (originalImage) { 
-                resizeWInput.value = originalWidth; 
-                resizeHInput.value = originalHeight; 
-            }
             applyEdits();
         }
 
