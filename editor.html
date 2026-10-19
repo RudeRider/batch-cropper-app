@@ -41,6 +41,16 @@
         }
         .menu-dropdown { display: none; }
         .menu-item-group:hover .menu-dropdown { display: block; }
+        .checkerboard-bg {
+            background-image: 
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+            background-color: #1f1f1f;
+        }
     </style>
 </head>
 <body class="bg-photoshop-bg text-gray-200 h-full flex flex-col overflow-hidden text-xs">
@@ -84,6 +94,11 @@
                 <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Edit</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-undo" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Undo</span><span class="text-[10px] text-gray-400">Ctrl+Z</span></button>
+                    <div class="border-t border-[#3c3c3c] my-1"></div>
+                    <button id="menu-cut" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Cut</span><span class="text-[10px] text-gray-400">Ctrl+X</span></button>
+                    <button id="menu-copy" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Copy</span><span class="text-[10px] text-gray-400">Ctrl+C</span></button>
+                    <button id="menu-paste" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Paste</span><span class="text-[10px] text-gray-400">Ctrl+V</span></button>
+                    <div class="border-t border-[#3c3c3c] my-1"></div>
                     <button id="menu-fill-fg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill FG</span><span class="text-[10px] text-gray-400">Ctrl+Backspace</span></button>
                     <button id="menu-fill-bg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill BG</span><span class="text-[10px] text-gray-400">Alt+Backspace</span></button>
                 </div>
@@ -147,19 +162,7 @@
                 <i class="fa-solid fa-sliders text-indigo-400"></i>
                 <span class="font-semibold text-white" id="options-title">Tool Options:</span>
             </div>
-            <div class="flex items-center space-x-4" id="dynamic-options-container">
-                <div class="flex items-center space-x-2">
-                    <span>Size:</span>
-                    <button id="brush-decrease" class="w-5 h-5 bg-[#222] hover:bg-[#444] rounded text-white flex items-center justify-center font-bold text-xs">-</button>
-                    <input type="range" id="opt-brush-size" min="1" max="150" value="15" class="w-20 h-1.5 bg-[#222] rounded cursor-pointer">
-                    <button id="brush-increase" class="w-5 h-5 bg-[#222] hover:bg-[#444] rounded text-white flex items-center justify-center font-bold text-xs">+</button>
-                    <span id="opt-brush-size-val" class="font-mono text-indigo-300 w-8">15px</span>
-                </div>
-                <div class="flex items-center space-x-2" id="color-option-wrapper">
-                    <span>Color (TAB):</span>
-                    <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" title="Press TAB to open Photoshop Color Picker"></button>
-                </div>
-            </div>
+            <div class="flex items-center space-x-4" id="dynamic-options-container"></div>
         </div>
         <div class="flex items-center space-x-2">
             <button id="fill-fg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+Backspace">Fill FG</button>
@@ -220,13 +223,13 @@
 
         <!-- Left Vertical Photoshop Toolbar Dock -->
         <aside id="left-dock" class="w-12 bg-[#323232] border-r border-[#1c1c1c] flex flex-col items-center py-2 space-y-1 shrink-0 z-20 shadow-lg">
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)"><i class="fa-solid fa-arrow-pointer text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)"><i class="fa-solid fa-arrows-up-down-left-right text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="rect-select" title="Rectangular Marquee (F)"><i class="fa-regular fa-square text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee"><i class="fa-regular fa-circle text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee (Shift+F)"><i class="fa-regular fa-circle text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (Shift+F)"><i class="fa-solid fa-circle-notch text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="magic-wand" title="Magic Wand Tool (W)"><i class="fa-solid fa-wand-magic text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="eyedropper" title="Eyedropper Tool (I)"><i class="fa-solid fa-eye-dropper text-xs"></i></button>
-            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="pen" title="Pen Tool (Shift+E)"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="pen" title="Pen Tool (Shift+E)"><i class="fa-solid fa-pen-nib text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="brush" title="Brush Tool (E)"><i class="fa-solid fa-paintbrush text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="mixer-brush" title="Mixer Brush Tool (Shift+S)"><i class="fa-solid fa-palette text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="smudge" title="Smudge Tool (S)"><i class="fa-solid fa-fingerprint text-xs"></i></button>
@@ -242,15 +245,17 @@
 
         <!-- Canvas Workspace Area -->
         <div id="viewport-container" class="flex-1 bg-[#353535] flex items-center justify-center relative overflow-hidden">
-            <div id="canvas-container" class="absolute inset-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
-                <div id="canvas-viewport-transform" class="relative transition-transform duration-75 origin-center">
-                    <div id="canvas-wrapper" class="relative shadow-2xl border border-black/80 bg-[#2b2b2b] p-0 m-0 leading-none">
+            <div id="canvas-container" class="absolute inset-0 flex items-center justify-center overflow-hidden">
+                <div id="canvas-viewport-transform" class="relative origin-center">
+                    <div id="canvas-wrapper" class="relative shadow-2xl border border-black/80 checkerboard-bg p-0 m-0 leading-none">
                         <canvas id="image-canvas" class="block shadow-inner"></canvas>
                         <canvas id="selection-canvas" class="absolute inset-0 pointer-events-none"></canvas>
-                        <div id="brush-cursor" class="absolute pointer-events-none border border-white rounded-full hidden -translate-x-1/2 -translate-y-1/2 z-30" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(0,0,0,0.9);"></div>
                     </div>
                 </div>
             </div>
+
+            <!-- Brush Cursor placed at Viewport level (unscaled screen-space coordinates for 1:1 accuracy at any zoom) -->
+            <div id="brush-cursor" class="absolute pointer-events-none border border-white rounded-full hidden -translate-x-1/2 -translate-y-1/2 z-30" style="box-shadow: 0 0 0 1px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(0,0,0,0.9);"></div>
             
             <div id="size-badge" class="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-3 py-1 rounded-md text-xs font-mono shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-40">
                 Brush: <span id="badge-size-val">15</span>px
@@ -282,7 +287,7 @@
                 </div>
                 <div class="p-3 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Stack & Blend Modes (Delete Key to Delete)</span>
+                        <span class="text-[11px] text-gray-400">Stack & Blend Modes</span>
                         <button id="add-layer-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-gray-200 border border-[#555] rounded text-[11px] font-medium flex items-center space-x-1"><i class="fa-solid fa-plus text-[9px]"></i><span>New</span></button>
                     </div>
                     <div id="layers-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
@@ -505,6 +510,7 @@
         let badgeTimeout = null;
         let dashOffset = 0;
         let internalClipboard = null;
+        let lastClientX = -1000, lastClientY = -1000;
 
         // --- Photoshop-Style Pen Tool State ---
         let penPaths = [];
@@ -512,6 +518,20 @@
         let selectedAnchorIndex = null;
         let isDrawingPenBezier = false;
         let penAnchorPointBeingCreated = null;
+        let penDraggingHandle = null;
+        let penHoverFirstPoint = false;
+
+        // --- Unified Photoshop Selection Mask Engine ---
+        let selectionMask = null;
+        let hasActiveSelection = false;
+        let selectionContourSegments = [];
+
+        // --- Move Tool & Floating Selection State ---
+        let floatingSelection = null;
+        let moveStartPos = { x: 0, y: 0 };
+        let moveLayerSnapshot = null;
+        let moveAltDuplicated = false;
+        let moveAutoSelect = false;
 
         const brightnessInput = document.getElementById('brightness');
         const contrastInput = document.getElementById('contrast');
@@ -529,7 +549,6 @@
         const swatchFg = document.getElementById('swatch-fg');
         const swatchBg = document.getElementById('swatch-bg');
         const swatchContainer = document.getElementById('swatch-container');
-        const optBrushColorBtn = document.getElementById('opt-brush-color-btn');
 
         const addLayerBtn = document.getElementById('add-layer-btn');
         const layersListContainer = document.getElementById('layers-list');
@@ -554,11 +573,19 @@
         let fgColor = '#6366f1';
         let bgColor = '#ffffff';
         let brushSize = 15;
-        let brushStrength = 30;
+        let brushOpacity = 100;
+        let brushHardness = 100;
+        let brushStrength = 50;
         let brushWetness = 30;
         let wandTolerance = 32;
+        let wandContiguous = true;
+        let wandSampleAllLayers = true;
 
-        let smudgeCarriedR = 0, smudgeCarriedG = 0, smudgeCarriedB = 0, smudgeCarriedA = 0;
+        // Mixer Brush Reservoir
+        let mixerLoadedR = 99, mixerLoadedG = 102, mixerLoadedB = 241, mixerLoadedA = 255;
+
+        // Smudge State
+        let smudgeCarriedBuffer = null;
 
         let marqueeMode = 'new';
         let marqueeFeather = 0;
@@ -572,7 +599,6 @@
         let layers = [];
         let activeLayerId = null;
 
-        let selectionRegions = [];
         let activeAction = null;
         let startSelX = 0, startSelY = 0;
         let currentDragSelection = null;
@@ -580,6 +606,9 @@
         let isSpaceDraggingSelection = false;
 
         let lastX = 0, lastY = 0;
+        let lastBrushStrokeEnd = null;
+        let strokeStartSnapshot = null;
+        let strokePadCanvas = null;
         let lassoPoints = [];
         let historyStack = [];
         let historyIndex = -1;
@@ -624,7 +653,7 @@
             return "#" + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
         }
         function hexToRgb(hex) {
-            let c = hex.replace('#', '');
+            let c = (hex || '#000000').replace('#', '');
             if (c.length === 3) c = c.split('').map(x => x + x).join('');
             const num = parseInt(c, 16) || 0;
             return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
@@ -647,7 +676,7 @@
             return { h: Math.round(h * 360), s: Math.round(s * 100), b: Math.round(v * 100) };
         }
         function hsbToRgb(h, s, b) {
-            h = (h % 360) / 360; s /= 100; b /= 100;
+            h = ((h % 360) + 360) % 360 / 360; s = Math.max(0, Math.min(100, s)) / 100; b = Math.max(0, Math.min(100, b)) / 100;
             let r, g, b_val;
             const i = Math.floor(h * 6);
             const f = h * 6 - i;
@@ -689,6 +718,20 @@
             const A = Math.round(500 * (x - y));
             const B = Math.round(200 * (y - z));
             return { l: Math.max(0, Math.min(100, L)), a: Math.max(-128, Math.min(127, A)), b: Math.max(-128, Math.min(127, B)) };
+        }
+
+        function setForegroundColor(hex) {
+            fgColor = hex;
+            swatchFg.style.backgroundColor = fgColor;
+            const colorBtn = document.getElementById('opt-brush-color-btn');
+            if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+            const rgb = hexToRgb(fgColor);
+            mixerLoadedR = rgb.r; mixerLoadedG = rgb.g; mixerLoadedB = rgb.b; mixerLoadedA = 255;
+        }
+
+        function setBackgroundColor(hex) {
+            bgColor = hex;
+            swatchBg.style.backgroundColor = bgColor;
         }
 
         function drawHueSlider() {
@@ -743,7 +786,7 @@
             psCpInputs.m.value = cmyk.m;
             psCpInputs.y.value = cmyk.y;
             psCpInputs.k.value = cmyk.k;
-            psCpInputs.hex.value = hex;
+            psCpInputs.hex.value = hex.replace('#', '');
 
             const fieldW = psCpFieldCanvas.width;
             const fieldH = psCpFieldCanvas.height;
@@ -766,11 +809,8 @@
         }
 
         function openPhotoshopColorPicker(target = 'fg') {
-            if (target === 'fg') {
-                psTargetFgRadio.checked = true;
-            } else {
-                psTargetBgRadio.checked = true;
-            }
+            if (target === 'fg') psTargetFgRadio.checked = true;
+            else psTargetBgRadio.checked = true;
             loadPickerTargetColor(target);
             drawHueSlider();
             psColorPickerModal.classList.remove('hidden');
@@ -784,36 +824,21 @@
         
         document.getElementById('ps-cp-apply-fg').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
-            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            fgColor = hex;
-            swatchFg.style.backgroundColor = fgColor;
-            const colorBtn = document.getElementById('opt-brush-color-btn');
-            if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+            setForegroundColor(rgbToHex(rgb.r, rgb.g, rgb.b));
             psCpCurrPreview.style.backgroundColor = fgColor;
         });
 
         document.getElementById('ps-cp-apply-bg').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
-            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            bgColor = hex;
-            swatchBg.style.backgroundColor = bgColor;
-            if (!psTargetFgRadio.checked) {
-                psCpCurrPreview.style.backgroundColor = bgColor;
-            }
+            setBackgroundColor(rgbToHex(rgb.r, rgb.g, rgb.b));
+            if (!psTargetFgRadio.checked) psCpCurrPreview.style.backgroundColor = bgColor;
         });
 
         document.getElementById('ps-cp-ok').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            if (psTargetFgRadio.checked) {
-                fgColor = hex;
-                swatchFg.style.backgroundColor = fgColor;
-                const colorBtn = document.getElementById('opt-brush-color-btn');
-                if (colorBtn) colorBtn.style.backgroundColor = fgColor;
-            } else {
-                bgColor = hex;
-                swatchBg.style.backgroundColor = bgColor;
-            }
+            if (psTargetFgRadio.checked) setForegroundColor(hex);
+            else setBackgroundColor(hex);
             psColorPickerModal.classList.add('hidden');
         });
 
@@ -894,17 +919,17 @@
                 const item = document.createElement('div');
                 item.className = 'w-7 h-7 rounded cursor-pointer border border-black/60 shadow hover:scale-105 transition';
                 item.style.backgroundColor = hex;
-                item.title = hex;
-                item.onclick = () => {
-                    fgColor = hex;
-                    swatchFg.style.backgroundColor = fgColor;
-                    optBrushColorBtn.style.backgroundColor = fgColor;
+                item.title = `${hex} (Click for FG, Alt+Click for BG)`;
+                item.onclick = (e) => {
+                    if (e.altKey) setBackgroundColor(hex);
+                    else setForegroundColor(hex);
                 };
                 grid.appendChild(item);
             });
         }
         renderSwatchesUI();
 
+        // --- History System ---
         function saveHistoryState(actionName = "Action") {
             if (historyIndex < historyStack.length - 1) {
                 historyStack = historyStack.slice(0, historyIndex + 1);
@@ -912,6 +937,7 @@
 
             const state = {
                 name: actionName,
+                activeLayerId: activeLayerId,
                 layers: layers.map(l => ({
                     id: l.id,
                     name: l.name,
@@ -936,15 +962,22 @@
 
         function restoreHistoryState(index) {
             if (index < 0 || index >= historyStack.length) return;
+            commitFloatingSelection();
             historyIndex = index;
             const state = historyStack[historyIndex];
 
+            let loadedCount = 0;
+            const totalLayers = state.layers.length;
             layers = state.layers.map(s => {
                 const c = document.createElement('canvas');
                 c.width = canvas.width; c.height = canvas.height;
                 const cCtx = c.getContext('2d');
                 const img = new Image();
-                img.onload = () => { cCtx.drawImage(img, 0, 0); compositeCanvas(); };
+                img.onload = () => {
+                    cCtx.drawImage(img, 0, 0);
+                    loadedCount++;
+                    if (loadedCount === totalLayers) compositeCanvas();
+                };
                 img.src = s.dataUrl;
                 return { 
                     id: s.id, 
@@ -961,9 +994,9 @@
                     canvas: c 
                 };
             });
-            if (!layers.some(l => l.id === activeLayerId)) {
-                activeLayerId = layers[layers.length - 1].id;
-            }
+            activeLayerId = state.activeLayerId && layers.some(l => l.id === state.activeLayerId)
+                ? state.activeLayerId
+                : layers[layers.length - 1].id;
             renderLayersUI();
             syncAdjustmentsUI();
             renderHistoryUI();
@@ -984,27 +1017,30 @@
                 item.onclick = () => restoreHistoryState(idx);
                 historyListContainer.appendChild(item);
             });
+            historyListContainer.scrollTop = historyListContainer.scrollHeight;
         }
 
+        // --- Viewport, Zoom & 1:1 Screen-Space Brush Cursor ---
         function updateViewportTransform() {
             transformContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
             document.getElementById('zoom-val').textContent = `${Math.round(zoomLevel * 100)}%`;
             updateBrushCursorSize();
+            updateBrushCursorPosition(lastClientX, lastClientY);
+            redrawSelectionOverlay();
         }
 
         viewportContainer.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomFactor = 1.1;
-            if (e.deltaY < 0) {
-                zoomLevel = Math.min(zoomLevel * zoomFactor, 5);
-            } else {
-                zoomLevel = Math.max(zoomLevel / zoomFactor, 0.2);
-            }
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
+            const zoomFactor = 1.12;
+            if (e.deltaY < 0) zoomLevel = Math.min(zoomLevel * zoomFactor, 16);
+            else zoomLevel = Math.max(zoomLevel / zoomFactor, 0.1);
             updateViewportTransform();
         }, { passive: false });
 
-        document.getElementById('zoom-in').addEventListener('click', () => { zoomLevel = Math.min(zoomLevel * 1.2, 5); updateViewportTransform(); });
-        document.getElementById('zoom-out').addEventListener('click', () => { zoomLevel = Math.max(zoomLevel / 1.2, 0.2); updateViewportTransform(); });
+        document.getElementById('zoom-in').addEventListener('click', () => { zoomLevel = Math.min(zoomLevel * 1.25, 16); updateViewportTransform(); });
+        document.getElementById('zoom-out').addEventListener('click', () => { zoomLevel = Math.max(zoomLevel / 1.25, 0.1); updateViewportTransform(); });
         document.getElementById('reset-view').addEventListener('click', () => { zoomLevel = 1; panX = 0; panY = 0; updateViewportTransform(); });
 
         function showSizeBadge() {
@@ -1020,49 +1056,308 @@
 
         function updateBrushCursorSize() {
             const rect = canvas.getBoundingClientRect();
-            if (!rect.width) return;
+            if (!rect.width || !canvas.width) return;
             const screenScale = rect.width / canvas.width;
-            const scaledSize = brushSize * screenScale;
+            const scaledSize = Math.max(2, brushSize * screenScale);
             brushCursor.style.width = `${scaledSize}px`;
             brushCursor.style.height = `${scaledSize}px`;
         }
 
-        window.addEventListener('pointermove', (e) => {
+        function updateBrushCursorPosition(clientX, clientY) {
             const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
-            if (activeBrushes.includes(currentTool)) {
-                const rect = canvas.getBoundingClientRect();
-                if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                    brushCursor.classList.remove('hidden');
-                    brushCursor.style.left = `${e.clientX - rect.left}px`;
-                    brushCursor.style.top = `${e.clientY - rect.top}px`;
-                } else {
-                    brushCursor.classList.add('hidden');
-                }
-            } else if (currentTool === 'pen') {
+            if (!activeBrushes.includes(currentTool) || isSpacePressed || isAltPressed) {
+                brushCursor.classList.add('hidden');
+                return;
+            }
+            const cRect = canvas.getBoundingClientRect();
+            const vRect = viewportContainer.getBoundingClientRect();
+            if (
+                clientX >= cRect.left && clientX <= cRect.right &&
+                clientY >= cRect.top && clientY <= cRect.bottom &&
+                clientX >= vRect.left && clientX <= vRect.right &&
+                clientY >= vRect.top && clientY <= vRect.bottom
+            ) {
+                updateBrushCursorSize();
+                brushCursor.classList.remove('hidden');
+                brushCursor.style.left = `${clientX - vRect.left}px`;
+                brushCursor.style.top = `${clientY - vRect.top}px`;
+            } else {
                 brushCursor.classList.add('hidden');
             }
+        }
 
-            if (isZoomingScrub) {
-                const dx = e.clientX - startZoomX;
-                const zoomFactor = 1 + (dx * 0.01);
-                zoomLevel = Math.max(0.2, Math.min(5, zoomLevel * zoomFactor));
-                startZoomX = e.clientX;
-                updateViewportTransform();
-            } else if (isPanning) {
-                panX = e.clientX - startPanX;
-                panY = e.clientY - startPanY;
-                updateViewportTransform();
+        // --- Unified Selection Mask Engine ---
+        function initSelectionMask(w, h) {
+            selectionMask = new Uint8Array(w * h);
+            hasActiveSelection = false;
+            selectionContourSegments = [];
+        }
+
+        function clearSelection() {
+            commitFloatingSelection();
+            if (selectionMask) selectionMask.fill(0);
+            hasActiveSelection = false;
+            selectionContourSegments = [];
+            currentDragSelection = null;
+            redrawSelectionOverlay();
+        }
+
+        function selectAllCanvas() {
+            commitFloatingSelection();
+            if (!selectionMask || selectionMask.length !== canvas.width * canvas.height) {
+                selectionMask = new Uint8Array(canvas.width * canvas.height);
             }
-        });
+            selectionMask.fill(255);
+            hasActiveSelection = true;
+            rebuildSelectionContour();
+            redrawSelectionOverlay();
+        }
 
-        window.addEventListener('pointerup', () => { 
-            isPanning = false; 
-            isZoomingScrub = false; 
-        });
+        function invertSelection() {
+            commitFloatingSelection();
+            const w = canvas.width, h = canvas.height;
+            if (!selectionMask || selectionMask.length !== w * h) {
+                selectionMask = new Uint8Array(w * h);
+            }
+            if (!hasActiveSelection) {
+                selectionMask.fill(255);
+                hasActiveSelection = true;
+            } else {
+                let anySelected = false;
+                for (let i = 0; i < selectionMask.length; i++) {
+                    selectionMask[i] = 255 - selectionMask[i];
+                    if (selectionMask[i] > 0) anySelected = true;
+                }
+                hasActiveSelection = anySelected;
+            }
+            rebuildSelectionContour();
+            redrawSelectionOverlay();
+        }
 
+        function applyFeatherToMask(mask, w, h, radius) {
+            if (radius <= 0) return mask;
+            const r = Math.min(120, Math.max(1, Math.round(radius)));
+            let src = new Float32Array(mask);
+            let dst = new Float32Array(w * h);
+
+            for (let pass = 0; pass < 3; pass++) {
+                for (let y = 0; y < h; y++) {
+                    let sum = 0;
+                    const rowOffset = y * w;
+                    for (let x = -r; x <= r; x++) {
+                        sum += src[rowOffset + Math.min(w - 1, Math.max(0, x))];
+                    }
+                    for (let x = 0; x < w; x++) {
+                        dst[rowOffset + x] = sum / (2 * r + 1);
+                        const left = Math.max(0, x - r);
+                        const right = Math.min(w - 1, x + r + 1);
+                        sum += src[rowOffset + right] - src[rowOffset + left];
+                    }
+                }
+                for (let x = 0; x < w; x++) {
+                    let sum = 0;
+                    for (let y = -r; y <= r; y++) {
+                        sum += dst[Math.min(h - 1, Math.max(0, y)) * w + x];
+                    }
+                    for (let y = 0; y < h; y++) {
+                        src[y * w + x] = sum / (2 * r + 1);
+                        const top = Math.max(0, y - r);
+                        const bottom = Math.min(h - 1, y + r + 1);
+                        sum += dst[bottom * w + x] - dst[top * w + x];
+                    }
+                }
+            }
+
+            const out = new Uint8Array(w * h);
+            for (let i = 0; i < out.length; i++) {
+                out[i] = Math.min(255, Math.max(0, Math.round(src[i])));
+            }
+            return out;
+        }
+
+        function createMaskFromShape(reg) {
+            const w = canvas.width, h = canvas.height;
+            let rawMask = new Uint8Array(w * h);
+
+            if (reg.type === 'mask' && reg.mask) {
+                rawMask.set(reg.mask);
+            } else {
+                const tempC = document.createElement('canvas');
+                tempC.width = w; tempC.height = h;
+                const tCtx = tempC.getContext('2d');
+                tCtx.fillStyle = '#ffffff';
+
+                if (reg.type === 'rect') {
+                    tCtx.fillRect(Math.round(reg.x), Math.round(reg.y), Math.round(reg.w), Math.round(reg.h));
+                } else if (reg.type === 'circle') {
+                    tCtx.beginPath();
+                    tCtx.ellipse(reg.cx, reg.cy, Math.max(0.5, reg.rx), Math.max(0.5, reg.ry), 0, 0, Math.PI * 2);
+                    tCtx.fill();
+                } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
+                    tCtx.beginPath();
+                    reg.points.forEach((p, idx) => idx === 0 ? tCtx.moveTo(p.x, p.y) : tCtx.lineTo(p.x, p.y));
+                    tCtx.closePath();
+                    tCtx.fill();
+                }
+
+                const imgData = tCtx.getImageData(0, 0, w, h).data;
+                for (let i = 0; i < w * h; i++) {
+                    const a = imgData[i * 4 + 3];
+                    rawMask[i] = marqueeAntialias ? a : (a >= 128 ? 255 : 0);
+                }
+            }
+
+            if (marqueeFeather > 0) {
+                rawMask = applyFeatherToMask(rawMask, w, h, marqueeFeather);
+            }
+            return rawMask;
+        }
+
+        function getEffectiveSelectionMode() {
+            if (isShiftPressed && isAltPressed) return 'intersect';
+            if (isShiftPressed && !['rect-select', 'circle-select'].includes(currentTool)) return 'add';
+            if (isAltPressed && !['rect-select', 'circle-select'].includes(currentTool)) return 'subtract';
+            return marqueeMode;
+        }
+
+        function applySelectionCombination(newReg, explicitMode = null) {
+            commitFloatingSelection();
+            const w = canvas.width, h = canvas.height;
+            if (!selectionMask || selectionMask.length !== w * h) {
+                selectionMask = new Uint8Array(w * h);
+            }
+
+            const shapeMask = createMaskFromShape(newReg);
+            const mode = explicitMode || (hasActiveSelection ? marqueeMode : 'new');
+
+            let anySelected = false;
+            for (let i = 0; i < w * h; i++) {
+                const a = selectionMask[i];
+                const b = shapeMask[i];
+                let res = 0;
+                if (mode === 'new' || !hasActiveSelection) {
+                    res = b;
+                } else if (mode === 'add') {
+                    res = Math.min(255, a + b);
+                } else if (mode === 'subtract') {
+                    res = Math.max(0, a - b);
+                } else if (mode === 'intersect') {
+                    res = Math.min(a, b);
+                }
+                selectionMask[i] = res;
+                if (res > 0) anySelected = true;
+            }
+
+            hasActiveSelection = anySelected;
+            rebuildSelectionContour();
+            redrawSelectionOverlay();
+        }
+
+        function rebuildSelectionContour() {
+            selectionContourSegments = [];
+            if (!hasActiveSelection || !selectionMask) return;
+            const w = canvas.width, h = canvas.height;
+
+            for (let y = 0; y < h; y++) {
+                const row = y * w;
+                for (let x = 0; x < w; x++) {
+                    if (selectionMask[row + x] >= 128) {
+                        if (y === 0 || selectionMask[(y - 1) * w + x] < 128) {
+                            selectionContourSegments.push(x, y, x + 1, y);
+                        }
+                        if (y === h - 1 || selectionMask[(y + 1) * w + x] < 128) {
+                            selectionContourSegments.push(x, y + 1, x + 1, y + 1);
+                        }
+                        if (x === 0 || selectionMask[row + x - 1] < 128) {
+                            selectionContourSegments.push(x, y, x, y + 1);
+                        }
+                        if (x === w - 1 || selectionMask[row + x + 1] < 128) {
+                            selectionContourSegments.push(x + 1, y, x + 1, y + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Floating Selection (Photoshop Move Tool on Active Selection) ---
+        function liftSelectionToFloat(duplicateOnly = false) {
+            if (!hasActiveSelection || !selectionMask) return;
+            if (floatingSelection) return;
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || !active.visible) return;
+
+            const w = canvas.width, h = canvas.height;
+            const lCtx = active.canvas.getContext('2d');
+            const layerData = lCtx.getImageData(0, 0, w, h);
+            const lPixels = layerData.data;
+
+            const floatCanvas = createOffscreenCanvas(w, h);
+            const fCtx = floatCanvas.getContext('2d');
+            const floatImgData = fCtx.createImageData(w, h);
+            const fPixels = floatImgData.data;
+
+            for (let i = 0; i < w * h; i++) {
+                const selAlpha = selectionMask[i] / 255;
+                if (selAlpha > 0) {
+                    const idx = i * 4;
+                    fPixels[idx] = lPixels[idx];
+                    fPixels[idx + 1] = lPixels[idx + 1];
+                    fPixels[idx + 2] = lPixels[idx + 2];
+                    fPixels[idx + 3] = Math.round(lPixels[idx + 3] * selAlpha);
+
+                    if (!duplicateOnly) {
+                        lPixels[idx + 3] = Math.round(lPixels[idx + 3] * (1 - selAlpha));
+                    }
+                }
+            }
+
+            fCtx.putImageData(floatImgData, 0, 0);
+            if (!duplicateOnly) lCtx.putImageData(layerData, 0, 0);
+
+            floatingSelection = {
+                canvas: floatCanvas,
+                baseMask: new Uint8Array(selectionMask),
+                offsetX: 0,
+                offsetY: 0
+            };
+            compositeCanvas();
+        }
+
+        function updateTranslatedSelectionMask(baseMask, dx, dy) {
+            const w = canvas.width, h = canvas.height;
+            selectionMask.fill(0);
+            const idxX = Math.round(dx), idxY = Math.round(dy);
+            for (let y = 0; y < h; y++) {
+                const ny = y + idxY;
+                if (ny < 0 || ny >= h) continue;
+                for (let x = 0; x < w; x++) {
+                    const nx = x + idxX;
+                    if (nx < 0 || nx >= w) continue;
+                    selectionMask[ny * w + nx] = baseMask[y * w + x];
+                }
+            }
+            rebuildSelectionContour();
+        }
+
+        function commitFloatingSelection() {
+            if (!floatingSelection) return;
+            const active = layers.find(l => l.id === activeLayerId);
+            if (active) {
+                const lCtx = active.canvas.getContext('2d');
+                lCtx.save();
+                if (active.lockTransparency) lCtx.globalCompositeOperation = 'source-atop';
+                lCtx.drawImage(floatingSelection.canvas, Math.round(floatingSelection.offsetX), Math.round(floatingSelection.offsetY));
+                lCtx.restore();
+            }
+            floatingSelection = null;
+            compositeCanvas();
+            saveHistoryState("Move Selection");
+        }
+
+        // --- Marching Ants Animation & Overlay Rendering ---
         function animateMarchingAnts() {
-            if (selectionRegions.length > 0 || currentDragSelection || currentPenPath.points.length > 0) {
-                dashOffset = (dashOffset - 0.5) % 10;
+            if (hasActiveSelection || currentDragSelection || currentPenPath.points.length > 0) {
+                dashOffset = (dashOffset - 0.35) % 8;
                 redrawSelectionOverlay();
             }
             requestAnimationFrame(animateMarchingAnts);
@@ -1071,23 +1366,42 @@
 
         function redrawSelectionOverlay() {
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-            
-            if (selectionRegions.length > 0 || currentDragSelection) {
-                selectionCtx.lineWidth = 1;
-                selectionCtx.setLineDash([4, 4]);
-                selectionCtx.lineDashOffset = dashOffset;
+            const invZoom = 1 / Math.max(0.25, zoomLevel);
 
+            if (hasActiveSelection && selectionContourSegments.length > 0) {
+                selectionCtx.save();
+                selectionCtx.lineWidth = invZoom;
+                selectionCtx.beginPath();
+                for (let i = 0; i < selectionContourSegments.length; i += 4) {
+                    selectionCtx.moveTo(selectionContourSegments[i], selectionContourSegments[i + 1]);
+                    selectionCtx.lineTo(selectionContourSegments[i + 2], selectionContourSegments[i + 3]);
+                }
                 selectionCtx.strokeStyle = '#000000';
-                selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-                if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
+                selectionCtx.setLineDash([4 * invZoom, 4 * invZoom]);
+                selectionCtx.lineDashOffset = dashOffset * invZoom;
+                selectionCtx.stroke();
 
                 selectionCtx.strokeStyle = '#ffffff';
-                selectionCtx.lineDashOffset = dashOffset + 4;
-                selectionRegions.forEach(reg => drawRegionOutline(selectionCtx, reg));
-                if (currentDragSelection) drawRegionOutline(selectionCtx, currentDragSelection);
+                selectionCtx.lineDashOffset = (dashOffset + 4) * invZoom;
+                selectionCtx.stroke();
+                selectionCtx.restore();
             }
 
-            if (currentTool === 'pen') {
+            if (currentDragSelection) {
+                selectionCtx.save();
+                selectionCtx.lineWidth = invZoom;
+                selectionCtx.setLineDash([4 * invZoom, 4 * invZoom]);
+                selectionCtx.lineDashOffset = dashOffset * invZoom;
+                selectionCtx.strokeStyle = '#000000';
+                drawRegionOutline(selectionCtx, currentDragSelection);
+
+                selectionCtx.strokeStyle = '#ffffff';
+                selectionCtx.lineDashOffset = (dashOffset + 4) * invZoom;
+                drawRegionOutline(selectionCtx, currentDragSelection);
+                selectionCtx.restore();
+            }
+
+            if (currentTool === 'pen' || currentPenPath.points.length > 0) {
                 drawPenPathsOverlay();
             }
         }
@@ -1097,57 +1411,19 @@
                 sCtx.strokeRect(reg.x, reg.y, reg.w, reg.h);
             } else if (reg.type === 'circle') {
                 sCtx.beginPath();
-                sCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
+                sCtx.ellipse(reg.cx, reg.cy, Math.max(0.5, reg.rx), Math.max(0.5, reg.ry), 0, 0, Math.PI * 2);
                 sCtx.stroke();
             } else if (reg.type === 'lasso' && reg.points && reg.points.length > 0) {
                 sCtx.beginPath();
                 reg.points.forEach((p, idx) => idx === 0 ? sCtx.moveTo(p.x, p.y) : sCtx.lineTo(p.x, p.y));
                 sCtx.stroke();
-            } else if (reg.type === 'magic-wand' && reg.mask) {
-                const w = selectionCanvas.width;
-                const h = selectionCanvas.height;
-                const imgData = sCtx.createImageData(w, h);
-                const data = imgData.data;
-                const mask = reg.mask;
-                
-                for (let i = 0; i < mask.length; i++) {
-                    if (mask[i]) {
-                        const x = i % w;
-                        const y = Math.floor(i / w);
-                        const isBorder = (x === 0 || y === 0 || x === w - 1 || y === h - 1 || 
-                                          !mask[i - 1] || !mask[i + 1] || !mask[i - w] || !mask[i + w]);
-                        if (isBorder) {
-                            const idx = i * 4;
-                            data[idx] = 0; data[idx+1] = 88; data[idx+2] = 208; data[idx+3] = 255;
-                        }
-                    }
-                }
-                sCtx.putImageData(imgData, 0, 0);
-            } else if (reg.type === 'inverse') {
-                sCtx.strokeRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-                if (reg.baseRegions) {
-                    reg.baseRegions.forEach(subReg => drawRegionOutline(sCtx, subReg));
-                }
             }
         }
 
         // --- Photoshop-Style Pen Path & Selection Conversion ---
-        function renderPenPathToLayer() {
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active || currentPenPath.points.length < 2) return;
-            const lCtx = active.canvas.getContext('2d');
-            lCtx.save();
-            lCtx.lineWidth = brushSize;
-            lCtx.strokeStyle = fgColor;
-            lCtx.fillStyle = fgColor;
-            lCtx.lineCap = 'round';
-            lCtx.lineJoin = 'round';
-            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
-
-            lCtx.beginPath();
-            const pts = currentPenPath.points;
-            lCtx.moveTo(pts[0].x, pts[0].y);
-
+        function tracePenPathOnContext(targetCtx, pts, closed) {
+            targetCtx.beginPath();
+            targetCtx.moveTo(pts[0].x, pts[0].y);
             for (let i = 0; i < pts.length - 1; i++) {
                 const p0 = pts[i];
                 const p1 = pts[i + 1];
@@ -1155,109 +1431,122 @@
                 const cp1y = p0.outHandle ? p0.outHandle.y : p0.y;
                 const cp2x = p1.inHandle ? p1.inHandle.x : p1.x;
                 const cp2y = p1.inHandle ? p1.inHandle.y : p1.y;
-                lCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p1.x, p1.y);
+                targetCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p1.x, p1.y);
             }
+            if (closed && pts.length > 2) {
+                const pLast = pts[pts.length - 1];
+                const pFirst = pts[0];
+                const cp1x = pLast.outHandle ? pLast.outHandle.x : pLast.x;
+                const cp1y = pLast.outHandle ? pLast.outHandle.y : pLast.y;
+                const cp2x = pFirst.inHandle ? pFirst.inHandle.x : pFirst.x;
+                const cp2y = pFirst.inHandle ? pFirst.inHandle.y : pFirst.y;
+                targetCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pFirst.x, pFirst.y);
+                targetCtx.closePath();
+            }
+        }
 
-            if (currentPenPath.closed) {
-                lCtx.closePath();
-            }
-            lCtx.stroke();
-            lCtx.restore();
+        function strokePenPathToLayer() {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || currentPenPath.points.length < 2) return;
+
+            const tempC = createOffscreenCanvas(canvas.width, canvas.height);
+            const tCtx = tempC.getContext('2d');
+            tCtx.lineWidth = brushSize;
+            tCtx.strokeStyle = fgColor;
+            tCtx.lineCap = 'round';
+            tCtx.lineJoin = 'round';
+            tracePenPathOnContext(tCtx, currentPenPath.points, currentPenPath.closed);
+            tCtx.stroke();
+
+            applyBufferToActiveLayer(tempC);
             compositeCanvas();
-            saveHistoryState("Pen Path Stroke");
+            saveHistoryState("Stroke Path");
+        }
+
+        function fillPenPathToLayer() {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || currentPenPath.points.length < 3) return;
+
+            const tempC = createOffscreenCanvas(canvas.width, canvas.height);
+            const tCtx = tempC.getContext('2d');
+            tCtx.fillStyle = fgColor;
+            tracePenPathOnContext(tCtx, currentPenPath.points, true);
+            tCtx.fill();
+
+            applyBufferToActiveLayer(tempC);
+            compositeCanvas();
+            saveHistoryState("Fill Path");
         }
 
         function convertPathToSelection() {
-            if (currentPenPath.points.length < 3) return;
-            
-            const w = canvas.width;
-            const h = canvas.height;
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = w; tempCanvas.height = h;
+            if (currentPenPath.points.length < 2) return;
+            const w = canvas.width, h = canvas.height;
+            const tempCanvas = createOffscreenCanvas(w, h);
             const tCtx = tempCanvas.getContext('2d');
-            
-            tCtx.clearRect(0, 0, w, h);
+
             tCtx.fillStyle = '#ffffff';
-            tCtx.beginPath();
-            const pts = currentPenPath.points;
-            tCtx.moveTo(pts[0].x, pts[0].y);
-            for (let i = 0; i < pts.length - 1; i++) {
-                const p0 = pts[i];
-                const p1 = pts[i + 1];
-                tCtx.bezierCurveTo(
-                    p0.outHandle ? p0.outHandle.x : p0.x, p0.outHandle ? p0.outHandle.y : p0.y,
-                    p1.inHandle ? p1.inHandle.x : p1.x, p1.inHandle ? p1.inHandle.y : p1.y,
-                    p1.x, p1.y
-                );
-            }
-            tCtx.closePath();
+            tracePenPathOnContext(tCtx, currentPenPath.points, true);
             tCtx.fill('nonzero');
 
-            const imgData = tCtx.getImageData(0, 0, w, h);
-            const data = imgData.data;
-            const selectionMask = new Uint8Array(w * h);
-
+            const imgData = tCtx.getImageData(0, 0, w, h).data;
+            const pathMask = new Uint8Array(w * h);
             for (let i = 0; i < w * h; i++) {
-                if (data[i * 4 + 3] > 128) {
-                    selectionMask[i] = 1;
-                }
+                pathMask[i] = imgData[i * 4 + 3];
             }
 
-            selectionRegions = [{ type: 'magic-wand', mask: selectionMask }];
-            
-            // ** FULLY RESET PEN PATH STATE AFTER CONVERSION **
+            applySelectionCombination({ type: 'mask', mask: pathMask }, 'new');
+
             currentPenPath = { points: [], closed: false };
             selectedAnchorIndex = null;
             isDrawingPenBezier = false;
             penAnchorPointBeingCreated = null;
-
             redrawSelectionOverlay();
         }
 
         function drawPenPathsOverlay() {
+            const pts = currentPenPath.points;
+            if (pts.length === 0) return;
+
+            const invZoom = 1 / Math.max(0.25, zoomLevel);
             selectionCtx.save();
             selectionCtx.strokeStyle = '#0058d0';
             selectionCtx.fillStyle = '#ffffff';
-            selectionCtx.lineWidth = 1.5;
+            selectionCtx.lineWidth = 1.5 * invZoom;
 
-            const pts = currentPenPath.points;
-            if (pts.length > 0) {
-                selectionCtx.beginPath();
-                selectionCtx.moveTo(pts[0].x, pts[0].y);
-                for (let i = 0; i < pts.length - 1; i++) {
-                    const p0 = pts[i];
-                    const p1 = pts[i + 1];
-                    selectionCtx.bezierCurveTo(
-                        p0.outHandle ? p0.outHandle.x : p0.x, p0.outHandle ? p0.outHandle.y : p0.y,
-                        p1.inHandle ? p1.inHandle.x : p1.x, p1.inHandle ? p1.inHandle.y : p1.y,
-                        p1.x, p1.y
-                    );
+            tracePenPathOnContext(selectionCtx, pts, currentPenPath.closed);
+            selectionCtx.stroke();
+
+            const handleRadius = 3 * invZoom;
+            const anchorSize = 4 * invZoom;
+
+            pts.forEach((p, idx) => {
+                if (p.inHandle) {
+                    selectionCtx.strokeStyle = '#0058d0';
+                    selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.inHandle.x, p.inHandle.y); selectionCtx.stroke();
+                    selectionCtx.fillStyle = '#ffffff';
+                    selectionCtx.beginPath(); selectionCtx.arc(p.inHandle.x, p.inHandle.y, handleRadius, 0, Math.PI * 2); selectionCtx.fill(); selectionCtx.stroke();
                 }
-                if (currentPenPath.closed) selectionCtx.closePath();
-                selectionCtx.stroke();
+                if (p.outHandle) {
+                    selectionCtx.strokeStyle = '#0058d0';
+                    selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.outHandle.x, p.outHandle.y); selectionCtx.stroke();
+                    selectionCtx.fillStyle = '#ffffff';
+                    selectionCtx.beginPath(); selectionCtx.arc(p.outHandle.x, p.outHandle.y, handleRadius, 0, Math.PI * 2); selectionCtx.fill(); selectionCtx.stroke();
+                }
 
-                pts.forEach((p, idx) => {
-                    if (p.inHandle) {
-                        selectionCtx.strokeStyle = '#0058d0';
-                        selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.inHandle.x, p.inHandle.y); selectionCtx.stroke();
-                        selectionCtx.fillRect(p.inHandle.x - 3, p.inHandle.y - 3, 6, 6);
-                        selectionCtx.strokeRect(p.inHandle.x - 3, p.inHandle.y - 3, 6, 6);
-                    }
-                    if (p.outHandle) {
-                        selectionCtx.strokeStyle = '#0058d0';
-                        selectionCtx.beginPath(); selectionCtx.moveTo(p.x, p.y); selectionCtx.lineTo(p.outHandle.x, p.outHandle.y); selectionCtx.stroke();
-                        selectionCtx.fillRect(p.outHandle.x - 3, p.outHandle.y - 3, 6, 6);
-                        selectionCtx.strokeRect(p.outHandle.x - 3, p.outHandle.y - 3, 6, 6);
-                    }
+                selectionCtx.fillStyle = (idx === selectedAnchorIndex) ? '#0058d0' : '#ffffff';
+                selectionCtx.fillRect(p.x - anchorSize, p.y - anchorSize, anchorSize * 2, anchorSize * 2);
+                selectionCtx.strokeRect(p.x - anchorSize, p.y - anchorSize, anchorSize * 2, anchorSize * 2);
 
-                    selectionCtx.fillStyle = (idx === selectedAnchorIndex) ? '#0058d0' : '#ffffff';
-                    selectionCtx.fillRect(p.x - 4, p.y - 4, 8, 8);
-                    selectionCtx.strokeRect(p.x - 4, p.y - 4, 8, 8);
-                });
-            }
+                if (idx === 0 && penHoverFirstPoint && pts.length > 2 && !currentPenPath.closed) {
+                    selectionCtx.beginPath();
+                    selectionCtx.arc(p.x + 8 * invZoom, p.y - 8 * invZoom, 4 * invZoom, 0, Math.PI * 2);
+                    selectionCtx.stroke();
+                }
+            });
             selectionCtx.restore();
         }
 
+        // --- Floating Panels Dragging ---
         document.querySelectorAll('.floating-panel').forEach(panel => {
             const header = panel.querySelector('.panel-header');
             let isDraggingPanel = false;
@@ -1268,6 +1557,7 @@
                 isDraggingPanel = true;
                 startX = e.clientX - panel.offsetLeft;
                 startY = e.clientY - panel.offsetTop;
+                document.querySelectorAll('.floating-panel').forEach(p => p.style.zIndex = 20);
                 panel.style.zIndex = 100;
             });
 
@@ -1297,37 +1587,62 @@
             });
         });
 
+        // --- Dynamic Tool Options Bar ---
         function updateOptionsBarForTool(toolName) {
-            if (toolName === 'rect-select' || toolName === 'circle-select') {
-                const isEllipse = toolName === 'circle-select';
-                optionsTitle.textContent = `${isEllipse ? 'Elliptical' : 'Rectangular'} Marquee Options:`;
+            if (toolName === 'move') {
+                optionsTitle.textContent = "Move Tool (V):";
                 dynamicOptionsContainer.innerHTML = `
-                    <div class="flex items-center space-x-1" title="New Selection">
-                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'new' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="new"><i class="fa-solid fa-square text-[10px]"></i></button>
-                    </div>
-                    <div class="flex items-center space-x-1" title="Add to Selection (Shift)">
-                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'add' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="add"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                    </div>
-                    <div class="flex items-center space-x-1" title="Subtract from Selection (Alt)">
-                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'subtract' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="subtract"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                    </div>
-                    <div class="flex items-center space-x-1" title="Intersect with Selection (Shift+Alt)">
-                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'intersect' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="intersect"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    <label class="flex items-center space-x-1.5 cursor-pointer text-gray-200">
+                        <input type="checkbox" id="opt-move-autoselect" ${moveAutoSelect ? 'checked' : ''} class="rounded bg-[#222] border-[#555]">
+                        <span>Auto-Select Layer</span>
+                    </label>
+                    <span class="text-gray-400 text-[11px]">Drag to move Layer or Selection • Hold <b>Alt</b> to Duplicate • Hold <b>Shift</b> to Constrain • Hold <b>Space</b> to Pan</span>
+                `;
+                document.getElementById('opt-move-autoselect').addEventListener('change', (e) => {
+                    moveAutoSelect = e.target.checked;
+                });
+            } else if (toolName === 'rect-select' || toolName === 'circle-select' || toolName === 'lasso-select') {
+                const labelMap = { 'rect-select': 'Rectangular Marquee', 'circle-select': 'Elliptical Marquee', 'lasso-select': 'Lasso' };
+                optionsTitle.textContent = `${labelMap[toolName]} Options:`;
+                dynamicOptionsContainer.innerHTML = `
+                    <div class="flex items-center space-x-1">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'new' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="new" title="New Selection"><i class="fa-regular fa-square text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'add' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="add" title="Add to Selection (Shift)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'subtract' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="subtract" title="Subtract from Selection (Alt)"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'intersect' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="intersect" title="Intersect with Selection (Shift+Alt)"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                     </div>
                     <div class="w-[1px] h-4 bg-[#555]"></div>
+                    <div class="flex items-center space-x-1.5">
+                        <span>Feather:</span>
+                        <input type="number" id="opt-feather" value="${marqueeFeather}" min="0" max="100" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        <span>px</span>
+                    </div>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" id="opt-antialias" ${marqueeAntialias ? 'checked' : ''}>
+                        <span>Anti-alias</span>
+                    </label>
+                    ${toolName !== 'lasso-select' ? `
                     <div class="flex items-center space-x-1.5">
                         <span>Style:</span>
                         <select id="opt-marquee-style" class="bg-[#222] text-gray-200 rounded border border-[#555] px-1 py-0.5 text-[11px]">
                             <option value="normal" ${marqueeStyle === 'normal' ? 'selected' : ''}>Normal</option>
-                            <option value="aspect" ${marqueeStyle === 'aspect' ? 'selected' : ''}>Fixed Aspect Ratio</option>
+                            <option value="aspect" ${marqueeStyle === 'aspect' ? 'selected' : ''}>Fixed Ratio</option>
                             <option value="fixed" ${marqueeStyle === 'fixed' ? 'selected' : ''}>Fixed Size</option>
                         </select>
                     </div>
-                    <div class="flex items-center space-x-1.5">
-                        <span>Feather:</span>
-                        <input type="number" id="opt-feather" value="${marqueeFeather}" min="0" max="250" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
-                        <span>px</span>
-                    </div>
+                    ${marqueeStyle === 'aspect' ? `
+                        <div class="flex items-center space-x-1">
+                            <span>W:</span><input type="number" id="opt-aspect-w" value="${marqueeAspectW}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                            <span>H:</span><input type="number" id="opt-aspect-h" value="${marqueeAspectH}" min="1" class="w-10 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        </div>
+                    ` : ''}
+                    ${marqueeStyle === 'fixed' ? `
+                        <div class="flex items-center space-x-1">
+                            <span>W:</span><input type="number" id="opt-fixed-w" value="${marqueeFixedW}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                            <span>H:</span><input type="number" id="opt-fixed-h" value="${marqueeFixedH}" min="1" class="w-12 bg-[#222] border border-[#555] rounded px-1 text-white font-mono text-[11px]">
+                        </div>
+                    ` : ''}
+                    ` : ''}
                 `;
 
                 document.querySelectorAll('.marquee-mode-btn').forEach(btn => {
@@ -1336,47 +1651,78 @@
                         updateOptionsBarForTool(currentTool);
                     });
                 });
-                const styleSelect = document.getElementById('opt-marquee-style');
-                if (styleSelect) {
-                    styleSelect.addEventListener('change', (e) => {
-                        marqueeStyle = e.target.value;
+                document.getElementById('opt-feather')?.addEventListener('input', (e) => marqueeFeather = Math.max(0, parseInt(e.target.value) || 0));
+                document.getElementById('opt-antialias')?.addEventListener('change', (e) => marqueeAntialias = e.target.checked);
+                document.getElementById('opt-marquee-style')?.addEventListener('change', (e) => {
+                    marqueeStyle = e.target.value;
+                    updateOptionsBarForTool(currentTool);
+                });
+                document.getElementById('opt-aspect-w')?.addEventListener('input', (e) => marqueeAspectW = Math.max(0.1, parseFloat(e.target.value) || 1));
+                document.getElementById('opt-aspect-h')?.addEventListener('input', (e) => marqueeAspectH = Math.max(0.1, parseFloat(e.target.value) || 1));
+                document.getElementById('opt-fixed-w')?.addEventListener('input', (e) => marqueeFixedW = Math.max(1, parseInt(e.target.value) || 100));
+                document.getElementById('opt-fixed-h')?.addEventListener('input', (e) => marqueeFixedH = Math.max(1, parseInt(e.target.value) || 100));
+            } else if (toolName === 'magic-wand') {
+                optionsTitle.textContent = "Magic Wand Options:";
+                dynamicOptionsContainer.innerHTML = `
+                    <div class="flex items-center space-x-1">
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'new' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="new" title="New Selection"><i class="fa-regular fa-square text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'add' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="add" title="Add to Selection (Shift)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'subtract' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="subtract" title="Subtract from Selection (Alt)"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button type="button" class="marquee-mode-btn px-2 py-0.5 rounded ${marqueeMode === 'intersect' ? 'bg-[#0058d0] text-white' : 'bg-[#222] text-gray-300 hover:bg-[#444]'}" data-mode="intersect" title="Intersect with Selection (Shift+Alt)"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span>Tolerance:</span>
+                        <input type="range" id="opt-tolerance" min="0" max="255" value="${wandTolerance}" class="w-24 h-1.5 bg-[#222] rounded cursor-pointer">
+                        <span id="opt-tolerance-val" class="font-mono text-indigo-300 w-7">${wandTolerance}</span>
+                    </div>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" id="opt-wand-contiguous" ${wandContiguous ? 'checked' : ''}>
+                        <span>Contiguous</span>
+                    </label>
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" id="opt-wand-all-layers" ${wandSampleAllLayers ? 'checked' : ''}>
+                        <span>Sample All Layers</span>
+                    </label>
+                `;
+                document.querySelectorAll('.marquee-mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        marqueeMode = btn.getAttribute('data-mode');
                         updateOptionsBarForTool(currentTool);
                     });
-                }
-                const featherInput = document.getElementById('opt-feather');
-                if (featherInput) {
-                    featherInput.addEventListener('input', (e) => marqueeFeather = Math.max(0, parseInt(e.target.value) || 0));
-                }
+                });
+                document.getElementById('opt-tolerance').addEventListener('input', (e) => {
+                    wandTolerance = parseInt(e.target.value);
+                    document.getElementById('opt-tolerance-val').textContent = `${wandTolerance}`;
+                });
+                document.getElementById('opt-wand-contiguous').addEventListener('change', (e) => wandContiguous = e.target.checked);
+                document.getElementById('opt-wand-all-layers').addEventListener('change', (e) => wandSampleAllLayers = e.target.checked);
             } else if (toolName === 'pen') {
                 optionsTitle.textContent = "Pen Tool Options:";
                 dynamicOptionsContainer.innerHTML = `
                     <div class="flex items-center space-x-2">
-                        <span>Stroke:</span>
+                        <span>Stroke Width:</span>
                         <input type="range" id="opt-pen-size" min="1" max="50" value="${brushSize}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
                         <span id="opt-pen-size-val" class="font-mono text-indigo-300 w-7">${brushSize}px</span>
                     </div>
-                    <button id="pen-complete-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white rounded text-[11px] border border-gray-600 transition">Complete Path</button>
+                    <button id="pen-stroke-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white rounded text-[11px] border border-gray-600 transition">Stroke Path</button>
+                    <button id="pen-fill-btn" class="px-2.5 py-1 bg-[#3a3a3a] hover:bg-[#4a4a4a] text-white rounded text-[11px] border border-gray-600 transition">Fill Path</button>
                     <button id="pen-select-btn" class="px-2.5 py-1 bg-[#0058d0] hover:bg-[#0047a8] text-white rounded text-[11px] border border-blue-600 transition" title="Ctrl+Enter">Make Selection (Ctrl+Enter)</button>
+                    <button id="pen-clear-btn" class="px-2 py-1 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-300 rounded text-[11px] border border-gray-600 transition">Clear Path</button>
+                    <span class="text-gray-400 text-[10px]">Alt+Click / Alt+Right-Click Anchor or Handle to Delete/Cut</span>
                 `;
-                document.getElementById('pen-complete-btn').addEventListener('click', () => {
-                    if (currentPenPath.points.length > 1) {
-                        renderPenPathToLayer();
-                        penPaths.push(currentPenPath);
-                        currentPenPath = { points: [], closed: false };
-                        redrawSelectionOverlay();
-                    }
+                document.getElementById('pen-stroke-btn').addEventListener('click', () => strokePenPathToLayer());
+                document.getElementById('pen-fill-btn').addEventListener('click', () => fillPenPathToLayer());
+                document.getElementById('pen-select-btn').addEventListener('click', () => convertPathToSelection());
+                document.getElementById('pen-clear-btn').addEventListener('click', () => {
+                    currentPenPath = { points: [], closed: false };
+                    selectedAnchorIndex = null;
+                    redrawSelectionOverlay();
                 });
-                document.getElementById('pen-select-btn').addEventListener('click', () => {
-                    convertPathToSelection();
+                document.getElementById('opt-pen-size')?.addEventListener('input', (e) => {
+                    brushSize = parseInt(e.target.value);
+                    document.getElementById('opt-pen-size-val').textContent = `${brushSize}px`;
+                    updateBrushCursorSize();
                 });
-                const penSizeInput = document.getElementById('opt-pen-size');
-                if (penSizeInput) {
-                    penSizeInput.addEventListener('input', (e) => {
-                        brushSize = parseInt(e.target.value);
-                        document.getElementById('opt-pen-size-val').textContent = `${brushSize}px`;
-                        updateBrushCursorSize();
-                    });
-                }
             } else if (toolName === 'mixer-brush') {
                 optionsTitle.textContent = "Mixer Brush Options:";
                 dynamicOptionsContainer.innerHTML = `
@@ -1391,7 +1737,7 @@
                         <span id="opt-wetness-val" class="font-mono text-indigo-300 w-7">${brushWetness}%</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span>Color (TAB):</span>
+                        <span>Load Color (TAB):</span>
                         <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press TAB to open Color Picker"></button>
                     </div>
                 `;
@@ -1410,7 +1756,7 @@
                     </div>
                     <div class="flex items-center space-x-2">
                         <span>Strength:</span>
-                        <input type="range" id="opt-strength" min="1" max="100" value="${brushStrength}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
+                        <input type="range" id="opt-strength" min="1" max="99" value="${brushStrength}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
                         <span id="opt-strength-val" class="font-mono text-indigo-300 w-7">${brushStrength}%</span>
                     </div>
                 `;
@@ -1418,21 +1764,8 @@
                     brushStrength = parseInt(e.target.value);
                     document.getElementById('opt-strength-val').textContent = `${brushStrength}%`;
                 });
-            } else if (toolName === 'magic-wand') {
-                optionsTitle.textContent = "Magic Wand Options:";
-                dynamicOptionsContainer.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <span>Tolerance:</span>
-                        <input type="range" id="opt-tolerance" min="1" max="128" value="${wandTolerance}" class="w-24 h-1.5 bg-[#222] rounded cursor-pointer">
-                        <span id="opt-tolerance-val" class="font-mono text-indigo-300 w-8">${wandTolerance}</span>
-                    </div>
-                `;
-                document.getElementById('opt-tolerance').addEventListener('input', (e) => {
-                    wandTolerance = parseInt(e.target.value);
-                    document.getElementById('opt-tolerance-val').textContent = `${wandTolerance}`;
-                });
             } else {
-                optionsTitle.textContent = "Tool Options:";
+                optionsTitle.textContent = `${toolName === 'eraser' ? 'Eraser' : toolName === 'eyedropper' ? 'Eyedropper' : 'Brush'} Options:`;
                 dynamicOptionsContainer.innerHTML = `
                     <div class="flex items-center space-x-2">
                         <span>Size:</span>
@@ -1442,12 +1775,30 @@
                         <span id="opt-brush-size-val" class="font-mono text-indigo-300 w-8">${brushSize}px</span>
                     </div>
                     <div class="flex items-center space-x-2">
+                        <span>Opacity:</span>
+                        <input type="range" id="opt-brush-opacity" min="1" max="100" value="${brushOpacity}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
+                        <span id="opt-brush-opacity-val" class="font-mono text-indigo-300 w-8">${brushOpacity}%</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span>Hardness:</span>
+                        <input type="range" id="opt-brush-hardness" min="0" max="100" value="${brushHardness}" class="w-16 h-1.5 bg-[#222] rounded cursor-pointer">
+                        <span id="opt-brush-hardness-val" class="font-mono text-indigo-300 w-8">${brushHardness}%</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
                         <span>Color (TAB):</span>
                         <button id="opt-brush-color-btn" class="w-6 h-6 rounded bg-indigo-600 cursor-pointer border border-gray-600 shadow" style="background-color: ${fgColor};" title="Press TAB to open Color Picker"></button>
                     </div>
                 `;
                 document.getElementById('brush-increase').addEventListener('click', () => changeBrushSize(5));
                 document.getElementById('brush-decrease').addEventListener('click', () => changeBrushSize(-5));
+                document.getElementById('opt-brush-opacity').addEventListener('input', (e) => {
+                    brushOpacity = parseInt(e.target.value);
+                    document.getElementById('opt-brush-opacity-val').textContent = `${brushOpacity}%`;
+                });
+                document.getElementById('opt-brush-hardness').addEventListener('input', (e) => {
+                    brushHardness = parseInt(e.target.value);
+                    document.getElementById('opt-brush-hardness-val').textContent = `${brushHardness}%`;
+                });
                 document.getElementById('opt-brush-color-btn').addEventListener('click', () => openPhotoshopColorPicker('fg'));
             }
 
@@ -1464,6 +1815,9 @@
         }
 
         function setTool(toolName) {
+            if (currentTool === 'move' && toolName !== 'move') {
+                commitFloatingSelection();
+            }
             currentTool = toolName;
             document.querySelectorAll('.tool-dock-btn').forEach(b => {
                 b.classList.remove('bg-[#0058d0]', 'text-white');
@@ -1477,7 +1831,7 @@
             const toolNamesMap = {
                 'move': 'Move (V)',
                 'rect-select': 'Rectangular Marquee (F)',
-                'circle-select': 'Elliptical Marquee',
+                'circle-select': 'Elliptical Marquee (Shift+F)',
                 'lasso-select': 'Lasso Tool (Shift+F)',
                 'magic-wand': 'Magic Wand (W)',
                 'eyedropper': 'Eyedropper (I)',
@@ -1489,26 +1843,31 @@
             };
             currentToolIndicator.textContent = `Tool: ${toolNamesMap[toolName] || toolName}`;
             updateOptionsBarForTool(toolName);
+            updateCanvasCursor();
+            redrawSelectionOverlay();
+        }
 
+        function updateCanvasCursor() {
             const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
-            if (activeBrushes.includes(currentTool)) {
+            if (isSpacePressed) {
+                brushCursor.classList.add('hidden');
+                canvasWrapper.style.cursor = isPanning ? 'grabbing' : 'grab';
+            } else if (activeBrushes.includes(currentTool) && !isAltPressed) {
                 canvasWrapper.style.cursor = 'none';
                 updateBrushCursorSize();
-                brushCursor.classList.remove('hidden');
+                updateBrushCursorPosition(lastClientX, lastClientY);
             } else {
                 brushCursor.classList.add('hidden');
-                if (['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'pen'].includes(currentTool)) {
-                    canvasWrapper.style.cursor = 'crosshair';
+                if (currentTool === 'move') {
+                    canvasWrapper.style.cursor = 'default';
                 } else {
-                    canvasWrapper.style.cursor = 'grab';
+                    canvasWrapper.style.cursor = 'crosshair';
                 }
             }
         }
 
         document.querySelectorAll('.tool-dock-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                setTool(btn.getAttribute('data-tool'));
-            });
+            btn.addEventListener('click', () => setTool(btn.getAttribute('data-tool')));
         });
 
         function changeBrushSize(delta) {
@@ -1518,174 +1877,135 @@
             const valSpan = document.getElementById('opt-brush-size-val');
             if (valSpan) valSpan.textContent = `${brushSize}px`;
             updateBrushCursorSize();
+            updateBrushCursorPosition(lastClientX, lastClientY);
             showSizeBadge();
         }
 
         function swapColors() {
             const temp = fgColor;
-            fgColor = bgColor;
-            bgColor = temp;
-            swatchFg.style.backgroundColor = fgColor;
-            swatchBg.style.backgroundColor = bgColor;
-            const colorBtn = document.getElementById('opt-brush-color-btn');
-            if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+            setForegroundColor(bgColor);
+            setBackgroundColor(temp);
         }
 
-        swatchFg.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openPhotoshopColorPicker('fg');
-        });
-        swatchBg.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openPhotoshopColorPicker('bg');
-        });
-        swatchContainer.addEventListener('dblclick', () => {
-            openPhotoshopColorPicker('fg');
-        });
+        swatchFg.addEventListener('click', (e) => { e.stopPropagation(); openPhotoshopColorPicker('fg'); });
+        swatchBg.addEventListener('click', (e) => { e.stopPropagation(); openPhotoshopColorPicker('bg'); });
+        swatchContainer.addEventListener('dblclick', () => openPhotoshopColorPicker('fg'));
 
-        function invertSelection() {
-            const w = canvas.width;
-            const h = canvas.height;
-            const totalPixels = w * h;
+        // --- Helper: Apply Stroke/Operation Buffer to Active Layer Respecting Selection Mask & Lock Transparency ---
+        function applyBufferToActiveLayer(sourceCanvas, isEraser = false, baseSnapshotCanvas = null) {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = w; tempCanvas.height = h;
-            const tCtx = tempCanvas.getContext('2d');
-            tCtx.fillStyle = '#ffffff';
+            const w = canvas.width, h = canvas.height;
+            const lCtx = active.canvas.getContext('2d');
+            const baseData = baseSnapshotCanvas
+                ? baseSnapshotCanvas.getContext('2d').getImageData(0, 0, w, h)
+                : lCtx.getImageData(0, 0, w, h);
+            const srcData = sourceCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+            const dst = baseData.data;
 
-            if (selectionRegions.length > 0) {
-                selectionRegions.forEach(reg => {
-                    if (reg.type === 'rect') {
-                        tCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
-                    } else if (reg.type === 'circle') {
-                        tCtx.beginPath();
-                        tCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
-                        tCtx.fill();
-                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
-                        tCtx.beginPath();
-                        reg.points.forEach((p, idx) => idx === 0 ? tCtx.moveTo(p.x, p.y) : tCtx.lineTo(p.x, p.y));
-                        tCtx.closePath();
-                        tCtx.fill();
-                    } else if (reg.type === 'magic-wand' && reg.mask) {
-                        const imgData = tCtx.getImageData(0, 0, w, h);
-                        for (let i = 0; i < reg.mask.length; i++) {
-                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
+            for (let i = 0; i < w * h; i++) {
+                const selFactor = hasActiveSelection ? (selectionMask[i] / 255) : 1;
+                if (selFactor <= 0) continue;
+
+                const idx = i * 4;
+                const srcA = (srcData[idx + 3] / 255) * selFactor;
+                if (srcA <= 0) continue;
+
+                const dstR = dst[idx], dstG = dst[idx + 1], dstB = dst[idx + 2], dstA = dst[idx + 3] / 255;
+
+                if (isEraser) {
+                    if (active.lockTransparency) continue;
+                    dst[idx + 3] = Math.round(dst[idx + 3] * (1 - srcA));
+                } else {
+                    const sR = srcData[idx], sG = srcData[idx + 1], sB = srcData[idx + 2];
+                    if (active.lockTransparency) {
+                        dst[idx] = Math.round(sR * srcA + dstR * (1 - srcA));
+                        dst[idx + 1] = Math.round(sG * srcA + dstG * (1 - srcA));
+                        dst[idx + 2] = Math.round(sB * srcA + dstB * (1 - srcA));
+                    } else {
+                        const outA = srcA + dstA * (1 - srcA);
+                        if (outA > 0) {
+                            dst[idx] = Math.round((sR * srcA + dstR * dstA * (1 - srcA)) / outA);
+                            dst[idx + 1] = Math.round((sG * srcA + dstG * dstA * (1 - srcA)) / outA);
+                            dst[idx + 2] = Math.round((sB * srcA + dstB * dstA * (1 - srcA)) / outA);
                         }
-                        tCtx.putImageData(imgData, 0, 0);
-                    } else if (reg.type === 'inverse' && reg.mask) {
-                        const imgData = tCtx.getImageData(0, 0, w, h);
-                        for (let i = 0; i < reg.mask.length; i++) {
-                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
-                        }
-                        tCtx.putImageData(imgData, 0, 0);
+                        dst[idx + 3] = Math.round(outA * 255);
                     }
-                });
-            } else {
-                selectionRegions = [{ type: 'rect', x: 0, y: 0, w: w, h: h }];
-                redrawSelectionOverlay();
-                return;
-            }
-
-            const imgData = tCtx.getImageData(0, 0, w, h);
-            const data = imgData.data;
-            const inverseMask = new Uint8Array(totalPixels);
-
-            for (let i = 0; i < totalPixels; i++) {
-                if (data[i * 4 + 3] === 0) {
-                    inverseMask[i] = 1;
                 }
             }
+            lCtx.putImageData(baseData, 0, 0);
+        }
 
-            selectionRegions = [{ type: 'inverse', baseRegions: [...selectionRegions], mask: inverseMask }];
-            redrawSelectionOverlay();
+        // --- Copy, Cut, Paste, Delete Selected Pixels ---
+        function deleteSelectedPixels() {
+            if (floatingSelection) {
+                floatingSelection = null;
+                clearSelection();
+                compositeCanvas();
+                saveHistoryState("Delete Selection");
+                return true;
+            }
+            if (!hasActiveSelection || !selectionMask) return false;
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || active.lockTransparency) return true;
+
+            const w = canvas.width, h = canvas.height;
+            const lCtx = active.canvas.getContext('2d');
+            const imgData = lCtx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+
+            for (let i = 0; i < w * h; i++) {
+                const sel = selectionMask[i] / 255;
+                if (sel > 0) {
+                    data[i * 4 + 3] = Math.round(data[i * 4 + 3] * (1 - sel));
+                }
+            }
+            lCtx.putImageData(imgData, 0, 0);
+            compositeCanvas();
+            saveHistoryState("Clear Selection");
+            return true;
         }
 
         function copySelectionOrLayer() {
+            commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
+            const w = canvas.width, h = canvas.height;
+            const tempCanvas = createOffscreenCanvas(w, h);
             const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(active.canvas, 0, 0);
 
-            if (selectionRegions.length > 0) {
-                tCtx.drawImage(active.canvas, 0, 0);
-                const maskCanvas = document.createElement('canvas');
-                maskCanvas.width = canvas.width;
-                maskCanvas.height = canvas.height;
-                const mCtx = maskCanvas.getContext('2d');
-                mCtx.fillStyle = '#ffffff';
-                selectionRegions.forEach(reg => {
-                    if (reg.type === 'rect') {
-                        mCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
-                    } else if (reg.type === 'circle') {
-                        mCtx.beginPath();
-                        mCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
-                        mCtx.fill();
-                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
-                        mCtx.beginPath();
-                        reg.points.forEach((p, idx) => idx === 0 ? mCtx.moveTo(p.x, p.y) : mCtx.lineTo(p.x, p.y));
-                        mCtx.closePath();
-                        mCtx.fill();
-                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
-                        const imgData = mCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-                        for (let i = 0; i < reg.mask.length; i++) {
-                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 255;
-                        }
-                        mCtx.putImageData(imgData, 0, 0);
-                    }
-                });
-                tCtx.globalCompositeOperation = 'destination-in';
-                tCtx.drawImage(maskCanvas, 0, 0);
-            } else {
-                tCtx.drawImage(active.canvas, 0, 0);
+            if (hasActiveSelection && selectionMask) {
+                const imgData = tCtx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+                for (let i = 0; i < w * h; i++) {
+                    data[i * 4 + 3] = Math.round(data[i * 4 + 3] * (selectionMask[i] / 255));
+                }
+                tCtx.putImageData(imgData, 0, 0);
             }
             internalClipboard = tempCanvas;
         }
 
         function cutSelectionOrLayer() {
             copySelectionOrLayer();
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
-            lCtx.save();
-            lCtx.globalCompositeOperation = 'destination-out';
-
-            if (selectionRegions.length > 0) {
-                selectionRegions.forEach(reg => {
-                    if (reg.type === 'rect') {
-                        lCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
-                    } else if (reg.type === 'circle') {
-                        lCtx.beginPath();
-                        lCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2);
-                        lCtx.fill();
-                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
-                        lCtx.beginPath();
-                        reg.points.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
-                        lCtx.closePath();
-                        lCtx.fill();
-                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
-                        const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
-                        for (let i = 0; i < reg.mask.length; i++) {
-                            if (reg.mask[i]) imgData.data[i * 4 + 3] = 0;
-                        }
-                        lCtx.putImageData(imgData, 0, 0);
-                    }
-                });
+            if (hasActiveSelection) {
+                deleteSelectedPixels();
             } else {
-                lCtx.clearRect(0, 0, active.canvas.width, active.canvas.height);
+                const active = layers.find(l => l.id === activeLayerId);
+                if (!active) return;
+                active.canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                compositeCanvas();
+                saveHistoryState("Cut Layer");
             }
-            lCtx.restore();
-            compositeCanvas();
-            saveHistoryState("Cut");
         }
 
         function pasteClipboard() {
             if (!internalClipboard) return;
+            commitFloatingSelection();
             const newId = 'layer-' + Date.now();
             const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
-            const nCtx = newCanvas.getContext('2d');
-            nCtx.drawImage(internalClipboard, 0, 0);
+            newCanvas.getContext('2d').drawImage(internalClipboard, 0, 0);
 
             const activeIdx = layers.findIndex(l => l.id === activeLayerId);
             const insertIdx = activeIdx !== -1 ? activeIdx + 1 : layers.length;
@@ -1710,6 +2030,7 @@
             saveHistoryState("Paste");
         }
 
+        // --- Place Embedded / Linked ---
         const placeFileInput = document.getElementById('place-file-input');
         let currentPlaceType = 'embedded';
 
@@ -1717,7 +2038,6 @@
             currentPlaceType = 'embedded';
             placeFileInput.click();
         });
-
         document.getElementById('menu-place-linked').addEventListener('click', () => {
             currentPlaceType = 'linked';
             placeFileInput.click();
@@ -1777,18 +2097,39 @@
             placeFileInput.value = '';
         });
 
+        // --- Keyboard Shortcuts (Strictly Preserved) ---
         window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
 
             const key = e.key.toLowerCase();
-            if (e.code === 'Space') isSpacePressed = true;
+            if (e.code === 'Space') { isSpacePressed = true; updateCanvasCursor(); }
             if (e.key === 'Control' || e.metaKey) isCtrlPressed = true;
             if (e.key === 'Shift') isShiftPressed = true;
-            if (e.key === 'Alt') isAltPressed = true;
+            if (e.key === 'Alt') { isAltPressed = true; updateCanvasCursor(); }
 
-            if (e.key === 'Delete') {
+            if (e.key === 'Escape') {
+                if (currentTool === 'pen' && currentPenPath.points.length > 0) {
+                    currentPenPath = { points: [], closed: false };
+                    selectedAnchorIndex = null;
+                    redrawSelectionOverlay();
+                } else if (floatingSelection) {
+                    commitFloatingSelection();
+                }
+                return;
+            }
+
+            if (e.key === 'Delete' || (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey)) {
                 e.preventDefault();
-                if (activeLayerId && layers.length > 1) {
+                if (currentTool === 'pen' && selectedAnchorIndex !== null && currentPenPath.points.length > 0) {
+                    currentPenPath.points.splice(selectedAnchorIndex, 1);
+                    if (currentPenPath.points.length < 3) currentPenPath.closed = false;
+                    selectedAnchorIndex = currentPenPath.points.length > 0 ? currentPenPath.points.length - 1 : null;
+                    redrawSelectionOverlay();
+                    return;
+                }
+                if (hasActiveSelection || floatingSelection) {
+                    deleteSelectedPixels();
+                } else if (e.key === 'Delete' && activeLayerId && layers.length > 1) {
                     deleteLayer(activeLayerId);
                 }
                 return;
@@ -1796,7 +2137,7 @@
 
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
-                if (currentTool === 'pen' && currentPenPath.points.length > 2) {
+                if (currentPenPath.points.length >= 2) {
                     convertPathToSelection();
                 }
                 return;
@@ -1815,10 +2156,7 @@
 
                 if (e.ctrlKey || e.metaKey) {
                     if (key === 'z') { undoLastAction(); }
-                    else if (key === 'a') {
-                        selectionRegions = [{ type: 'rect', x: 0, y: 0, w: canvas.width, h: canvas.height }];
-                        redrawSelectionOverlay();
-                    }
+                    else if (key === 'a') { selectAllCanvas(); }
                     else if (key === 'c') { copySelectionOrLayer(); }
                     else if (key === 'x') { cutSelectionOrLayer(); }
                     else if (key === 'v') { pasteClipboard(); }
@@ -1829,10 +2167,7 @@
                     } else if (key === 's') { downloadBtn.click(); }
                     else if (key === 'e') { mergeLayerDown(activeLayerId); }
                     else if (key === '0') { document.getElementById('reset-view').click(); }
-                    else if (key === 'd') {
-                        selectionRegions = []; currentDragSelection = null;
-                        selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-                    }
+                    else if (key === 'd') { clearSelection(); }
                     else if (e.code === 'Backspace') { performSelectionFill(fgColor); }
                 }
                 return;
@@ -1882,12 +2217,13 @@
         }, { capture: true });
 
         window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') isSpacePressed = false;
+            if (e.code === 'Space') { isSpacePressed = false; updateCanvasCursor(); }
             if (e.key === 'Control' || e.key === 'Meta') isCtrlPressed = false;
             if (e.key === 'Shift') isShiftPressed = false;
-            if (e.key === 'Alt') isAltPressed = false;
+            if (e.key === 'Alt') { isAltPressed = false; updateCanvasCursor(); }
         }, { capture: true });
 
+        // --- Layer Management ---
         function initLayers(w, h) {
             layers = [
                 { id: 'layer-base', name: 'Background', visible: true, canvas: createOffscreenCanvas(w, h), isBase: true, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 },
@@ -1898,6 +2234,7 @@
             bCtx.fillRect(0, 0, w, h);
 
             activeLayerId = 'layer-1';
+            initSelectionMask(w, h);
             renderLayersUI();
             syncAdjustmentsUI();
             historyStack = [];
@@ -1933,7 +2270,7 @@
                     <div class="flex items-center justify-between cursor-pointer" onclick="setActiveLayer('${layer.id}')">
                         <div class="flex items-center space-x-2 flex-1 min-w-0">
                             <button class="text-gray-400 hover:text-white" onclick="event.stopPropagation(); toggleLayerVisibility('${layer.id}')"><i class="fa-solid ${layer.visible ? 'fa-eye text-indigo-400' : 'fa-eye-slash text-gray-600'} text-xs"></i></button>
-                            <span class="text-xs font-medium text-gray-200 truncate">${layer.name}</span>
+                            <span class="text-xs font-medium text-gray-200 truncate" ondblclick="event.stopPropagation(); renameLayerPrompt('${layer.id}')" title="Double-click to rename">${layer.name}</span>
                         </div>
                         <div class="flex items-center space-x-1">
                             <button class="p-1 ${layer.lockTransparency ? 'text-indigo-400 bg-[#333]' : 'text-gray-500 hover:text-gray-300'} rounded" title="Lock Transparent Pixels" onclick="event.stopPropagation(); toggleLockTransparency('${layer.id}')">
@@ -1945,14 +2282,14 @@
                             <button class="p-1 text-gray-400 hover:text-white rounded" title="Merge Down (Ctrl+E)" onclick="event.stopPropagation(); mergeLayerDown('${layer.id}')">
                                 <i class="fa-solid fa-down-long text-[9px]"></i>
                             </button>
-                            <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', 1)"><i class="fa-solid fa-chevron-up text-[9px]"></i></button>
-                            <button class="p-1 text-gray-400 hover:text-white" onclick="moveLayer('${layer.id}', -1)"><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
-                            ${!layer.isBase && layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="deleteLayer('${layer.id}')" title="Delete Layer (Delete Key)"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
+                            <button class="p-1 text-gray-400 hover:text-white" onclick="event.stopPropagation(); moveLayer('${layer.id}', 1)"><i class="fa-solid fa-chevron-up text-[9px]"></i></button>
+                            <button class="p-1 text-gray-400 hover:text-white" onclick="event.stopPropagation(); moveLayer('${layer.id}', -1)"><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
+                            ${layers.length > 1 ? `<button class="p-1 text-red-400 hover:text-red-300" onclick="event.stopPropagation(); deleteLayer('${layer.id}')" title="Delete Layer (Delete Key)"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center space-x-2 text-[10px] text-gray-400 pt-1 border-t border-[#333]">
                         <span>Opacity:</span>
-                        <input type="range" min="0" max="1" step="0.05" value="${layer.opacity ?? 1}" class="flex-1 h-1 bg-[#222] rounded cursor-pointer" oninput="updateLayerOpacity('${layer.id}', this.value)">
+                        <input type="range" min="0" max="1" step="0.05" value="${layer.opacity ?? 1}" class="flex-1 h-1 bg-[#222] rounded cursor-pointer" oninput="updateLayerOpacity('${layer.id}', this.value)" onchange="saveHistoryState('Layer Opacity')">
                         <select class="bg-[#2a2a2a] text-gray-200 rounded border border-[#444] px-1 py-0.5 text-[10px]" onchange="updateLayerBlendMode('${layer.id}', this.value)">
                             <option value="source-over" ${layer.blendMode === 'source-over' ? 'selected' : ''}>Normal</option>
                             <option value="multiply" ${layer.blendMode === 'multiply' ? 'selected' : ''}>Multiply</option>
@@ -1960,6 +2297,12 @@
                             <option value="overlay" ${layer.blendMode === 'overlay' ? 'selected' : ''}>Overlay</option>
                             <option value="darken" ${layer.blendMode === 'darken' ? 'selected' : ''}>Darken</option>
                             <option value="lighten" ${layer.blendMode === 'lighten' ? 'selected' : ''}>Lighten</option>
+                            <option value="color-dodge" ${layer.blendMode === 'color-dodge' ? 'selected' : ''}>Color Dodge</option>
+                            <option value="color-burn" ${layer.blendMode === 'color-burn' ? 'selected' : ''}>Color Burn</option>
+                            <option value="hard-light" ${layer.blendMode === 'hard-light' ? 'selected' : ''}>Hard Light</option>
+                            <option value="soft-light" ${layer.blendMode === 'soft-light' ? 'selected' : ''}>Soft Light</option>
+                            <option value="difference" ${layer.blendMode === 'difference' ? 'selected' : ''}>Difference</option>
+                            <option value="exclusion" ${layer.blendMode === 'exclusion' ? 'selected' : ''}>Exclusion</option>
                         </select>
                     </div>
                 `;
@@ -1967,20 +2310,30 @@
             });
         }
 
-        window.setActiveLayer = (id) => { activeLayerId = id; renderLayersUI(); syncAdjustmentsUI(); };
+        window.setActiveLayer = (id) => { commitFloatingSelection(); activeLayerId = id; renderLayersUI(); syncAdjustmentsUI(); };
+        window.renameLayerPrompt = (id) => {
+            const l = layers.find(x => x.id === id);
+            if (!l) return;
+            const newName = prompt("Rename Layer:", l.name);
+            if (newName && newName.trim()) {
+                l.name = newName.trim();
+                renderLayersUI();
+                syncAdjustmentsUI();
+            }
+        };
         window.toggleLayerVisibility = (id) => { const l = layers.find(x => x.id === id); if (l) { l.visible = !l.visible; renderLayersUI(); compositeCanvas(); saveHistoryState("Toggle Visibility"); } };
         window.toggleLockTransparency = (id) => { const l = layers.find(x => x.id === id); if (l) { l.lockTransparency = !l.lockTransparency; renderLayersUI(); saveHistoryState("Toggle Pixel Lock"); } };
         window.updateLayerOpacity = (id, val) => { const l = layers.find(x => x.id === id); if (l) { l.opacity = parseFloat(val); compositeCanvas(); } };
         window.updateLayerBlendMode = (id, mode) => { const l = layers.find(x => x.id === id); if (l) { l.blendMode = mode; compositeCanvas(); saveHistoryState("Blend Mode Change"); } };
         
         window.duplicateLayer = (id) => {
+            commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             if (idx === -1) return;
             const original = layers[idx];
             const newId = 'layer-' + Date.now();
             const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
-            const nCtx = newCanvas.getContext('2d');
-            nCtx.drawImage(original.canvas, 0, 0);
+            newCanvas.getContext('2d').drawImage(original.canvas, 0, 0);
 
             const duplicated = {
                 id: newId,
@@ -2006,27 +2359,37 @@
         };
 
         window.mergeLayerDown = (id) => {
+            commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             if (idx <= 0) return;
 
             const upperLayer = layers[idx];
             const lowerLayer = layers[idx - 1];
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
+            const tempCanvas = createOffscreenCanvas(canvas.width, canvas.height);
             const tCtx = tempCanvas.getContext('2d');
 
+            tCtx.save();
             tCtx.globalAlpha = lowerLayer.opacity ?? 1;
             tCtx.globalCompositeOperation = lowerLayer.blendMode ?? 'source-over';
+            tCtx.filter = `brightness(${lowerLayer.brightness}%) contrast(${lowerLayer.contrast}%) saturate(${lowerLayer.saturation}%) blur(${lowerLayer.blur}px)`;
             tCtx.drawImage(lowerLayer.canvas, 0, 0);
+            tCtx.restore();
 
-            tCtx.globalAlpha = upperLayer.opacity ?? 1;
-            tCtx.globalCompositeOperation = upperLayer.blendMode ?? 'source-over';
-            tCtx.drawImage(upperLayer.canvas, 0, 0);
+            if (upperLayer.visible) {
+                tCtx.save();
+                tCtx.globalAlpha = upperLayer.opacity ?? 1;
+                tCtx.globalCompositeOperation = upperLayer.blendMode ?? 'source-over';
+                tCtx.filter = `brightness(${upperLayer.brightness}%) contrast(${upperLayer.contrast}%) saturate(${upperLayer.saturation}%) blur(${upperLayer.blur}px)`;
+                tCtx.drawImage(upperLayer.canvas, 0, 0);
+                tCtx.restore();
+            }
 
             const lowerCtx = lowerLayer.canvas.getContext('2d');
             lowerCtx.clearRect(0, 0, canvas.width, canvas.height);
             lowerCtx.drawImage(tempCanvas, 0, 0);
+            lowerLayer.opacity = 1;
+            lowerLayer.brightness = 100; lowerLayer.contrast = 100; lowerLayer.saturation = 100; lowerLayer.blur = 0;
 
             layers.splice(idx, 1);
             activeLayerId = lowerLayer.id;
@@ -2038,12 +2401,14 @@
         };
 
         window.deleteLayer = (id) => {
+            commitFloatingSelection();
             if (layers.length <= 1) return;
             layers = layers.filter(x => x.id !== id);
             if (activeLayerId === id) activeLayerId = layers[layers.length - 1].id;
             renderLayersUI(); syncAdjustmentsUI(); compositeCanvas(); saveHistoryState("Delete Layer");
         };
         window.moveLayer = (id, dir) => {
+            commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             const target = idx + dir;
             if (target < 0 || target >= layers.length) return;
@@ -2052,8 +2417,11 @@
         };
 
         addLayerBtn.addEventListener('click', () => {
+            commitFloatingSelection();
             const newId = 'layer-' + Date.now();
-            layers.push({ 
+            const activeIdx = layers.findIndex(l => l.id === activeLayerId);
+            const insertIdx = activeIdx !== -1 ? activeIdx + 1 : layers.length;
+            layers.splice(insertIdx, 0, { 
                 id: newId, 
                 name: `Layer ${layers.length}`, 
                 visible: true, 
@@ -2066,9 +2434,10 @@
             });
             activeLayerId = newId; 
             renderLayersUI(); syncAdjustmentsUI(); compositeCanvas(); 
-            saveHistoryState("Add Layer");
+            saveHistoryState("New Layer");
         });
 
+        // --- Document Setup & Loading ---
         function setupNewDocument(w, h, name = "document.png") {
             originalWidth = w; originalHeight = h;
             imageName = name;
@@ -2079,6 +2448,7 @@
             canvas.width = originalWidth; canvas.height = originalHeight;
             selectionCanvas.width = originalWidth; selectionCanvas.height = originalHeight;
             originalImage = null;
+            floatingSelection = null;
             initLayers(originalWidth, originalHeight);
             compositeCanvas();
         }
@@ -2111,15 +2481,21 @@
                 infoName.textContent = imageName;
                 canvas.width = originalWidth; canvas.height = originalHeight;
                 selectionCanvas.width = originalWidth; selectionCanvas.height = originalHeight;
-                
+                floatingSelection = null;
+
+                const baseCanvas = createOffscreenCanvas(originalWidth, originalHeight);
+                baseCanvas.getContext('2d').drawImage(img, 0, 0);
+
                 layers = [
-                    { id: 'layer-base', name: 'Background Image', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: true, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 },
+                    { id: 'layer-base', name: 'Background', visible: true, canvas: baseCanvas, isBase: true, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 },
                     { id: 'layer-1', name: 'Layer 1', visible: true, canvas: createOffscreenCanvas(originalWidth, originalHeight), isBase: false, opacity: 1, blendMode: 'source-over', lockTransparency: false, brightness: 100, contrast: 100, saturation: 100, blur: 0 }
                 ];
                 activeLayerId = 'layer-1';
+                initSelectionMask(originalWidth, originalHeight);
                 renderLayersUI();
                 syncAdjustmentsUI();
-                resetEdits();
+                compositeCanvas();
+                historyStack = [];
                 saveHistoryState("Open Image");
             };
             img.src = src;
@@ -2129,7 +2505,6 @@
             const f = e.target.files[0];
             if (f) { const r = new FileReader(); r.onload = (ev) => handleImageLoad(ev.target.result, f.name); r.readAsDataURL(f); }
         });
-
         document.getElementById('image-upload-modal').addEventListener('change', (e) => {
             const f = e.target.files[0];
             if (f) { const r = new FileReader(); r.onload = (ev) => handleImageLoad(ev.target.result, f.name); r.readAsDataURL(f); }
@@ -2137,19 +2512,17 @@
 
         document.getElementById('menu-open').addEventListener('click', () => document.getElementById('image-upload').click());
         document.getElementById('menu-new').addEventListener('click', () => uploadOverlay.classList.remove('opacity-0', 'pointer-events-none'));
+        document.getElementById('menu-save').addEventListener('click', () => downloadBtn.click());
         document.getElementById('menu-new-layer').addEventListener('click', () => addLayerBtn.click());
         document.getElementById('menu-merge-down').addEventListener('click', () => mergeLayerDown(activeLayerId));
         document.getElementById('menu-undo').addEventListener('click', () => undoLastAction());
+        document.getElementById('menu-cut').addEventListener('click', () => cutSelectionOrLayer());
+        document.getElementById('menu-copy').addEventListener('click', () => copySelectionOrLayer());
+        document.getElementById('menu-paste').addEventListener('click', () => pasteClipboard());
         document.getElementById('menu-fill-fg').addEventListener('click', () => performSelectionFill(fgColor));
         document.getElementById('menu-fill-bg').addEventListener('click', () => performSelectionFill(bgColor));
-        document.getElementById('menu-select-all').addEventListener('click', () => {
-            selectionRegions = [{ type: 'rect', x: 0, y: 0, w: canvas.width, h: canvas.height }];
-            redrawSelectionOverlay();
-        });
-        document.getElementById('menu-deselect').addEventListener('click', () => {
-            selectionRegions = []; currentDragSelection = null;
-            selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-        });
+        document.getElementById('menu-select-all').addEventListener('click', () => selectAllCanvas());
+        document.getElementById('menu-deselect').addEventListener('click', () => clearSelection());
         document.getElementById('menu-invert-select').addEventListener('click', () => invertSelection());
 
         document.getElementById('load-sample-btn').addEventListener('click', () => {
@@ -2157,38 +2530,23 @@
             handleImageLoad(url, 'tropical-beach.jpg');
         });
 
-        function updateLayerContent(layer) {
-            const ctxLayer = layer.canvas.getContext('2d');
-            ctxLayer.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
-            if (layer.isBase && originalImage) {
-                ctxLayer.drawImage(originalImage, 0, 0);
-            }
-        }
-
+        // --- Compositing Engine ---
         function compositeCanvas() {
-            let w = originalWidth;
-            let h = originalHeight;
-            canvas.width = w; canvas.height = h; selectionCanvas.width = w; selectionCanvas.height = h;
-            infoDims.textContent = `${canvas.width} × ${canvas.height} px`;
+            const w = originalWidth, h = originalHeight;
+            infoDims.textContent = `${w} × ${h} px`;
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, w, h);
             layers.forEach(l => {
                 if (!l.visible || !l.canvas) return;
                 ctx.save();
-                if (l.isBase && originalImage) {
-                    updateLayerContent(l);
-                }
-
                 ctx.globalAlpha = l.opacity ?? 1;
                 ctx.globalCompositeOperation = l.blendMode ?? 'source-over';
-
-                const tempLayerCanvas = document.createElement('canvas');
-                tempLayerCanvas.width = canvas.width; tempLayerCanvas.height = canvas.height;
-                const tempCtx = tempLayerCanvas.getContext('2d');
-                tempCtx.drawImage(l.canvas, 0, 0, canvas.width, canvas.height);
-
                 ctx.filter = `brightness(${l.brightness}%) contrast(${l.contrast}%) saturate(${l.saturation}%) blur(${l.blur}px)`;
-                ctx.drawImage(tempLayerCanvas, 0, 0);
+                ctx.drawImage(l.canvas, 0, 0, w, h);
+
+                if (floatingSelection && l.id === activeLayerId) {
+                    ctx.drawImage(floatingSelection.canvas, Math.round(floatingSelection.offsetX), Math.round(floatingSelection.offsetY));
+                }
                 ctx.restore();
             });
         }
@@ -2213,29 +2571,41 @@
         [brightnessInput, contrastInput, saturationInput, blurInput].forEach(i => i.addEventListener('change', () => saveHistoryState("Adjustments")));
 
         function applyPixelFilter(filterType) {
+            commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
+            const w = active.canvas.width, h = active.canvas.height;
             const lCtx = active.canvas.getContext('2d');
-            const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
+            const imgData = lCtx.getImageData(0, 0, w, h);
             const data = imgData.data;
 
-            for (let i = 0; i < data.length; i += 4) {
+            for (let p = 0; p < w * h; p++) {
+                const sel = hasActiveSelection ? (selectionMask[p] / 255) : 1;
+                if (sel <= 0) continue;
+
+                const i = p * 4;
+                if (data[i + 3] === 0) continue;
                 let r = data[i], g = data[i+1], b = data[i+2];
+                let nr = r, ng = g, nb = b;
 
                 if (filterType === 'invert') {
-                    data[i] = 255 - r; data[i+1] = 255 - g; data[i+2] = 255 - b;
+                    nr = 255 - r; ng = 255 - g; nb = 255 - b;
                 } else if (filterType === 'grayscale') {
-                    let avg = 0.3 * r + 0.59 * g + 0.11 * b;
-                    data[i] = avg; data[i+1] = avg; data[i+2] = avg;
+                    let avg = 0.299 * r + 0.587 * g + 0.114 * b;
+                    nr = avg; ng = avg; nb = avg;
                 } else if (filterType === 'sepia') {
-                    data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-                    data[i+1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-                    data[i+2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                    nr = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    ng = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    nb = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
                 } else if (filterType === 'kodak') {
-                    data[i] = Math.min(255, r * 1.2);
-                    data[i+1] = Math.min(255, g * 1.1);
-                    data[i+2] = Math.max(0, b * 0.9);
+                    nr = Math.min(255, r * 1.2);
+                    ng = Math.min(255, g * 1.1);
+                    nb = Math.max(0, b * 0.9);
                 }
+
+                data[i] = Math.round(r * (1 - sel) + nr * sel);
+                data[i+1] = Math.round(g * (1 - sel) + ng * sel);
+                data[i+2] = Math.round(b * (1 - sel) + nb * sel);
             }
 
             lCtx.putImageData(imgData, 0, 0);
@@ -2246,11 +2616,11 @@
         document.querySelectorAll('.filter-preset').forEach(b => {
             b.addEventListener('click', () => {
                 const filter = b.getAttribute('data-filter');
-                if (!filter) return;
-                applyPixelFilter(filter);
+                if (filter) applyPixelFilter(filter);
             });
         });
 
+        // Exact 1:1 mapping from screen pointer to internal canvas pixel coordinates
         function getCanvasPointerPos(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -2261,199 +2631,341 @@
             };
         }
 
+        // --- Magic Wand Tool ---
         function magicWandSelect(startX, startY) {
-            const w = canvas.width;
-            const h = canvas.height;
-            const imgData = ctx.getImageData(0, 0, w, h);
-            const data = imgData.data;
-
-            const sx = Math.floor(startX);
-            const sy = Math.floor(startY);
+            const w = canvas.width, h = canvas.height;
+            const sx = Math.floor(startX), sy = Math.floor(startY);
             if (sx < 0 || sx >= w || sy < 0 || sy >= h) return;
+
+            const active = layers.find(l => l.id === activeLayerId);
+            const sourceCtx = (!wandSampleAllLayers && active) ? active.canvas.getContext('2d') : ctx;
+            const data = sourceCtx.getImageData(0, 0, w, h).data;
 
             const startIdx = (sy * w + sx) * 4;
             const sr = data[startIdx], sg = data[startIdx + 1], sb = data[startIdx + 2], sa = data[startIdx + 3];
-
-            const queue = [[sx, sy]];
-            const visited = new Uint8Array(w * h);
             const wandMask = new Uint8Array(w * h);
 
-            while (queue.length > 0) {
-                const [x, y] = queue.pop();
-                const idx = y * w + x;
-                if (visited[idx]) continue;
-                visited[idx] = 1;
-
-                const pIdx = idx * 4;
+            function colorMatches(pIdx) {
+                if (sa === 0 && data[pIdx + 3] === 0) return true;
                 const dr = Math.abs(data[pIdx] - sr);
-                const dg = Math.abs(data[pIdx+1] - sg);
-                const db = Math.abs(data[pIdx+2] - sb);
-                const da = Math.abs(data[pIdx+3] - sa);
-
-                if (dr <= wandTolerance && dg <= wandTolerance && db <= wandTolerance && da <= wandTolerance) {
-                    wandMask[idx] = 1;
-                    if (x > 0) queue.push([x - 1, y]);
-                    if (x < w - 1) queue.push([x + 1, y]);
-                    if (y > 0) queue.push([x, y - 1]);
-                    if (y < h - 1) queue.push([x, y + 1]);
-                }
+                const dg = Math.abs(data[pIdx + 1] - sg);
+                const db = Math.abs(data[pIdx + 2] - sb);
+                const da = Math.abs(data[pIdx + 3] - sa);
+                return dr <= wandTolerance && dg <= wandTolerance && db <= wandTolerance && da <= wandTolerance;
             }
 
-            const newReg = { type: 'magic-wand', mask: wandMask };
-            applySelectionCombination(newReg);
-            redrawSelectionOverlay();
-        }
+            if (wandContiguous) {
+                const queue = [sy * w + sx];
+                const visited = new Uint8Array(w * h);
+                visited[sy * w + sx] = 1;
 
-        function applySelectionCombination(newReg) {
-            if (marqueeMode === 'new') {
-                selectionRegions = [newReg];
-            } else if (marqueeMode === 'add') {
-                selectionRegions.push(newReg);
-            } else if (marqueeMode === 'subtract') {
-                selectionRegions.push(newReg);
-            } else if (marqueeMode === 'intersect') {
-                selectionRegions = [newReg];
-            }
-        }
-
-        function applyMixerBrush(cx, cy) {
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
-            const radius = brushSize / 2;
-            const canvasW = active.canvas.width;
-            const canvasH = active.canvas.height;
-
-            const x0 = Math.max(0, Math.floor(cx - radius));
-            const y0 = Math.max(0, Math.floor(cy - radius));
-            const x1 = Math.min(canvasW, Math.ceil(cx + radius));
-            const y1 = Math.min(canvasH, Math.ceil(cy + radius));
-            const rw = x1 - x0;
-            const rh = y1 - y0;
-            if (rw <= 0 || rh <= 0) return;
-
-            const sampleData = ctx.getImageData(x0, y0, rw, rh).data;
-            const targetImgData = lCtx.getImageData(x0, y0, rw, rh);
-            const data = targetImgData.data;
-
-            const hex = fgColor.replace('#', '');
-            const fr = parseInt(hex.substring(0, 2), 16);
-            const fg = parseInt(hex.substring(2, 4), 16);
-            const fb = parseInt(hex.substring(4, 6), 16);
-            const wetFactor = (brushWetness / 100) * 0.25;
-
-            lCtx.save();
-            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
-
-            for (let py = 0; py < rh; py++) {
-                for (let px = 0; px < rw; px++) {
-                    const absX = x0 + px;
-                    const absY = y0 + py;
-                    const dist = Math.hypot(absX - cx, absY - cy);
-                    if (dist <= radius) {
-                        const falloff = (1 - (dist / radius)) * wetFactor;
-                        const idx = (py * rw + px) * 4;
-                        const baseR = sampleData[idx];
-                        const baseG = sampleData[idx+1];
-                        const baseB = sampleData[idx+2];
-                        const baseA = sampleData[idx+3];
-
-                        data[idx] = Math.round(baseR * (1 - falloff) + fr * falloff);
-                        data[idx+1] = Math.round(baseG * (1 - falloff) + fg * falloff);
-                        data[idx+2] = Math.round(baseB * (1 - falloff) + fb * falloff);
-                        data[idx+3] = Math.max(baseA, 255 * falloff);
+                while (queue.length > 0) {
+                    const curr = queue.pop();
+                    const pIdx = curr * 4;
+                    if (colorMatches(pIdx)) {
+                        wandMask[curr] = 255;
+                        const cx = curr % w;
+                        const cy = (curr - cx) / w;
+                        if (cx > 0 && !visited[curr - 1]) { visited[curr - 1] = 1; queue.push(curr - 1); }
+                        if (cx < w - 1 && !visited[curr + 1]) { visited[curr + 1] = 1; queue.push(curr + 1); }
+                        if (cy > 0 && !visited[curr - w]) { visited[curr - w] = 1; queue.push(curr - w); }
+                        if (cy < h - 1 && !visited[curr + w]) { visited[curr + w] = 1; queue.push(curr + w); }
                     }
                 }
+            } else {
+                for (let i = 0; i < w * h; i++) {
+                    if (colorMatches(i * 4)) wandMask[i] = 255;
+                }
             }
-            lCtx.putImageData(targetImgData, x0, y0);
-            lCtx.restore();
-            compositeCanvas();
+
+            applySelectionCombination({ type: 'mask', mask: wandMask }, getEffectiveSelectionMode());
         }
 
-        function startSmudge(cx, cy) {
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
-            const sampleX = Math.min(Math.max(0, Math.floor(cx)), active.canvas.width - 1);
-            const sampleY = Math.min(Math.max(0, Math.floor(cy)), active.canvas.height - 1);
-            const layerImg = lCtx.getImageData(sampleX, sampleY, 1, 1).data;
-            
-            smudgeCarriedR = layerImg[0];
-            smudgeCarriedG = layerImg[1];
-            smudgeCarriedB = layerImg[2];
-            smudgeCarriedA = layerImg[3];
+        // --- Brush Dab Engine ---
+        function drawBrushDabOnContext(targetCtx, x, y, radius, rgb, hardness, alpha = 1) {
+            targetCtx.save();
+            const r = Math.max(0.5, radius);
+            if (hardness >= 98) {
+                targetCtx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+                targetCtx.beginPath();
+                targetCtx.arc(x, y, r, 0, Math.PI * 2);
+                targetCtx.fill();
+            } else {
+                const innerR = r * (hardness / 100);
+                const grad = targetCtx.createRadialGradient(x, y, innerR, x, y, r);
+                grad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`);
+                grad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
+                targetCtx.fillStyle = grad;
+                targetCtx.beginPath();
+                targetCtx.arc(x, y, r, 0, Math.PI * 2);
+                targetCtx.fill();
+            }
+            targetCtx.restore();
         }
 
-        function applySmudge(x1, y1, x2, y2) {
-            const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
+        function stampBrushSegment(padCtx, x1, y1, x2, y2) {
             const radius = brushSize / 2;
-            const strengthFactor = (brushStrength / 100);
-
+            const rgb = currentTool === 'eraser' ? { r: 0, g: 0, b: 0 } : hexToRgb(fgColor);
             const dist = Math.hypot(x2 - x1, y2 - y1);
-            const steps = Math.max(1, Math.floor(dist / (radius * 0.25)));
+            const spacing = Math.max(0.75, radius * 0.2);
+            const steps = Math.max(1, Math.ceil(dist / spacing));
+            const stepAlpha = brushOpacity / 100;
 
-            lCtx.save();
-            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
+            for (let s = 0; s <= steps; s++) {
+                const t = steps === 0 ? 0 : s / steps;
+                const cx = x1 + (x2 - x1) * t;
+                const cy = y1 + (y2 - y1) * t;
+                drawBrushDabOnContext(padCtx, cx, cy, radius, rgb, brushHardness, stepAlpha);
+            }
+        }
+
+        // --- Mixer Brush Engine ---
+        function applyMixerBrushSegment(x1, y1, x2, y2) {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
+            const lCtx = active.canvas.getContext('2d');
+            const radius = Math.max(1, brushSize / 2);
+            const canvasW = active.canvas.width, canvasH = active.canvas.height;
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            const steps = Math.max(1, Math.ceil(dist / Math.max(1, radius * 0.25)));
+            const wet = brushWetness / 100;
 
             for (let s = 0; s <= steps; s++) {
                 const t = s / steps;
                 const cx = x1 + (x2 - x1) * t;
                 const cy = y1 + (y2 - y1) * t;
 
-                const sampleX = Math.min(Math.max(0, Math.floor(cx)), active.canvas.width - 1);
-                const sampleY = Math.min(Math.max(0, Math.floor(cy)), active.canvas.height - 1);
-                const currentLayerData = lCtx.getImageData(sampleX, sampleY, 1, 1).data;
-
-                const mixRate = strengthFactor * 0.35;
-                smudgeCarriedR = Math.round(smudgeCarriedR * (1 - mixRate) + currentLayerData[0] * mixRate);
-                smudgeCarriedG = Math.round(smudgeCarriedG * (1 - mixRate) + currentLayerData[1] * mixRate);
-                smudgeCarriedB = Math.round(smudgeCarriedB * (1 - mixRate) + currentLayerData[2] * mixRate);
-                smudgeCarriedA = Math.round(smudgeCarriedA * (1 - mixRate) + currentLayerData[3] * mixRate);
-
                 const x0 = Math.max(0, Math.floor(cx - radius));
                 const y0 = Math.max(0, Math.floor(cy - radius));
-                const x1_box = Math.min(active.canvas.width, Math.ceil(cx + radius));
-                const y1_box = Math.min(active.canvas.height, Math.ceil(cy + radius));
-                const rw = x1_box - x0;
-                const rh = y1_box - y0;
+                const x1_b = Math.min(canvasW, Math.ceil(cx + radius));
+                const y1_b = Math.min(canvasH, Math.ceil(cy + radius));
+                const rw = x1_b - x0, rh = y1_b - y0;
                 if (rw <= 0 || rh <= 0) continue;
 
-                const layerImgData = lCtx.getImageData(x0, y0, rw, rh);
-                const lData = layerImgData.data;
+                const targetImgData = lCtx.getImageData(x0, y0, rw, rh);
+                const data = targetImgData.data;
 
+                let sumR = 0, sumG = 0, sumB = 0, count = 0;
                 for (let py = 0; py < rh; py++) {
                     for (let px = 0; px < rw; px++) {
-                        const absX = x0 + px;
-                        const absY = y0 + py;
-                        const dCenter = Math.hypot(absX - cx, absY - cy);
-                        if (dCenter <= radius) {
-                            const falloff = (1 - (dCenter / radius)) * strengthFactor;
-                            const idx = (py * rw + px) * 4;
-
-                            lData[idx] = Math.round(lData[idx] * (1 - falloff) + smudgeCarriedR * falloff);
-                            lData[idx+1] = Math.round(lData[idx+1] * (1 - falloff) + smudgeCarriedG * falloff);
-                            lData[idx+2] = Math.round(lData[idx+2] * (1 - falloff) + smudgeCarriedB * falloff);
-                            lData[idx+3] = Math.max(lData[idx+3], smudgeCarriedA * falloff);
+                        const idx = (py * rw + px) * 4;
+                        if (data[idx + 3] > 0) {
+                            sumR += data[idx]; sumG += data[idx + 1]; sumB += data[idx + 2]; count++;
                         }
                     }
                 }
-                lCtx.putImageData(layerImgData, x0, y0);
+                if (count > 0) {
+                    const avgR = sumR / count, avgG = sumG / count, avgB = sumB / count;
+                    mixerLoadedR = mixerLoadedR * (1 - wet * 0.3) + avgR * (wet * 0.3);
+                    mixerLoadedG = mixerLoadedG * (1 - wet * 0.3) + avgG * (wet * 0.3);
+                    mixerLoadedB = mixerLoadedB * (1 - wet * 0.3) + avgB * (wet * 0.3);
+                }
+
+                for (let py = 0; py < rh; py++) {
+                    for (let px = 0; px < rw; px++) {
+                        const absX = x0 + px, absY = y0 + py;
+                        const globalIdx = absY * canvasW + absX;
+                        const selFactor = hasActiveSelection ? (selectionMask[globalIdx] / 255) : 1;
+                        if (selFactor <= 0) continue;
+
+                        const dCenter = Math.hypot(absX + 0.5 - cx, absY + 0.5 - cy);
+                        if (dCenter <= radius) {
+                            const falloff = (1 - (dCenter / radius)) * 0.35 * selFactor;
+                            const idx = (py * rw + px) * 4;
+                            data[idx] = Math.round(data[idx] * (1 - falloff) + mixerLoadedR * falloff);
+                            data[idx + 1] = Math.round(data[idx + 1] * (1 - falloff) + mixerLoadedG * falloff);
+                            data[idx + 2] = Math.round(data[idx + 2] * (1 - falloff) + mixerLoadedB * falloff);
+                            if (!active.lockTransparency) {
+                                data[idx + 3] = Math.min(255, Math.max(data[idx + 3], Math.round(255 * falloff)));
+                            }
+                        }
+                    }
+                }
+                lCtx.putImageData(targetImgData, x0, y0);
             }
-            lCtx.restore();
             compositeCanvas();
         }
 
-        canvasWrapper.addEventListener('contextmenu', (e) => {
+        // --- Photoshop Smudge Tool ---
+        function startSmudge(cx, cy) {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active) return;
+            const lCtx = active.canvas.getContext('2d');
+            const d = Math.max(2, Math.ceil(brushSize));
+            const r = Math.floor(d / 2);
+            const sx = Math.floor(cx) - r;
+            const sy = Math.floor(cy) - r;
+
+            smudgeCarriedBuffer = new Float32Array(d * d * 4);
+            const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height).data;
+            const w = active.canvas.width, h = active.canvas.height;
+
+            for (let py = 0; py < d; py++) {
+                for (let px = 0; px < d; px++) {
+                    const ax = Math.min(w - 1, Math.max(0, sx + px));
+                    const ay = Math.min(h - 1, Math.max(0, sy + py));
+                    const sIdx = (ay * w + ax) * 4;
+                    const bIdx = (py * d + px) * 4;
+                    smudgeCarriedBuffer[bIdx] = imgData[sIdx];
+                    smudgeCarriedBuffer[bIdx + 1] = imgData[sIdx + 1];
+                    smudgeCarriedBuffer[bIdx + 2] = imgData[sIdx + 2];
+                    smudgeCarriedBuffer[bIdx + 3] = imgData[sIdx + 3];
+                }
+            }
+        }
+
+        function applySmudge(x1, y1, x2, y2) {
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || !smudgeCarriedBuffer) return;
+            const lCtx = active.canvas.getContext('2d');
+            const d = Math.max(2, Math.ceil(brushSize));
+            const r = d / 2;
+            const w = active.canvas.width, h = active.canvas.height;
+            const strength = (brushStrength / 100) * 0.75;
+
+            const dist = Math.hypot(x2 - x1, y2 - y1);
+            const steps = Math.max(1, Math.ceil(dist / Math.max(1, r * 0.2)));
+            const fullLayerImg = lCtx.getImageData(0, 0, w, h);
+            const lData = fullLayerImg.data;
+
+            for (let s = 1; s <= steps; s++) {
+                const t = s / steps;
+                const cx = x1 + (x2 - x1) * t;
+                const cy = y1 + (y2 - y1) * t;
+                const sx = Math.floor(cx - r);
+                const sy = Math.floor(cy - r);
+
+                for (let py = 0; py < d; py++) {
+                    const ay = sy + py;
+                    if (ay < 0 || ay >= h) continue;
+                    for (let px = 0; px < d; px++) {
+                        const ax = sx + px;
+                        if (ax < 0 || ax >= w) continue;
+
+                        const distCenter = Math.hypot(px + 0.5 - r, py + 0.5 - r);
+                        if (distCenter > r) continue;
+
+                        const globalIdx = ay * w + ax;
+                        const selFactor = hasActiveSelection ? (selectionMask[globalIdx] / 255) : 1;
+                        if (selFactor <= 0) continue;
+
+                        const softFalloff = Math.max(0, 1 - (distCenter / r));
+                        const blend = strength * softFalloff * selFactor;
+
+                        const lIdx = globalIdx * 4;
+                        const bIdx = (py * d + px) * 4;
+
+                        const carriedR = smudgeCarriedBuffer[bIdx];
+                        const carriedG = smudgeCarriedBuffer[bIdx + 1];
+                        const carriedB = smudgeCarriedBuffer[bIdx + 2];
+                        const carriedA = smudgeCarriedBuffer[bIdx + 3];
+
+                        const curR = lData[lIdx];
+                        const curG = lData[lIdx + 1];
+                        const curB = lData[lIdx + 2];
+                        const curA = lData[lIdx + 3];
+
+                        lData[lIdx] = Math.round(curR * (1 - blend) + carriedR * blend);
+                        lData[lIdx + 1] = Math.round(curG * (1 - blend) + carriedG * blend);
+                        lData[lIdx + 2] = Math.round(curB * (1 - blend) + carriedB * blend);
+                        if (!active.lockTransparency) {
+                            lData[lIdx + 3] = Math.round(curA * (1 - blend) + carriedA * blend);
+                        }
+
+                        const pickup = 1 - (brushStrength / 100) * 0.85;
+                        smudgeCarriedBuffer[bIdx] = carriedR * (1 - pickup) + curR * pickup;
+                        smudgeCarriedBuffer[bIdx + 1] = carriedG * (1 - pickup) + curG * pickup;
+                        smudgeCarriedBuffer[bIdx + 2] = carriedB * (1 - pickup) + curB * pickup;
+                        smudgeCarriedBuffer[bIdx + 3] = carriedA * (1 - pickup) + curA * pickup;
+                    }
+                }
+            }
+            lCtx.putImageData(fullLayerImg, 0, 0);
+            compositeCanvas();
+        }
+
+        // --- Eyedropper Sampling ---
+        function sampleColorAtPoint(x, y, setBg = false) {
+            const ix = Math.max(0, Math.min(canvas.width - 1, Math.floor(x)));
+            const iy = Math.max(0, Math.min(canvas.height - 1, Math.floor(y)));
+            const pixel = ctx.getImageData(ix, iy, 1, 1).data;
+            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+            if (setBg) setBackgroundColor(hex);
+            else setForegroundColor(hex);
+        }
+
+        // --- Pointer Events on Workspace ---
+        viewportContainer.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            selectionRegions = [];
-            currentDragSelection = null;
-            selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+            // Do not clear selection when right-clicking or Alt+right-clicking in Pen tool
+            if (currentTool === 'pen') return;
+            clearSelection();
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
+            updateBrushCursorPosition(e.clientX, e.clientY);
+
+            if (isZoomingScrub) {
+                const dx = e.clientX - startZoomX;
+                const zoomFactor = 1 + (dx * 0.01);
+                zoomLevel = Math.max(0.1, Math.min(16, zoomLevel * zoomFactor));
+                startZoomX = e.clientX;
+                updateViewportTransform();
+            } else if (isPanning) {
+                panX = e.clientX - startPanX;
+                panY = e.clientY - startPanY;
+                updateViewportTransform();
+            }
         });
 
         viewportContainer.addEventListener('pointerdown', (e) => {
-            if (e.button === 2) return;
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
+            updateBrushCursorPosition(e.clientX, e.clientY);
+
+            const pos = getCanvasPointerPos(e);
+
+            // Allow Right-Click / Alt+Right-Click inside the Pen tool to delete handles or anchors
+            if (e.button === 2) {
+                if (currentTool === 'pen') {
+                    e.preventDefault();
+                    const hitRadius = 10 / Math.max(0.25, zoomLevel);
+                    const pts = currentPenPath.points;
+
+                    for (let i = pts.length - 1; i >= 0; i--) {
+                        const p = pts[i];
+                        if (p.outHandle && Math.hypot(pos.x - p.outHandle.x, pos.y - p.outHandle.y) <= hitRadius) {
+                            p.outHandle = null;
+                            selectedAnchorIndex = i;
+                            redrawSelectionOverlay();
+                            return;
+                        }
+                        if (p.inHandle && Math.hypot(pos.x - p.inHandle.x, pos.y - p.inHandle.y) <= hitRadius) {
+                            p.inHandle = null;
+                            selectedAnchorIndex = i;
+                            redrawSelectionOverlay();
+                            return;
+                        }
+                        if (Math.hypot(pos.x - p.x, pos.y - p.y) <= hitRadius) {
+                            if ((e.altKey || isAltPressed) && i === pts.length - 1 && p.outHandle) {
+                                // Alt+Right-Click on the last created anchor cuts its forward handle first
+                                p.outHandle = null;
+                                selectedAnchorIndex = i;
+                            } else {
+                                // Delete the anchor point
+                                pts.splice(i, 1);
+                                if (pts.length < 3) currentPenPath.closed = false;
+                                selectedAnchorIndex = pts.length > 0 ? Math.min(i, pts.length - 1) : null;
+                            }
+                            redrawSelectionOverlay();
+                            return;
+                        }
+                    }
+                }
+                return;
+            }
 
             if (isCtrlPressed && isSpacePressed) {
                 isZoomingScrub = true;
@@ -2461,99 +2973,262 @@
                 return;
             }
 
-            const isToolActive = ['rect-select', 'circle-select', 'lasso-select', 'magic-wand', 'eyedropper', 'brush', 'mixer-brush', 'smudge', 'eraser', 'pen'].includes(currentTool);
-            
-            if (isSpacePressed || currentTool === 'move' || e.button === 1 || e.target === viewportContainer || !isToolActive) {
+            if (isSpacePressed || e.button === 1) {
                 isPanning = true;
                 startPanX = e.clientX - panX;
                 startPanY = e.clientY - panY;
+                updateCanvasCursor();
                 return;
             }
 
-            const pos = getCanvasPointerPos(e);
-            
+            if (isAltPressed && ['brush', 'mixer-brush'].includes(currentTool)) {
+                sampleColorAtPoint(pos.x, pos.y, false);
+                return;
+            }
+
             if (currentTool === 'eyedropper') {
-                const pixel = ctx.getImageData(pos.x, pos.y, 1, 1).data;
-                const hex = '#' + [pixel[0], pixel[1], pixel[2]].map(x => x.toString(16).padStart(2, '0')).join('');
-                fgColor = hex;
-                swatchFg.style.backgroundColor = fgColor;
-                const colorBtn = document.getElementById('opt-brush-color-btn');
-                if (colorBtn) colorBtn.style.backgroundColor = fgColor;
+                activeAction = 'eyedropper';
+                sampleColorAtPoint(pos.x, pos.y, isAltPressed);
                 return;
-            } else if (currentTool === 'magic-wand') {
-                magicWandSelect(pos.x, pos.y);
-                return;
-            } else if (currentTool === 'rect-select' || currentTool === 'circle-select') {
-                const isEllipse = currentTool === 'circle-select';
-                
-                if (marqueeStyle === 'fixed') {
-                    const fw = marqueeFixedW;
-                    const fh = marqueeFixedH;
-                    const newReg = isEllipse ? {
-                        type: 'circle', cx: pos.x, cy: pos.y, rx: fw / 2, ry: fh / 2, x: pos.x - fw/2, y: pos.y - fh/2, w: fw, h: fh
-                    } : {
-                        type: 'rect', x: pos.x, y: pos.y, w: fw, h: fh
-                    };
-                    applySelectionCombination(newReg);
-                    redrawSelectionOverlay();
-                    return;
+            }
+
+            if (currentTool === 'move') {
+                if (moveAutoSelect && !hasActiveSelection && !floatingSelection) {
+                    const ix = Math.floor(pos.x), iy = Math.floor(pos.y);
+                    if (ix >= 0 && ix < canvas.width && iy >= 0 && iy < canvas.height) {
+                        for (let i = layers.length - 1; i >= 0; i--) {
+                            const l = layers[i];
+                            if (!l.visible) continue;
+                            const alpha = l.canvas.getContext('2d').getImageData(ix, iy, 1, 1).data[3];
+                            if (alpha > 10) {
+                                activeLayerId = l.id;
+                                renderLayersUI();
+                                syncAdjustmentsUI();
+                                break;
+                            }
+                        }
+                    }
                 }
 
+                const active = layers.find(l => l.id === activeLayerId);
+                if (!active || !active.visible) return;
+
+                moveStartPos = { x: pos.x, y: pos.y };
+                moveAltDuplicated = false;
+
+                if (hasActiveSelection || floatingSelection) {
+                    if (!floatingSelection) {
+                        liftSelectionToFloat(isAltPressed);
+                        moveAltDuplicated = isAltPressed;
+                    } else if (isAltPressed) {
+                        const lCtx = active.canvas.getContext('2d');
+                        lCtx.drawImage(floatingSelection.canvas, Math.round(floatingSelection.offsetX), Math.round(floatingSelection.offsetY));
+                        moveAltDuplicated = true;
+                    }
+                    floatingSelection.startOffsetX = floatingSelection.offsetX;
+                    floatingSelection.startOffsetY = floatingSelection.offsetY;
+                    activeAction = 'move-selection';
+                } else {
+                    if (isAltPressed) {
+                        duplicateLayer(active.id);
+                    }
+                    const currentActive = layers.find(l => l.id === activeLayerId);
+                    moveLayerSnapshot = createOffscreenCanvas(canvas.width, canvas.height);
+                    moveLayerSnapshot.getContext('2d').drawImage(currentActive.canvas, 0, 0);
+                    activeAction = 'move-layer';
+                }
+                return;
+            }
+
+            if (currentTool === 'magic-wand') {
+                magicWandSelect(pos.x, pos.y);
+                return;
+            }
+
+            if (currentTool === 'rect-select' || currentTool === 'circle-select') {
+                const isEllipse = currentTool === 'circle-select';
+                if (marqueeStyle === 'fixed') {
+                    const fw = marqueeFixedW, fh = marqueeFixedH;
+                    const newReg = isEllipse
+                        ? { type: 'circle', cx: pos.x, cy: pos.y, rx: fw / 2, ry: fh / 2 }
+                        : { type: 'rect', x: pos.x - fw / 2, y: pos.y - fh / 2, w: fw, h: fh };
+                    applySelectionCombination(newReg, getEffectiveSelectionMode());
+                    return;
+                }
                 activeAction = 'select';
-                startSelX = pos.x; 
-                startSelY = pos.y;
-            } else if (currentTool === 'lasso-select') {
+                startSelX = pos.x; startSelY = pos.y;
+                return;
+            }
+
+            if (currentTool === 'lasso-select') {
                 activeAction = 'select';
-                startSelX = pos.x; 
-                startSelY = pos.y;
+                startSelX = pos.x; startSelY = pos.y;
                 lassoPoints = [pos];
-            } else if (currentTool === 'pen') {
+                return;
+            }
+
+            if (currentTool === 'pen') {
+                const hitRadius = 10 / Math.max(0.25, zoomLevel);
+                const pts = currentPenPath.points;
+                const altHeld = e.altKey || isAltPressed;
+                const ctrlHeld = e.ctrlKey || e.metaKey || isCtrlPressed;
+
+                for (let i = pts.length - 1; i >= 0; i--) {
+                    const p = pts[i];
+                    if (p.outHandle && Math.hypot(pos.x - p.outHandle.x, pos.y - p.outHandle.y) <= hitRadius) {
+                        activeAction = 'pen-edit';
+                        penDraggingHandle = {
+                            ptIndex: i,
+                            type: 'out',
+                            breakTangent: altHeld,
+                            altClicked: altHeld,
+                            moved: false,
+                            startX: pos.x,
+                            startY: pos.y
+                        };
+                        selectedAnchorIndex = i;
+                        return;
+                    }
+                    if (p.inHandle && Math.hypot(pos.x - p.inHandle.x, pos.y - p.inHandle.y) <= hitRadius) {
+                        activeAction = 'pen-edit';
+                        penDraggingHandle = {
+                            ptIndex: i,
+                            type: 'in',
+                            breakTangent: altHeld,
+                            altClicked: altHeld,
+                            moved: false,
+                            startX: pos.x,
+                            startY: pos.y
+                        };
+                        selectedAnchorIndex = i;
+                        return;
+                    }
+                    if (Math.hypot(pos.x - p.x, pos.y - p.y) <= hitRadius) {
+                        if (i === 0 && pts.length > 2 && !currentPenPath.closed && !ctrlHeld && !altHeld) {
+                            currentPenPath.closed = true;
+                            selectedAnchorIndex = 0;
+                            activeAction = 'pen-draw';
+                            penAnchorPointBeingCreated = pts[0];
+                            isDrawingPenBezier = true;
+                            redrawSelectionOverlay();
+                            return;
+                        }
+                        if (altHeld) {
+                            // Photoshop Convert Point behavior:
+                            // Clicking the last active anchor cuts its outgoing handle; clicking again or another anchor converts/deletes
+                            if (i === pts.length - 1 && p.outHandle) {
+                                p.outHandle = null;
+                            } else if (p.inHandle || p.outHandle) {
+                                p.inHandle = null;
+                                p.outHandle = null;
+                            } else {
+                                pts.splice(i, 1);
+                                if (pts.length < 3) currentPenPath.closed = false;
+                                selectedAnchorIndex = pts.length > 0 ? Math.min(i, pts.length - 1) : null;
+                            }
+                            redrawSelectionOverlay();
+                            return;
+                        }
+                        activeAction = 'pen-edit';
+                        penDraggingHandle = { ptIndex: i, type: 'anchor', moved: false, startX: pos.x, startY: pos.y };
+                        selectedAnchorIndex = i;
+                        return;
+                    }
+                }
+
+                if (currentPenPath.closed) {
+                    currentPenPath = { points: [], closed: false };
+                }
+
                 activeAction = 'pen-draw';
-                penAnchorPointBeingCreated = {
-                    x: pos.x,
-                    y: pos.y,
-                    inHandle: null,
-                    outHandle: null
-                };
+                penAnchorPointBeingCreated = { x: pos.x, y: pos.y, inHandle: null, outHandle: null };
                 currentPenPath.points.push(penAnchorPointBeingCreated);
                 selectedAnchorIndex = currentPenPath.points.length - 1;
                 isDrawingPenBezier = true;
                 redrawSelectionOverlay();
-            } else if (['brush', 'eraser', 'mixer-brush', 'smudge'].includes(currentTool)) {
+                return;
+            }
+
+            if (['brush', 'eraser', 'mixer-brush', 'smudge'].includes(currentTool)) {
+                commitFloatingSelection();
                 const active = layers.find(l => l.id === activeLayerId);
-                if (!active) return;
+                if (!active || !active.visible) return;
                 activeAction = 'draw';
-                lastX = pos.x; lastY = pos.y;
-                
+
                 if (currentTool === 'brush' || currentTool === 'eraser') {
-                    const lCtx = active.canvas.getContext('2d');
-                    lCtx.save();
-                    lCtx.lineWidth = brushSize; 
-                    lCtx.lineCap = 'round'; 
-                    lCtx.lineJoin = 'round';
-                    if (currentTool === 'eraser') { 
-                        lCtx.globalCompositeOperation = 'destination-out'; 
-                        lCtx.strokeStyle = 'rgba(0,0,0,1)'; 
-                    } else { 
-                        lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over'; 
-                        lCtx.strokeStyle = fgColor; 
-                        lCtx.fillStyle = fgColor; 
+                    strokeStartSnapshot = createOffscreenCanvas(canvas.width, canvas.height);
+                    strokeStartSnapshot.getContext('2d').drawImage(active.canvas, 0, 0);
+                    strokePadCanvas = createOffscreenCanvas(canvas.width, canvas.height);
+
+                    const padCtx = strokePadCanvas.getContext('2d');
+                    if (isShiftPressed && lastBrushStrokeEnd) {
+                        stampBrushSegment(padCtx, lastBrushStrokeEnd.x, lastBrushStrokeEnd.y, pos.x, pos.y);
+                    } else {
+                        stampBrushSegment(padCtx, pos.x, pos.y, pos.x, pos.y);
                     }
-                    lCtx.beginPath(); lCtx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2); lCtx.fill();
-                    lCtx.restore();
+                    applyBufferToActiveLayer(strokePadCanvas, currentTool === 'eraser', strokeStartSnapshot);
                     compositeCanvas();
                 } else if (currentTool === 'mixer-brush') {
-                    applyMixerBrush(pos.x, pos.y);
+                    applyMixerBrushSegment(pos.x, pos.y, pos.x, pos.y);
                 } else if (currentTool === 'smudge') {
                     startSmudge(pos.x, pos.y);
-                    applySmudge(pos.x, pos.y, pos.x, pos.y);
                 }
+
+                lastX = pos.x; lastY = pos.y;
+                lastBrushStrokeEnd = { x: pos.x, y: pos.y };
             }
         });
 
         window.addEventListener('pointermove', (e) => {
-            if (!activeAction) return;
             const pos = getCanvasPointerPos(e);
+
+            if (currentTool === 'pen' && !activeAction && currentPenPath.points.length > 2 && !currentPenPath.closed) {
+                const p0 = currentPenPath.points[0];
+                const hitRadius = 10 / Math.max(0.25, zoomLevel);
+                const hovering = Math.hypot(pos.x - p0.x, pos.y - p0.y) <= hitRadius;
+                if (hovering !== penHoverFirstPoint) {
+                    penHoverFirstPoint = hovering;
+                    redrawSelectionOverlay();
+                }
+            }
+
+            if (!activeAction) return;
+
+            if (activeAction === 'eyedropper') {
+                sampleColorAtPoint(pos.x, pos.y, isAltPressed);
+                return;
+            }
+
+            if (activeAction === 'move-layer') {
+                const active = layers.find(l => l.id === activeLayerId);
+                if (!active || !moveLayerSnapshot) return;
+                let dx = pos.x - moveStartPos.x;
+                let dy = pos.y - moveStartPos.y;
+                if (isShiftPressed) {
+                    if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+                    else dx = 0;
+                }
+                const lCtx = active.canvas.getContext('2d');
+                lCtx.clearRect(0, 0, canvas.width, canvas.height);
+                lCtx.drawImage(moveLayerSnapshot, Math.round(dx), Math.round(dy));
+                compositeCanvas();
+                return;
+            }
+
+            if (activeAction === 'move-selection' && floatingSelection) {
+                let dx = pos.x - moveStartPos.x;
+                let dy = pos.y - moveStartPos.y;
+                if (isShiftPressed) {
+                    if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+                    else dx = 0;
+                }
+                floatingSelection.offsetX = floatingSelection.startOffsetX + dx;
+                floatingSelection.offsetY = floatingSelection.startOffsetY + dy;
+                updateTranslatedSelectionMask(floatingSelection.baseMask, floatingSelection.offsetX, floatingSelection.offsetY);
+                compositeCanvas();
+                redrawSelectionOverlay();
+                return;
+            }
 
             if (activeAction === 'select') {
                 const isEllipse = currentTool === 'circle-select';
@@ -2571,14 +3246,12 @@
                     isSpaceDraggingSelection = false;
                 }
 
-                let x1 = startSelX;
-                let y1 = startSelY;
-                let x2 = pos.x;
-                let y2 = pos.y;
+                let x1 = startSelX, y1 = startSelY;
+                let x2 = pos.x, y2 = pos.y;
 
-                if (isAltPressed && !isSpacePressed) {
-                    const dx = Math.abs(x2 - x1);
-                    const dy = Math.abs(y2 - y1);
+                if (isAltPressed && !isSpacePressed && (isRect || isEllipse)) {
+                    const dx = x2 - x1;
+                    const dy = y2 - y1;
                     x1 = startSelX - dx;
                     x2 = startSelX + dx;
                     y1 = startSelY - dy;
@@ -2588,18 +3261,16 @@
                 let w = x2 - x1;
                 let h = y2 - y1;
 
-                if (isShiftPressed || marqueeStyle === 'aspect') {
-                    if (marqueeStyle === 'aspect') {
-                        const ratio = marqueeAspectW / marqueeAspectH;
-                        if (Math.abs(w) / Math.abs(h) > ratio) {
-                            w = h * ratio * Math.sign(w);
-                        } else {
-                            h = w / ratio * Math.sign(h);
-                        }
-                    } else if (isRect || isEllipse) {
-                        const maxDim = Math.max(Math.abs(w), Math.abs(h));
-                        w = maxDim * Math.sign(w || 1);
-                        h = maxDim * Math.sign(h || 1);
+                if ((isShiftPressed && (isRect || isEllipse)) || marqueeStyle === 'aspect') {
+                    const ratio = marqueeStyle === 'aspect' ? (marqueeAspectW / marqueeAspectH) : 1;
+                    if (Math.abs(w) / Math.max(1, Math.abs(h)) > ratio) {
+                        w = Math.abs(h) * ratio * Math.sign(w || 1);
+                    } else {
+                        h = (Math.abs(w) / ratio) * Math.sign(h || 1);
+                    }
+                    if (isAltPressed && !isSpacePressed) {
+                        x1 = startSelX - w / 2;
+                        y1 = startSelY - h / 2;
                     }
                 }
 
@@ -2611,11 +3282,8 @@
                 if (isRect) {
                     currentDragSelection = { type: 'rect', x: finalX, y: finalY, w: finalW, h: finalH };
                 } else if (isEllipse) {
-                    const rx = finalW / 2;
-                    const ry = finalH / 2;
-                    const cx = finalX + rx;
-                    const cy = finalY + ry;
-                    currentDragSelection = { type: 'circle', cx, cy, rx, ry, x: finalX, y: finalY, w: finalW, h: finalH };
+                    const rx = finalW / 2, ry = finalH / 2;
+                    currentDragSelection = { type: 'circle', cx: finalX + rx, cy: finalY + ry, rx, ry, x: finalX, y: finalY, w: finalW, h: finalH };
                 } else if (currentTool === 'lasso-select') {
                     lassoPoints.push(pos);
                     currentDragSelection = { type: 'lasso', points: lassoPoints };
@@ -2624,128 +3292,152 @@
             } else if (activeAction === 'pen-draw' && isDrawingPenBezier && penAnchorPointBeingCreated) {
                 const dx = pos.x - penAnchorPointBeingCreated.x;
                 const dy = pos.y - penAnchorPointBeingCreated.y;
-                
-                penAnchorPointBeingCreated.outHandle = { x: pos.x, y: pos.y };
-                penAnchorPointBeingCreated.inHandle = { 
-                    x: penAnchorPointBeingCreated.x - dx, 
-                    y: penAnchorPointBeingCreated.y - dy 
-                };
+                if (Math.hypot(dx, dy) > 2) {
+                    penAnchorPointBeingCreated.outHandle = { x: pos.x, y: pos.y };
+                    if (!isAltPressed && !e.altKey) {
+                        penAnchorPointBeingCreated.inHandle = {
+                            x: penAnchorPointBeingCreated.x - dx,
+                            y: penAnchorPointBeingCreated.y - dy
+                        };
+                    }
+                }
+                redrawSelectionOverlay();
+            } else if (activeAction === 'pen-edit' && penDraggingHandle) {
+                const pt = currentPenPath.points[penDraggingHandle.ptIndex];
+                if (!pt) return;
+                if (Math.hypot(pos.x - penDraggingHandle.startX, pos.y - penDraggingHandle.startY) > 2) {
+                    penDraggingHandle.moved = true;
+                }
+                if (penDraggingHandle.type === 'anchor') {
+                    const dx = pos.x - pt.x, dy = pos.y - pt.y;
+                    pt.x = pos.x; pt.y = pos.y;
+                    if (pt.inHandle) { pt.inHandle.x += dx; pt.inHandle.y += dy; }
+                    if (pt.outHandle) { pt.outHandle.x += dx; pt.outHandle.y += dy; }
+                } else if (penDraggingHandle.type === 'out') {
+                    pt.outHandle = { x: pos.x, y: pos.y };
+                    if (!penDraggingHandle.breakTangent && !isAltPressed && !e.altKey && pt.inHandle) {
+                        pt.inHandle = { x: pt.x - (pos.x - pt.x), y: pt.y - (pos.y - pt.y) };
+                    }
+                } else if (penDraggingHandle.type === 'in') {
+                    pt.inHandle = { x: pos.x, y: pos.y };
+                    if (!penDraggingHandle.breakTangent && !isAltPressed && !e.altKey && pt.outHandle) {
+                        pt.outHandle = { x: pt.x - (pos.x - pt.x), y: pt.y - (pos.y - pt.y) };
+                    }
+                }
                 redrawSelectionOverlay();
             } else if (activeAction === 'draw') {
-                const active = layers.find(l => l.id === activeLayerId);
-                if (!active) return;
-                
                 if (currentTool === 'brush' || currentTool === 'eraser') {
-                    const lCtx = active.canvas.getContext('2d');
-                    lCtx.save();
-                    lCtx.lineWidth = brushSize; 
-                    lCtx.lineCap = 'round'; 
-                    lCtx.lineJoin = 'round';
-                    
-                    if (currentTool === 'eraser') { 
-                        lCtx.globalCompositeOperation = 'destination-out'; 
-                        lCtx.strokeStyle = 'rgba(0,0,0,1)'; 
-                    } else { 
-                        lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over'; 
-                        lCtx.strokeStyle = fgColor; 
-                    }
-
-                    lCtx.beginPath();
-                    lCtx.moveTo(lastX, lastY);
-                    lCtx.lineTo(pos.x, pos.y);
-                    lCtx.stroke();
-                    lCtx.restore();
+                    const padCtx = strokePadCanvas.getContext('2d');
+                    stampBrushSegment(padCtx, lastX, lastY, pos.x, pos.y);
+                    applyBufferToActiveLayer(strokePadCanvas, currentTool === 'eraser', strokeStartSnapshot);
                     compositeCanvas();
                 } else if (currentTool === 'mixer-brush') {
-                    applyMixerBrush(pos.x, pos.y);
+                    applyMixerBrushSegment(lastX, lastY, pos.x, pos.y);
                 } else if (currentTool === 'smudge') {
                     applySmudge(lastX, lastY, pos.x, pos.y);
                 }
-
                 lastX = pos.x; lastY = pos.y;
+                lastBrushStrokeEnd = { x: pos.x, y: pos.y };
             }
         });
 
         window.addEventListener('pointerup', () => {
-            if (activeAction === 'select' && currentDragSelection) {
-                applySelectionCombination(currentDragSelection);
-                currentDragSelection = null;
-            } else if (activeAction === 'pen-draw') {
+            isPanning = false;
+            isZoomingScrub = false;
+            updateCanvasCursor();
+
+            if (activeAction === 'select') {
+                if (currentDragSelection) {
+                    const isTiny = (currentDragSelection.type === 'rect' || currentDragSelection.type === 'circle')
+                        ? (currentDragSelection.w < 2 && currentDragSelection.h < 2)
+                        : (currentDragSelection.points && currentDragSelection.points.length < 3);
+
+                    if (isTiny) {
+                        clearSelection();
+                    } else {
+                        applySelectionCombination(currentDragSelection, getEffectiveSelectionMode());
+                    }
+                    currentDragSelection = null;
+                } else {
+                    clearSelection();
+                }
+                redrawSelectionOverlay();
+            } else if (activeAction === 'move-layer') {
+                moveLayerSnapshot = null;
+                saveHistoryState("Move Layer");
+            } else if (activeAction === 'pen-draw' || activeAction === 'pen-edit') {
+                // If user Alt+Clicked a direction handle without dragging, delete that handle
+                if (activeAction === 'pen-edit' && penDraggingHandle && penDraggingHandle.altClicked && !penDraggingHandle.moved) {
+                    const pt = currentPenPath.points[penDraggingHandle.ptIndex];
+                    if (pt) {
+                        if (penDraggingHandle.type === 'out') pt.outHandle = null;
+                        else if (penDraggingHandle.type === 'in') pt.inHandle = null;
+                        redrawSelectionOverlay();
+                    }
+                }
                 isDrawingPenBezier = false;
                 penAnchorPointBeingCreated = null;
+                penDraggingHandle = null;
             } else if (activeAction === 'draw') {
-                saveHistoryState(`${currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : 'Brush'} Stroke`);
+                strokeStartSnapshot = null;
+                strokePadCanvas = null;
+                const label = currentTool === 'mixer-brush' ? 'Mixer Brush' : currentTool === 'smudge' ? 'Smudge' : currentTool === 'eraser' ? 'Eraser' : 'Brush Stroke';
+                saveHistoryState(label);
             }
             activeAction = null;
         });
-        window.addEventListener('pointercancel', () => { activeAction = null; currentDragSelection = null; isDrawingPenBezier = false; });
 
+        window.addEventListener('pointercancel', () => {
+            activeAction = null;
+            currentDragSelection = null;
+            isDrawingPenBezier = false;
+            penDraggingHandle = null;
+        });
+
+        // --- Photoshop Fill FG / BG ---
         function performSelectionFill(colorToFill) {
+            commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
-            if (!active) return;
-            const lCtx = active.canvas.getContext('2d');
-            lCtx.save();
-            lCtx.fillStyle = colorToFill;
-            lCtx.globalCompositeOperation = active.lockTransparency ? 'source-atop' : 'source-over';
+            if (!active || !active.visible) return;
 
-            if (selectionRegions.length > 0) {
-                selectionRegions.forEach(reg => {
-                    if (reg.type === 'rect') {
-                        lCtx.fillRect(reg.x, reg.y, reg.w, reg.h);
-                    } else if (reg.type === 'circle') {
-                        lCtx.beginPath(); 
-                        lCtx.ellipse(reg.cx, reg.cy, reg.rx, reg.ry, 0, 0, Math.PI * 2); 
-                        lCtx.fill();
-                    } else if (reg.type === 'lasso' && reg.points && reg.points.length > 2) {
-                        lCtx.beginPath();
-                        reg.points.forEach((p, idx) => idx === 0 ? lCtx.moveTo(p.x, p.y) : lCtx.lineTo(p.x, p.y));
-                        lCtx.closePath(); 
-                        lCtx.fill();
-                    } else if ((reg.type === 'magic-wand' || reg.type === 'inverse') && reg.mask) {
-                        const imgData = lCtx.getImageData(0, 0, active.canvas.width, active.canvas.height);
-                        const data = imgData.data;
-                        const hex = colorToFill.replace('#', '');
-                        const tr = parseInt(hex.substring(0, 2), 16);
-                        const tg = parseInt(hex.substring(2, 4), 16);
-                        const tb = parseInt(hex.substring(4, 6), 16);
+            const w = canvas.width, h = canvas.height;
+            const fillTemp = createOffscreenCanvas(w, h);
+            const fCtx = fillTemp.getContext('2d');
+            fCtx.fillStyle = colorToFill;
+            fCtx.fillRect(0, 0, w, h);
 
-                        for (let i = 0; i < reg.mask.length; i++) {
-                            if (reg.mask[i]) {
-                                const idx = i * 4;
-                                data[idx] = tr; data[idx+1] = tg; data[idx+2] = tb; data[idx+3] = 255;
-                            }
-                        }
-                        lCtx.putImageData(imgData, 0, 0);
-                    }
-                });
-            } else {
-                lCtx.fillRect(0, 0, active.canvas.width, active.canvas.height);
-            }
-            lCtx.restore();
+            applyBufferToActiveLayer(fillTemp, false);
             compositeCanvas();
-            saveHistoryState("Selection Fill");
+            saveHistoryState("Fill");
         }
 
         fillFgBtn.addEventListener('click', () => performSelectionFill(fgColor));
         fillBgBtn.addEventListener('click', () => performSelectionFill(bgColor));
-        clearSelectionBtn.addEventListener('click', () => {
-            selectionRegions = []; 
-            currentDragSelection = null;
-            selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
-        });
+        clearSelectionBtn.addEventListener('click', () => clearSelection());
 
         function resetEdits() {
-            applyEdits();
+            const active = layers.find(l => l.id === activeLayerId);
+            if (active) {
+                active.brightness = 100;
+                active.contrast = 100;
+                active.saturation = 100;
+                active.blur = 0;
+                syncAdjustmentsUI();
+                compositeCanvas();
+                saveHistoryState("Reset Adjustments");
+            }
         }
 
         resetBtn.addEventListener('click', resetEdits);
         downloadBtn.addEventListener('click', () => {
+            commitFloatingSelection();
             const link = document.createElement('a');
             link.download = `photoshop-web-${imageName.replace(/\.[^/.]+$/, "")}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
 
+        setTool('move');
         setupNewDocument(512, 512, "512x512-canvas.png");
     </script>
 </body>
