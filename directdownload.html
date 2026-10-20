@@ -346,4 +346,68 @@
                   src="${inPageExtractorUrl}" 
                   class="w-full h-16 border-0 overflow-hidden rounded-lg" 
                   scrolling="no" 
-                  allow
+                  allowtransparency="true"
+                  sandbox="allow-scripts allow-same-origin allow-downloads allow-popups">
+                </iframe>
+                <span class="text-[10px] text-zinc-500 mt-1">
+                  <i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Sandboxed In-Page Stream (Blocks pop-up redirects automatically)
+                </span>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // =========================================================================
+        // ENGINE 3: RAPIDAPI NATIVE JSON ENGINE (For IG, X, FB, etc.)
+        // =========================================================================
+        if (savedRapidKey) {
+          const rapidRes = await fetch('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'X-RapidAPI-Key': savedRapidKey,
+              'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com'
+            },
+            body: JSON.stringify({ url: urlInput })
+          });
+          const rapidData = await rapidRes.json();
+          if (rapidData && rapidData.medias && rapidData.medias.length > 0) {
+            const bestMedia = rapidData.medias[0];
+            resultArea.innerHTML = `
+              <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] font-bold uppercase text-emerald-400">Direct Stream Extracted</span>
+                  <h4 class="text-xs font-semibold text-white truncate max-w-xs">${rapidData.title || 'Social Media Post'}</h4>
+                </div>
+                <button onclick="forceBlobDownload('${bestMedia.url}', 'media.${bestMedia.extension || 'mp4'}')" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition">
+                  <i class="fa-solid fa-download mr-1"></i> Save File Now
+                </button>
+              </div>
+            `;
+            return;
+          }
+        }
+
+        // If it's Instagram/X/FB and no RapidAPI key is saved yet:
+        resultArea.innerHTML = `
+          <div class="bg-zinc-900/90 border border-white/[0.08] rounded-xl p-4 text-left space-y-2">
+            <span class="text-xs font-semibold text-amber-400 flex items-center gap-2">
+              <i class="fa-solid fa-key"></i> Instagram / X / Facebook Direct Extraction
+            </span>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              YouTube and TikTok work automatically without keys! To download from Instagram or X directly inside this page, click <b>API Settings</b> in the top right and paste a free RapidAPI key.
+            </p>
+          </div>
+        `;
+
+      } catch (err) {
+        resultArea.innerHTML = `<div class="text-xs text-red-400 text-center py-2">Could not extract stream. Please check the URL and try again.</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Fetch Media In-Page';
+      }
+    }
+  </script>
+</body>
+</html>
