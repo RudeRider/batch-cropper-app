@@ -53,13 +53,13 @@
     <div class="max-w-2xl w-full text-center space-y-3 mb-8">
       <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-400 text-[11px] font-medium">
         <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-        <span>In-Page Direct Stream Engine • Zero Redirects</span>
+        <span>In-Page Direct Stream Engine • Fast Extraction</span>
       </div>
       <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-white">
         Download Media <span class="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">Directly.</span>
       </h1>
       <p class="text-zinc-400 text-xs sm:text-sm max-w-md mx-auto">
-        Extract MP4 videos, MP3 audio, and 4K covers right inside this page without opening third-party websites.
+        Extract MP4 videos, MP3 audio, and 4K covers right inside this page.
       </p>
     </div>
 
@@ -105,10 +105,10 @@
         <div>
           <label class="block text-[11px] text-zinc-400 uppercase font-semibold tracking-wider mb-2">Target Quality</label>
           <select id="media-quality" class="w-full py-2.5 px-3.5 bg-zinc-900/90 border border-white/[0.08] rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500/60">
+            <option value="720" selected>720p HD (Instant Stream - Recommended)</option>
             <option value="1080">1080p Full HD</option>
-            <option value="720">720p HD</option>
-            <option value="1440">2K / 4K Source</option>
             <option value="480">480p Fast</option>
+            <option value="360">360p Compact</option>
           </select>
         </div>
       </div>
@@ -127,29 +127,34 @@
     </div>
   </main>
 
-  <!-- Optional RapidAPI Key Modal (For 100% Native IG/X/FB JSON Extraction) -->
+  <!-- RapidAPI Key Modal (For Instant 1-Second Native Extraction on YT/IG/X/FB) -->
   <div id="api-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bento-panel max-w-md w-full rounded-2xl p-6 space-y-4 border border-white/15">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-key text-cyan-400"></i> Custom RapidAPI Key (Optional)
+          <i class="fa-solid fa-bolt text-cyan-400"></i> Instant Native API Mode (Recommended)
         </h3>
         <button onclick="toggleApiModal()" class="text-zinc-400 hover:text-white">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <p class="text-xs text-zinc-400 leading-relaxed">
-        YouTube and TikTok work right out of the box! If you also want native one-click downloads for private/strict sites like Instagram Reels & X, paste a free <b>RapidAPI (All-in-One Video Downloader)</b> key below:
-      </p>
+      <div class="text-xs text-zinc-400 space-y-2 leading-relaxed">
+        <p>Want <b>1-second instant downloads</b> on YouTube, Instagram, and X with zero waiting bars? Plug in a free RapidAPI key:</p>
+        <ol class="list-decimal list-inside space-y-1 text-zinc-300 bg-zinc-900/80 p-3 rounded-xl border border-white/5">
+          <li>Go to <a href="https://rapidapi.com/ugoBoy/api/auto-download-all-in-one" target="_blank" class="text-cyan-400 underline">RapidAPI: Auto Download All-In-One</a></li>
+          <li>Click <b>Subscribe to Test</b> (Choose the $0.00 Free Plan)</li>
+          <li>Copy your <b>X-RapidAPI-Key</b> and paste it below:</li>
+        </ol>
+      </div>
       <input 
         type="password" 
         id="rapidapi-key-input" 
-        placeholder="Paste X-RapidAPI-Key here..." 
+        placeholder="Paste your X-RapidAPI-Key here..." 
         class="w-full px-3.5 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500"
       />
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="clearApiKey()" class="px-3 py-2 text-xs text-zinc-400 hover:text-white">Clear</button>
-        <button onclick="saveApiKey()" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs rounded-lg transition">Save Key in Browser</button>
+        <button onclick="saveApiKey()" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs rounded-lg transition">Save Key</button>
       </div>
     </div>
   </div>
@@ -163,11 +168,10 @@
   <script>
     let currentFormat = 'mp4';
 
-    // Load saved RapidAPI key indicator
     window.addEventListener('DOMContentLoaded', () => {
       const savedKey = localStorage.getItem('assetsuite_rapidapi_key');
       if (savedKey) {
-        document.getElementById('api-status-label').innerText = 'API Key Active';
+        document.getElementById('api-status-label').innerText = 'Instant API Active';
         document.getElementById('rapidapi-key-input').value = savedKey;
       }
     });
@@ -180,7 +184,7 @@
       const val = document.getElementById('rapidapi-key-input').value.trim();
       if (val) {
         localStorage.setItem('assetsuite_rapidapi_key', val);
-        document.getElementById('api-status-label').innerText = 'API Key Active';
+        document.getElementById('api-status-label').innerText = 'Instant API Active';
       }
       toggleApiModal();
     }
@@ -235,7 +239,6 @@
       return shortsMatch ? shortsMatch[1] : null;
     }
 
-    // Force direct blob file download so browser saves instead of opening a tab
     async function forceBlobDownload(url, filename) {
       try {
         const res = await fetch(url);
@@ -251,6 +254,92 @@
       } catch (e) {
         window.open(url, '_blank');
       }
+    }
+
+    // Switch between in-page embedded stream servers if one is slow
+    function switchYouTubeServer(serverNum, encodedUrl, ytId, format) {
+      const container = document.getElementById('yt-stream-frame-container');
+      const rawUrl = decodeURIComponent(encodedUrl);
+      document.querySelectorAll('.srv-tab').forEach(t => t.className = 'srv-tab px-2.5 py-1 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 hover:text-white transition');
+      document.getElementById(`srv-tab-${serverNum}`).className = 'srv-tab px-2.5 py-1 rounded text-[11px] font-semibold bg-cyan-500 text-black transition';
+
+      if (serverNum === 1) {
+        // Server 1: Piped API direct stream lookup (Zero iframe, pure native HTML5 video + download)
+        loadPipedNativeStream(ytId, container);
+      } else if (serverNum === 2) {
+        // Server 2: Un-sandboxed Fast 720p/MP3 Widget (Fixed so progress bar doesn't freeze)
+        const f = format === 'mp3' ? 'mp3' : '720';
+        container.innerHTML = `
+          <iframe 
+            src="https://loader.to/api/button/?url=${encodeURIComponent(rawUrl)}&f=${f}&color=06b6d4" 
+            class="w-full h-16 border-0 overflow-hidden rounded-lg" 
+            scrolling="no" 
+            allowtransparency="true">
+          </iframe>
+        `;
+      } else if (serverNum === 3) {
+        // Server 3: Full Multi-Quality Card Widget
+        container.innerHTML = `
+          <iframe 
+            src="https://loader.to/api/card2/?url=${encodeURIComponent(rawUrl)}" 
+            class="w-full h-72 border-0 rounded-lg" 
+            scrolling="yes" 
+            allowtransparency="true">
+          </iframe>
+        `;
+      }
+    }
+
+    // Native Piped API Stream Extractor (Pure JS, no waiting bar!)
+    async function loadPipedNativeStream(ytId, container) {
+      container.innerHTML = `<div class="py-4 text-center text-xs text-zinc-400 animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-1 text-cyan-400"></i> Fetching direct MP4/Audio stream from open nodes...</div>`;
+      const pipedNodes = [
+        'https://pipedapi.kavin.rocks',
+        'https://pipedapi.tokhmi.xyz',
+        'https://pipedapi.moomoo.me',
+        'https://piped-api.garudalinux.org'
+      ];
+
+      for (const node of pipedNodes) {
+        try {
+          const res = await fetch(`${node}/streams/${ytId}`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          
+          // Find combined video+audio streams (usually 720p/360p MP4)
+          const videoStreams = (data.videoStreams || []).filter(s => s.videoOnly === false && s.format === 'MPEG_4');
+          const audioStreams = (data.audioStreams || []);
+
+          if (videoStreams.length > 0 || audioStreams.length > 0) {
+            const bestVid = videoStreams[0];
+            const bestAud = audioStreams[0];
+            container.innerHTML = `
+              <div class="space-y-3 pt-1">
+                ${bestVid ? `<video src="${bestVid.url}" controls class="w-full max-h-56 rounded-lg bg-black border border-white/10"></video>` : ''}
+                <div class="flex flex-wrap gap-2">
+                  ${videoStreams.map(v => `
+                    <a href="${v.url}" target="_blank" download class="flex-1 py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition text-center">
+                      <i class="fa-solid fa-download mr-1"></i> Direct MP4 (${v.quality})
+                    </a>
+                  `).join('')}
+                  ${bestAud ? `
+                    <a href="${bestAud.url}" target="_blank" download class="flex-1 py-2.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium text-xs rounded-lg border border-white/10 transition text-center">
+                      <i class="fa-solid fa-music text-cyan-400 mr-1"></i> Direct Audio (${bestAud.quality})
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+            return;
+          }
+        } catch (e) {
+          // Try next node
+        }
+      }
+
+      // If all Piped nodes are busy, automatically switch to Server 2 (Un-sandboxed Fast Widget)
+      const urlInput = document.getElementById('media-url').value.trim();
+      switchYouTubeServer(2, encodeURIComponent(urlInput), ytId, currentFormat);
     }
 
     async function processDownload() {
@@ -275,7 +364,48 @@
 
       try {
         // =========================================================================
-        // ENGINE 1: TIKTOK DIRECT NATIVE API (100% Free, No Key, No Redirects)
+        // PRIORITY 1: IF USER HAS RAPIDAPI KEY -> 1-SECOND NATIVE EXTRACTION FOR ALL SITES (INCLUDING YOUTUBE)
+        // =========================================================================
+        if (savedRapidKey) {
+          try {
+            const rapidRes = await fetch('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                'X-RapidAPI-Key': savedRapidKey,
+                'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com'
+              },
+              body: JSON.stringify({ url: urlInput })
+            });
+            const rapidData = await rapidRes.json();
+            if (rapidData && rapidData.medias && rapidData.medias.length > 0) {
+              resultArea.innerHTML = `
+                <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-xl p-4 space-y-3 text-left">
+                  <div class="flex items-center gap-3">
+                    ${rapidData.thumbnail ? `<img src="${rapidData.thumbnail}" class="w-20 h-14 object-cover rounded-lg border border-white/10" />` : ''}
+                    <div>
+                      <span class="text-[10px] font-bold uppercase text-emerald-400">Instant Native Stream Ready</span>
+                      <h4 class="text-xs font-semibold text-white line-clamp-1">${rapidData.title || 'Media Extracted'}</h4>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    ${rapidData.medias.slice(0, 4).map(m => `
+                      <a href="${m.url}" target="_blank" download class="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Save ${(m.quality || m.extension || 'File').toUpperCase()}
+                      </a>
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+              return;
+            }
+          } catch (e) {
+            // Fall through to free engines if key quota is exceeded
+          }
+        }
+
+        // =========================================================================
+        // PRIORITY 2: TIKTOK DIRECT NATIVE API (0-Second Wait, No Key Required)
         // =========================================================================
         if (isTikTok) {
           const ttRes = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(urlInput)}&hd=1`);
@@ -299,13 +429,13 @@
                 <video src="${videoUrl}" controls class="w-full max-h-64 rounded-lg bg-black border border-white/10"></video>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button onclick="forceBlobDownload('${videoUrl}', 'tiktok-hd.mp4')" class="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-download"></i> Save HD Video (.MP4)
+                    <i class="fa-solid fa-download"></i> Save HD Video
                   </button>
                   <button onclick="forceBlobDownload('${audioUrl}', 'tiktok-audio.mp3')" class="py-2.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium text-xs rounded-lg border border-white/10 transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-music text-cyan-400"></i> Save Audio (.MP3)
+                    <i class="fa-solid fa-music text-cyan-400"></i> Save MP3
                   </button>
                   <button onclick="forceBlobDownload('${coverUrl}', 'tiktok-cover.jpg')" class="py-2.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium text-xs rounded-lg border border-white/10 transition flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-image text-indigo-400"></i> Save Cover (.JPG)
+                    <i class="fa-solid fa-image text-indigo-400"></i> Save Cover
                   </button>
                 </div>
               </div>
@@ -315,15 +445,25 @@
         }
 
         // =========================================================================
-        // ENGINE 2: YOUTUBE IN-PAGE DIRECT DOWNLOADER (Stays 100% Inside Your Page)
+        // PRIORITY 3: YOUTUBE MULTI-ENGINE IN-PAGE EXTRACTOR
         // =========================================================================
         if (ytId) {
           const maxRes = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
           const hqRes = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-          const targetFormat = currentFormat === 'mp3' ? 'mp3' : quality;
+          const encodedUrl = encodeURIComponent(urlInput);
 
-          // Uses loader.to's clean embedded button API so the download happens directly inside your card
-          const inPageExtractorUrl = `https://loader.to/api/button/?url=${encodeURIComponent(urlInput)}&f=${targetFormat}&color=06b6d4`;
+          // If user only wanted the Image cover, show it immediately
+          if (currentFormat === 'image') {
+            resultArea.innerHTML = `
+              <div class="bg-zinc-900/90 border border-white/[0.08] rounded-xl p-4 space-y-3 text-left">
+                <img src="${maxRes}" onerror="this.src='${hqRes}'" class="w-full rounded-lg border border-white/10" />
+                <button onclick="forceBlobDownload('${maxRes}', 'youtube-${ytId}-maxres.jpg')" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition">
+                  <i class="fa-solid fa-download mr-1"></i> Download 4K / HD Cover (.JPG)
+                </button>
+              </div>
+            `;
+            return;
+          }
 
           resultArea.innerHTML = `
             <div class="bg-zinc-900/90 border border-white/[0.08] rounded-xl p-4 space-y-4 text-left">
@@ -331,72 +471,49 @@
               <div class="flex flex-col sm:flex-row items-center gap-4">
                 <img src="${maxRes}" onerror="this.src='${hqRes}'" class="w-full sm:w-36 h-20 object-cover rounded-lg border border-white/[0.08]" alt="Thumbnail" />
                 <div class="flex-grow space-y-1">
-                  <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">YouTube Direct Stream Ready</span>
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">YouTube Asset Ready</span>
                   <h4 class="text-xs font-semibold text-white">Video ID: ${ytId}</h4>
-                  <p class="text-[11px] text-zinc-400">Click the button below to process & download directly inside this page.</p>
+                  <p class="text-[11px] text-zinc-400">Switch between our 3 in-page engines below if one is busy.</p>
                 </div>
                 <button onclick="forceBlobDownload('${maxRes}', 'youtube-${ytId}-cover.jpg')" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg border border-white/[0.08] transition shrink-0">
-                  <i class="fa-solid fa-image mr-1 text-cyan-400"></i> Save HD Cover
+                  <i class="fa-solid fa-image mr-1 text-cyan-400"></i> Save Cover
                 </button>
               </div>
 
-              <!-- Direct In-Page Conversion Bar (No external tab required) -->
-              <div class="bg-zinc-950/90 border border-white/[0.06] rounded-xl p-2 flex flex-col items-center justify-center">
-                <iframe 
-                  src="${inPageExtractorUrl}" 
-                  class="w-full h-16 border-0 overflow-hidden rounded-lg" 
-                  scrolling="no" 
-                  allowtransparency="true"
-                  sandbox="allow-scripts allow-same-origin allow-downloads allow-popups">
-                </iframe>
-                <span class="text-[10px] text-zinc-500 mt-1">
-                  <i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Sandboxed In-Page Stream (Blocks pop-up redirects automatically)
-                </span>
+              <!-- In-Page Server Switcher Tabs -->
+              <div class="flex items-center justify-between border-t border-white/[0.06] pt-3">
+                <span class="text-[11px] text-zinc-400 font-medium">In-Page Stream Engine:</span>
+                <div class="flex gap-1.5">
+                  <button id="srv-tab-1" onclick="switchYouTubeServer(1, '${encodedUrl}', '${ytId}', '${currentFormat}')" class="srv-tab px-2.5 py-1 rounded text-[11px] font-semibold bg-cyan-500 text-black transition">
+                    Server 1 (Direct Player)
+                  </button>
+                  <button id="srv-tab-2" onclick="switchYouTubeServer(2, '${encodedUrl}', '${ytId}', '${currentFormat}')" class="srv-tab px-2.5 py-1 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 hover:text-white transition">
+                    Server 2 (Fast 720p/MP3)
+                  </button>
+                  <button id="srv-tab-3" onclick="switchYouTubeServer(3, '${encodedUrl}', '${ytId}', '${currentFormat}')" class="srv-tab px-2.5 py-1 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 hover:text-white transition">
+                    Server 3 (Multi-Quality)
+                  </button>
+                </div>
               </div>
+
+              <!-- Dynamic Stream Container -->
+              <div id="yt-stream-frame-container" class="bg-zinc-950/90 border border-white/[0.06] rounded-xl p-3"></div>
             </div>
           `;
+
+          // Automatically launch Server 1 (tries native Piped MP4 stream first, then falls back to un-sandboxed Server 2)
+          switchYouTubeServer(1, encodedUrl, ytId, currentFormat);
           return;
         }
 
-        // =========================================================================
-        // ENGINE 3: RAPIDAPI NATIVE JSON ENGINE (For IG, X, FB, etc.)
-        // =========================================================================
-        if (savedRapidKey) {
-          const rapidRes = await fetch('https://auto-download-all-in-one.p.rapidapi.com/v1/social/autolink', {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              'X-RapidAPI-Key': savedRapidKey,
-              'X-RapidAPI-Host': 'auto-download-all-in-one.p.rapidapi.com'
-            },
-            body: JSON.stringify({ url: urlInput })
-          });
-          const rapidData = await rapidRes.json();
-          if (rapidData && rapidData.medias && rapidData.medias.length > 0) {
-            const bestMedia = rapidData.medias[0];
-            resultArea.innerHTML = `
-              <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <span class="text-[10px] font-bold uppercase text-emerald-400">Direct Stream Extracted</span>
-                  <h4 class="text-xs font-semibold text-white truncate max-w-xs">${rapidData.title || 'Social Media Post'}</h4>
-                </div>
-                <button onclick="forceBlobDownload('${bestMedia.url}', 'media.${bestMedia.extension || 'mp4'}')" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg transition">
-                  <i class="fa-solid fa-download mr-1"></i> Save File Now
-                </button>
-              </div>
-            `;
-            return;
-          }
-        }
-
-        // If it's Instagram/X/FB and no RapidAPI key is saved yet:
+        // Other platforms without RapidAPI key configured
         resultArea.innerHTML = `
           <div class="bg-zinc-900/90 border border-white/[0.08] rounded-xl p-4 text-left space-y-2">
             <span class="text-xs font-semibold text-amber-400 flex items-center gap-2">
-              <i class="fa-solid fa-key"></i> Instagram / X / Facebook Direct Extraction
+              <i class="fa-solid fa-key"></i> Enable Free RapidAPI Key for Instant Extraction
             </span>
             <p class="text-xs text-zinc-400 leading-relaxed">
-              YouTube and TikTok work automatically without keys! To download from Instagram or X directly inside this page, click <b>API Settings</b> in the top right and paste a free RapidAPI key.
+              Click <b>API Settings</b> in the top right and paste a free RapidAPI key to unlock instant 1-second downloads for Instagram, X, Facebook, and YouTube.
             </p>
           </div>
         `;
