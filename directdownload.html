@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaGrab - Universal Social Media Downloader</title>
+  <!-- Tailwind CSS via CDN for instant modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #1e1b4b, #0f172a);
+    }
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+
+  <!-- Navbar -->
+  <nav class="p-6 flex justify-between items-center max-w-6xl mx-auto w-full">
+    <div class="flex items-center gap-3 text-2xl font-bold tracking-tight">
+      <i class="fa-solid fa-cloud-arrow-down text-indigo-400"></i>
+      <span>Media<span class="text-indigo-400">Grab</span></span>
+    </div>
+    <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-white transition flex items-center gap-2 text-sm bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700">
+      <i class="fa-brands fa-github text-lg"></i> Star on GitHub
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex flex-col items-center justify-center px-4 py-12">
+    <div class="max-w-3xl w-full text-center space-y-4 mb-8">
+      <span class="px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
+        Supports YouTube, Instagram, TikTok, X & More
+      </span>
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight">
+        Download Any Video or Image <span class="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Instantly.</span>
+      </h1>
+      <p class="text-slate-400 text-lg max-w-xl mx-auto">
+        Paste the link to any social media post below. Fast, clean, and no annoying pop-up ads.
+      </p>
+    </div>
+
+    <!-- Downloader Card -->
+    <div class="glass w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl space-y-6">
+      
+      <!-- URL Input Area -->
+      <div class="relative flex items-center">
+        <div id="platform-icon" class="absolute left-4 text-slate-400 text-lg">
+          <i class="fa-solid fa-link"></i>
+        </div>
+        <input 
+          type="url" 
+          id="media-url" 
+          placeholder="Paste YouTube, Instagram, TikTok, or X link here..." 
+          class="w-full pl-12 pr-24 py-4 bg-slate-900/90 border border-slate-700 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white placeholder-slate-500 transition"
+          oninput="detectPlatform(this.value)"
+        />
+        <button 
+          onclick="pasteClipboard()" 
+          class="absolute right-3 px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-600"
+          title="Paste from clipboard">
+          <i class="fa-regular fa-paste mr-1"></i> Paste
+        </button>
+      </div>
+
+      <!-- Format & Quality Controls -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 uppercase font-semibold mb-2">Format</label>
+          <div class="grid grid-cols-3 gap-2 bg-slate-900/90 p-1.5 rounded-xl border border-slate-700">
+            <button type="button" onclick="setFormat('video')" id="btn-video" class="format-btn bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium transition">
+              <i class="fa-solid fa-video mr-1"></i> Video
+            </button>
+            <button type="button" onclick="setFormat('audio')" id="btn-audio" class="format-btn text-slate-400 hover:text-white py-2 rounded-lg text-sm font-medium transition">
+              <i class="fa-solid fa-music mr-1"></i> Audio
+            </button>
+            <button type="button" onclick="setFormat('image')" id="btn-image" class="format-btn text-slate-400 hover:text-white py-2 rounded-lg text-sm font-medium transition">
+              <i class="fa-solid fa-image mr-1"></i> Image
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 uppercase font-semibold mb-2">Quality</label>
+          <select id="media-quality" class="w-full py-3 px-4 bg-slate-900/90 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500">
+            <option value="1080">1080p Full HD</option>
+            <option value="720">720p HD</option>
+            <option value="4k">4K Ultra HD</option>
+            <option value="480">480p Standard</option>
+            <option value="mp3-320">320kbps MP3 (Audio)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button 
+        onclick="processDownload()" 
+        id="download-btn"
+        class="w-full py-4 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 text-lg">
+        <i class="fa-solid fa-bolt"></i> Fetch Media
+      </button>
+
+      <!-- Status / Result Container -->
+      <div id="result-area" class="hidden pt-4 border-t border-slate-700/80">
+        <!-- Dynamic Content Injected via JS -->
+      </div>
+
+    </div>
+
+    <!-- Supported Platforms Strip -->
+    <div class="mt-10 flex flex-wrap justify-center gap-6 text-slate-500 text-2xl">
+      <i class="fa-brands fa-youtube hover:text-red-500 transition cursor-pointer" title="YouTube"></i>
+      <i class="fa-brands fa-instagram hover:text-pink-500 transition cursor-pointer" title="Instagram"></i>
+      <i class="fa-brands fa-tiktok hover:text-cyan-400 transition cursor-pointer" title="TikTok"></i>
+      <i class="fa-brands fa-x-twitter hover:text-white transition cursor-pointer" title="X / Twitter"></i>
+      <i class="fa-brands fa-facebook hover:text-blue-500 transition cursor-pointer" title="Facebook"></i>
+      <i class="fa-brands fa-pinterest hover:text-red-600 transition cursor-pointer" title="Pinterest"></i>
+      <i class="fa-brands fa-reddit hover:text-orange-500 transition cursor-pointer" title="Reddit"></i>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-slate-500 text-xs border-t border-slate-800/80">
+    <p>Built for educational & personal archiving purposes. Hosted on GitHub Pages.</p>
+  </footer>
+
+  <!-- Frontend Logic -->
+  <script>
+    let currentFormat = 'video';
+
+    // 1. Auto-detect social media platform icon
+    function detectPlatform(url) {
+      const iconContainer = document.getElementById('platform-icon');
+      const u = url.toLowerCase();
+      if (u.includes('youtube.com') || u.includes('youtu.be')) {
+        iconContainer.innerHTML = '<i class="fa-brands fa-youtube text-red-500"></i>';
+      } else if (u.includes('instagram.com')) {
+        iconContainer.innerHTML = '<i class="fa-brands fa-instagram text-pink-500"></i>';
+      } else if (u.includes('tiktok.com')) {
+        iconContainer.innerHTML = '<i class="fa-brands fa-tiktok text-cyan-400"></i>';
+      } else if (u.includes('twitter.com') || u.includes('x.com')) {
+        iconContainer.innerHTML = '<i class="fa-brands fa-x-twitter text-white"></i>';
+      } else if (u.includes('facebook.com') || u.includes('fb.watch')) {
+        iconContainer.innerHTML = '<i class="fa-brands fa-facebook text-blue-500"></i>';
+      } else {
+        iconContainer.innerHTML = '<i class="fa-solid fa-link text-slate-400"></i>';
+      }
+    }
+
+    // 2. Format Switcher
+    function setFormat(format) {
+      currentFormat = format;
+      document.querySelectorAll('.format-btn').forEach(btn => {
+        btn.className = 'format-btn text-slate-400 hover:text-white py-2 rounded-lg text-sm font-medium transition';
+      });
+      const activeBtn = document.getElementById(`btn-${format}`);
+      activeBtn.className = 'format-btn bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium transition';
+    }
+
+    // 3. Clipboard Paste Helper
+    async function pasteClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const input = document.getElementById('media-url');
+        input.value = text;
+        detectPlatform(text);
+      } catch (err) {
+        alert('Please allow clipboard permissions or press Ctrl+V to paste.');
+      }
+    }
+
+    // 4. API Call / Download Handler
+    async function processDownload() {
+      const urlInput = document.getElementById('media-url').value.trim();
+      const quality = document.getElementById('media-quality').value;
+      const resultArea = document.getElementById('result-area');
+      const btn = document.getElementById('download-btn');
+
+      if (!urlInput) {
+        alert('Please enter a valid social media URL first!');
+        return;
+      }
+
+      // Show Loading State
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing Link...';
+      resultArea.classList.remove('hidden');
+      resultArea.innerHTML = `
+        <div class="text-center py-4 text-slate-400 text-sm animate-pulse">
+          Communicating with media extraction server...
+        </div>
+      `;
+
+      try {
+        /* 
+         * =====================================================================
+         * BACKEND API CONFIGURATION
+         * Since GitHub Pages is static, point this fetch() to your backend API
+         * (e.g., a self-hosted Cobalt API instance, RapidAPI Social Downloader, 
+         * or a Render/Cloudflare worker running yt-dlp).
+         * =====================================================================
+         */
+        const API_ENDPOINT = 'https://your-backend-api-url.com/api/extract'; // <-- Replace with your API URL
+
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            url: urlInput,
+            vQuality: quality,
+            isAudioOnly: currentFormat === 'audio'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data && data.url) {
+          resultArea.innerHTML = `
+            <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="text-left">
+                  <h4 class="font-semibold text-white text-sm">Media Ready!</h4>
+                  <p class="text-xs text-slate-400">Format: ${currentFormat.toUpperCase()} • Quality: ${quality}</p>
+                </div>
+              </div>
+              <a href="${data.url}" target="_blank" download class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-lg transition shrink-0">
+                <i class="fa-solid fa-download mr-1"></i> Save File
+              </a>
+            </div>
+          `;
+        } else {
+          throw new Error(data.text || 'Unable to extract direct link.');
+        }
+
+      } catch (error) {
+        // Fallback UI explaining how to wire up the API if none is connected yet
+        resultArea.innerHTML = `
+          <div class="bg-amber-950/40 border border-amber-500/30 rounded-xl p-4 text-left space-y-2">
+            <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Backend API Required for Extraction</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Your HTML frontend is working! To complete actual downloads on GitHub Pages, replace 
+              <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300">API_ENDPOINT</code> in the code with a working media extraction API (such as a RapidAPI key or a self-hosted <b>yt-dlp / Cobalt</b> server).
+            </p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Fetch Media';
+      }
+    }
+  </script>
+</body>
+</html>
