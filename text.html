@@ -3,111 +3,788 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Editor | Digital Asset Tools</title>
+    <title>Cloud Doc Studio | Digital Asset Tools</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load FileSaver for cross-browser file downloading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --paper-bg: #ffffff;
+            --paper-text: #1e293b;
+            --paper-heading: #0f172a;
+            --paper-accent: #2563eb;
+            --paper-border: #cbd5e1;
+            --paper-muted: #64748b;
+            --paper-code-bg: #f1f5f9;
+            --paper-quote-bg: #f8fafc;
+        }
+
+        .paper-dark {
+            --paper-bg: #1e293b;
+            --paper-text: #f1f5f9;
+            --paper-heading: #ffffff;
+            --paper-accent: #818cf8;
+            --paper-border: #334155;
+            --paper-muted: #94a3b8;
+            --paper-code-bg: #0f172a;
+            --paper-quote-bg: #162032;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .editor-workspace {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
         .editor-container {
             position: relative;
-            min-height: 50vh;
-            border-radius: 0.5rem;
-            border: 1px solid #4b5563;
-            background-color: #374151;
-            padding: 0;
+            transition: all 0.2s ease;
         }
+
+        .page-print-mode {
+            max-width: 816px;
+            min-height: 1056px;
+            margin: 0 auto;
+            padding: 72px 72px;
+            border-radius: 4px;
+            box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(148, 163, 184, 0.15);
+        }
+
+        .page-wide-mode {
+            max-width: 100%;
+            min-height: 72vh;
+            margin: 0 auto;
+            padding: 40px 48px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 640px) {
+            .page-print-mode, .page-wide-mode {
+                padding: 24px 20px;
+                min-height: 65vh;
+            }
+        }
+
         #text-editor-content {
-            padding: 2rem;
-            min-height: 50vh;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            line-height: 1.6;
-            background-color: #1f2937;
-            color: #f3f4f6;
-            border-radius: 0.5rem;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3); 
-            white-space: normal; 
-            overflow-y: auto;
+            font-size: 1.05rem;
+            line-height: 1.75;
+            background-color: var(--paper-bg);
+            color: var(--paper-text);
+            white-space: normal;
+            overflow-y: visible;
+            word-wrap: break-word;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
-        #text-editor-content:focus { outline: none; }
-        #text-editor-content h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 1rem;
+
+        #text-editor-content:focus {
+            outline: none;
+        }
+
+        #text-editor-content h1 {
+            font-size: 2.15rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--paper-heading);
+            letter-spacing: -0.02em;
+            border-bottom: 1px solid var(--paper-border);
+            padding-bottom: 0.35rem;
+        }
+
+        #text-editor-content h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-top: 1.25rem;
             margin-bottom: 0.5rem;
-            color: #818cf8;
+            color: var(--paper-heading);
+            letter-spacing: -0.01em;
         }
-        #text-editor-content ul, #text-editor-content ol {
-            list-style-position: inside;
-            margin-left: 1.5rem;
-            padding-left: 0.5rem;
+
+        #text-editor-content h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-top: 1rem;
+            margin-bottom: 0.4rem;
+            color: var(--paper-accent);
+        }
+
+        #text-editor-content p {
+            margin-bottom: 0.85rem;
+        }
+
+        #text-editor-content ul {
+            list-style-type: disc;
+            list-style-position: outside;
+            margin-left: 1.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        #text-editor-content ol {
+            list-style-type: decimal;
+            list-style-position: outside;
+            margin-left: 1.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        #text-editor-content li {
+            margin-bottom: 0.25rem;
+        }
+
+        #text-editor-content blockquote {
+            border-left: 4px solid var(--paper-accent);
+            background-color: var(--paper-quote-bg);
+            padding: 0.75rem 1.25rem;
+            margin: 1rem 0;
+            font-style: italic;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        #text-editor-content pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            background-color: var(--paper-code-bg);
+            border: 1px solid var(--paper-border);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        #text-editor-content code {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--paper-code-bg);
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+        }
+
+        #text-editor-content a {
+            color: var(--paper-accent);
+            text-decoration: underline;
+        }
+
+        #text-editor-content hr {
+            border: 0;
+            border-top: 2px solid var(--paper-border);
+            margin: 1.5rem 0;
+        }
+
+        #text-editor-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.25rem 0;
+            font-size: 0.95rem;
+        }
+
+        #text-editor-content th,
+        #text-editor-content td {
+            border: 1px solid var(--paper-border);
+            padding: 0.6rem 0.85rem;
+            text-align: left;
+        }
+
+        #text-editor-content th {
+            background-color: var(--paper-quote-bg);
+            font-weight: 700;
+            color: var(--paper-heading);
+        }
+
+        .doc-page-break {
+            border-top: 2px dashed #94a3b8;
+            margin: 2rem -2rem;
+            position: relative;
+            text-align: center;
+        }
+
+        .doc-page-break::after {
+            content: 'PAGE BREAK';
+            position: relative;
+            top: -0.75rem;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.08em;
+        }
+
+        /* Ruler styling */
+        .ruler-bar {
+            max-width: 816px;
+            margin: 0 auto 8px auto;
+            height: 22px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 72px;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* Print Media Query */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #text-editor-content, #text-editor-content * {
+                visibility: visible;
+            }
+            #text-editor-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen font-sans" onload="textTool.init()">
+<body id="top" class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans" onload="textTool.init()">
 
-    <!-- SHARED NAVIGATION BAR (Tabs Removed) -->
-    <header class="sticky top-0 bg-gray-800 border-b border-gray-700 shadow-xl z-20">
-        <div class="max-w-full mx-auto p-4 sm:px-8 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-extrabold text-white flex items-center space-x-2 hover:opacity-90 transition">
-                <span>🧰 Digital Asset Tools</span>
-            </a>
-            <a href="index.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-700 text-gray-300 hover:bg-gray-600 transition flex items-center space-x-1.5">
-                <i class="fa-solid fa-house"></i>
-                <span>Back to Home</span>
-            </a>
+    <!-- Toast Notification -->
+    <div id="messageBox" class="fixed bottom-5 right-5 bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-2xl border border-indigo-400/30 transition-all duration-300 hidden z-50 flex items-center gap-3 max-w-md" role="alert">
+        <i class="fa-solid fa-circle-info text-lg"></i>
+        <p id="messageText" class="text-sm font-medium"></p>
+    </div>
+
+    <!-- TOP APPLICATION HEADER (Google Docs / Word Style) -->
+    <header class="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg z-30">
+        <!-- Row 1: Brand, Document Title, Cloud Status & GitHub Action -->
+        <div class="max-w-full mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap justify-between items-center gap-3">
+            <!-- Left: Brand + Document Title & Metadata -->
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+                <button type="button" id="toggle-sidebar-btn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition lg:hidden" title="Toggle Documents Sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <a href="#top" class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-950 flex-shrink-0 hover:opacity-95 transition" title="Cloud Doc Studio">
+                    <i class="fa-solid fa-file-word text-lg"></i>
+                </a>
+                <div class="min-w-0 flex-1 max-w-xl">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filename-input" placeholder="Untitled_Document" value="rich_text_document" class="px-2.5 py-1 border border-transparent hover:border-slate-700 focus:border-indigo-500 rounded-lg text-base font-bold bg-transparent focus:bg-slate-800 text-white w-48 sm:w-64 transition focus:outline-none" title="Document Filename">
+                        <span id="doc-ext-badge" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">.md / .html</span>
+                        <span class="hidden sm:inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span id="text-editor-status" class="font-semibold text-emerald-400">Ready</span>
+                        </span>
+                    </div>
+                    <!-- Quick Menu Row -->
+                    <div class="flex items-center gap-1 sm:gap-3 mt-1 text-xs text-slate-400 flex-wrap">
+                        <!-- Template Loader -->
+                        <div class="flex items-center gap-1">
+                            <label for="template-select" class="text-slate-400 hidden sm:inline">Template:</label>
+                            <select id="template-select" class="bg-slate-800 text-slate-200 border border-slate-700 rounded px-2 py-0.5 text-xs focus:outline-none focus:border-indigo-500">
+                                <option value="">Load Template...</option>
+                                <option value="proposal">Project Proposal</option>
+                                <option value="readme">GitHub README.md</option>
+                                <option value="meeting">Executive Meeting Notes</option>
+                                <option value="spec">Technical RFC / Spec</option>
+                                <option value="report">Formal Research Report</option>
+                            </select>
+                        </div>
+                        <span class="text-slate-700">|</span>
+                        <button type="button" id="toggle-find-btn" class="hover:text-white transition flex items-center gap-1">
+                            <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                            <span>Find & Replace</span>
+                        </button>
+                        <span class="text-slate-700">|</span>
+                        <button type="button" id="print-doc-btn" class="hover:text-white transition flex items-center gap-1">
+                            <i class="fa-solid fa-print text-[10px]"></i>
+                            <span>Print / PDF</span>
+                        </button>
+                        <span class="text-slate-700 hidden md:inline">|</span>
+                        <span id="last-saved-time" class="text-[11px] text-slate-400 hidden md:inline">Auto-saved locally</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: GitHub Integration & Export Actions -->
+            <div class="flex items-center gap-2 flex-wrap justify-end">
+                <!-- Primary Save to GitHub Button -->
+                <button type="button" id="open-github-modal-btn" class="bg-slate-100 hover:bg-white text-slate-900 font-bold px-3.5 py-2 rounded-lg text-xs sm:text-sm transition flex items-center gap-2 shadow-md">
+                    <i class="fa-brands fa-github text-base"></i>
+                    <span>Save to GitHub</span>
+                    <span id="gh-connected-dot" class="w-2 h-2 rounded-full bg-slate-400" title="GitHub Connection Status"></span>
+                </button>
+
+                <!-- Pull from GitHub Button -->
+                <button type="button" id="open-github-pull-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5" title="Import file from a GitHub Repository">
+                    <i class="fa-solid fa-cloud-arrow-down text-indigo-400"></i>
+                    <span class="hidden sm:inline">Import GitHub</span>
+                </button>
+
+                <!-- Export Buttons (Preserving original IDs & labels) -->
+                <button id="copy-text-btn" class="bg-indigo-600/90 hover:bg-indigo-600 text-white font-semibold px-3 py-2 rounded-lg text-xs transition disabled:opacity-40" disabled type="button">Copy Clean</button>
+                <button id="download-md-btn" class="bg-violet-600/90 hover:bg-violet-600 text-white font-semibold px-3 py-2 rounded-lg text-xs transition" type="button" title="Download as Markdown (.md)">Download MD</button>
+                <button id="download-txt-btn" class="bg-blue-600/90 hover:bg-blue-600 text-white font-semibold px-3 py-2 rounded-lg text-xs transition disabled:opacity-40" disabled type="button">Download TXT</button>
+                <button id="download-text-btn" class="bg-emerald-600/90 hover:bg-emerald-600 text-white font-semibold px-3 py-2 rounded-lg text-xs transition disabled:opacity-40" disabled type="button">Download HTML</button>
+                <button id="clear-text-btn" class="bg-rose-900/80 hover:bg-rose-800 text-rose-100 border border-rose-700/50 font-semibold px-3 py-2 rounded-lg text-xs transition" type="button">Clear</button>
+            </div>
+        </div>
+
+        <!-- Row 2: Professional Word / Google Docs Formatting Ribbon -->
+        <div id="text-transform-controls" class="bg-slate-800/90 border-t border-slate-700/80 px-3 sm:px-6 py-1.5 flex items-center gap-1 sm:gap-1.5 flex-wrap text-xs">
+            <!-- History -->
+            <button type="button" data-command="undo" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Undo (Ctrl+Z)">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button type="button" data-command="redo" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Redo (Ctrl+Y)">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Block Type Dropdown -->
+            <select id="block-format-select" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500" title="Paragraph Style">
+                <option value="P">Normal Text</option>
+                <option value="H1">Heading 1</option>
+                <option value="H2">Heading 2</option>
+                <option value="H3">Heading 3</option>
+                <option value="BLOCKQUOTE">Quote Callout</option>
+                <option value="PRE">Code Block</option>
+            </select>
+
+            <!-- Font Family -->
+            <select id="font-family-select" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 hidden sm:inline-block" title="Font Family">
+                <option value="Inter, sans-serif">Inter (Sans)</option>
+                <option value="Merriweather, Georgia, serif">Merriweather (Serif)</option>
+                <option value="Georgia, serif">Georgia (Classic)</option>
+                <option value="'Fira Code', monospace">Fira Code (Mono)</option>
+                <option value="Arial, sans-serif">Arial</option>
+            </select>
+
+            <!-- Font Size -->
+            <select id="font-size-select" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500" title="Font Size">
+                <option value="2">Small (10pt)</option>
+                <option value="3" selected>Normal (12pt)</option>
+                <option value="4">Medium (14pt)</option>
+                <option value="5">Large (18pt)</option>
+                <option value="6">Title (24pt)</option>
+            </select>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Core Text Formatting (Preserving B, I, U, H3, • List button labels) -->
+            <button type="button" data-command="bold" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-amber-400 border border-slate-700 px-2.5 py-1 rounded font-extrabold" title="Bold (Ctrl+B)">B</button>
+            <button type="button" data-command="italic" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-amber-400 border border-slate-700 px-2.5 py-1 rounded italic font-serif" title="Italic (Ctrl+I)">I</button>
+            <button type="button" data-command="underline" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-amber-400 border border-slate-700 px-2.5 py-1 rounded underline" title="Underline (Ctrl+U)">U</button>
+            <button type="button" data-command="strikeThrough" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2 py-1 rounded line-through" title="Strikethrough">S</button>
+
+            <!-- Quick Heading Buttons -->
+            <button type="button" data-command="formatBlock" data-value="H1" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 px-2 py-1 rounded font-bold" title="Heading 1">H1</button>
+            <button type="button" data-command="formatBlock" data-value="H2" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 px-2 py-1 rounded font-bold" title="Heading 2">H2</button>
+            <button type="button" data-command="formatBlock" data-value="H3" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 px-2 py-1 rounded font-bold" title="Heading 3">H3</button>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Text Color & Highlight -->
+            <label class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-700" title="Text Color">
+                <i class="fa-solid fa-font text-rose-400"></i>
+                <input type="color" id="fore-color-input" value="#2563eb" class="w-4 h-4 bg-transparent border-0 cursor-pointer">
+            </label>
+            <label class="flex items-center gap-1 bg-slate-900 border border-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-slate-700" title="Highlight Color">
+                <i class="fa-solid fa-highlighter text-amber-300"></i>
+                <input type="color" id="hilite-color-input" value="#fef08a" class="w-4 h-4 bg-transparent border-0 cursor-pointer">
+            </label>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Alignment -->
+            <button type="button" data-command="justifyLeft" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Align Left">
+                <i class="fa-solid fa-align-left"></i>
+            </button>
+            <button type="button" data-command="justifyCenter" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Align Center">
+                <i class="fa-solid fa-align-center"></i>
+            </button>
+            <button type="button" data-command="justifyRight" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Align Right">
+                <i class="fa-solid fa-align-right"></i>
+            </button>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Lists & Indentation -->
+            <button type="button" data-command="insertUnorderedList" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 px-2.5 py-1 rounded font-medium" title="Bullet List">• List</button>
+            <button type="button" data-command="insertOrderedList" class="rich-text-btn bg-slate-900 hover:bg-slate-700 text-indigo-400 border border-slate-700 px-2 py-1 rounded font-medium" title="Numbered List">1. List</button>
+            <button type="button" id="insert-checklist-btn" class="bg-slate-900 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-2 py-1 rounded font-medium" title="Insert Interactive Checklist">
+                <i class="fa-regular fa-square-check"></i>
+            </button>
+
+            <span class="h-4 w-px bg-slate-700 mx-1"></span>
+
+            <!-- Insert Rich Elements -->
+            <button type="button" id="open-link-modal-btn" class="p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Insert Hyperlink">
+                <i class="fa-solid fa-link"></i>
+            </button>
+            <button type="button" id="open-table-modal-btn" class="p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Insert Table">
+                <i class="fa-solid fa-table"></i>
+            </button>
+            <button type="button" data-command="formatBlock" data-value="BLOCKQUOTE" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Blockquote">
+                <i class="fa-solid fa-quote-left"></i>
+            </button>
+            <button type="button" data-command="formatBlock" data-value="PRE" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Code Block">
+                <i class="fa-solid fa-code"></i>
+            </button>
+            <button type="button" id="insert-hr-btn" class="p-1.5 rounded hover:bg-slate-700 text-slate-300" title="Insert Horizontal Divider">
+                <i class="fa-solid fa-minus"></i>
+            </button>
+            <button type="button" data-command="removeFormat" class="rich-text-btn p-1.5 rounded hover:bg-slate-700 text-slate-400" title="Clear Formatting">
+                <i class="fa-solid fa-eraser"></i>
+            </button>
+
+            <!-- Right-side View Controls -->
+            <div class="ml-auto flex items-center gap-1.5">
+                <button type="button" id="toggle-paper-theme-btn" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5" title="Switch Paper Theme (Light / Dark)">
+                    <i id="paper-theme-icon" class="fa-solid fa-sun text-amber-400"></i>
+                    <span id="paper-theme-label" class="hidden xl:inline">Light Paper</span>
+                </button>
+                <button type="button" id="toggle-layout-mode-btn" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5" title="Toggle Print Page Layout vs Wide Mode">
+                    <i class="fa-solid fa-file-lines text-indigo-400"></i>
+                    <span id="layout-mode-label" class="hidden xl:inline">Print View</span>
+                </button>
+                <select id="zoom-select" class="bg-slate-900 text-slate-200 border border-slate-700 rounded px-1.5 py-1 text-xs focus:outline-none" title="Page Zoom">
+                    <option value="0.85">85%</option>
+                    <option value="1" selected>100%</option>
+                    <option value="1.15">115%</option>
+                    <option value="1.3">130%</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Collapsible Find & Replace Bar -->
+        <div id="find-replace-bar" class="hidden bg-slate-900 border-t border-slate-800 px-4 py-2 flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                <input type="text" id="find-input" placeholder="Find in document..." class="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-slate-100 focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-pen text-slate-400"></i>
+                <input type="text" id="replace-input" placeholder="Replace with..." class="bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-slate-100 focus:outline-none focus:border-indigo-500">
+            </div>
+            <button type="button" id="replace-next-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded font-semibold">Replace</button>
+            <button type="button" id="replace-all-btn" class="bg-slate-700 hover:bg-slate-600 text-slate-100 px-2.5 py-1 rounded font-semibold">Replace All</button>
+            <span id="find-match-count" class="text-slate-400 ml-2"></span>
+            <button type="button" id="close-find-btn" class="ml-auto text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </header>
 
-    <div id="messageBox" class="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-2xl transition-opacity duration-300 hidden z-50" role="alert">
-        <p id="messageText"></p>
-    </div>
-
-    <!-- Text Editor Tab -->
-    <div class="w-full p-4 sm:p-8">
-        <h2 class="text-3xl font-extrabold text-gray-50 mb-6">📝 Cloud Editor (Minimal Word)</h2>
-        
-        <div class="bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 border border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-start mb-4 space-y-4 md:space-y-0">
-                <div class="flex flex-col space-y-1 text-sm text-gray-300">
-                    <p>Words: <span id="word-count" class="font-bold text-gray-100">0</span></p>
-                    <p>Characters: <span id="char-count" class="font-bold text-gray-100">0</span></p>
-                    <p class="text-xs text-gray-400 mt-1">Status: <span id="text-editor-status" class="font-bold text-green-400">Ready</span></p>
-                </div>
-                <div class="flex space-x-3 flex-wrap justify-end">
-                    <input type="text" id="filename-input" placeholder="filename.html" value="rich_text_document" class="p-2 border border-gray-600 rounded-lg text-sm bg-gray-700 text-gray-100 w-full md:w-40">
-                    <button id="copy-text-btn" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition" disabled type="button">Copy Clean</button>
-                    <button id="download-txt-btn" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-700 transition" disabled type="button">Download TXT</button>
-                    <button id="download-text-btn" class="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition" disabled type="button">Download HTML</button>
-                    <button id="clear-text-btn" class="bg-red-800 text-red-100 font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition" type="button">Clear</button>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <div class="bg-gray-700 rounded-xl p-2 border border-gray-600 flex gap-2">
-                    <button onclick="textTool.switchNotebook('notebook1')" id="notebook-tab-notebook1" class="px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white">Notebook 1</button>
-                    <button onclick="textTool.switchNotebook('notebook2')" id="notebook-tab-notebook2" class="px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300">Scratchpad 2</button>
-                </div>
-            </div>
-
-            <div class="flex flex-col md:flex-row gap-4">
-                <div id="text-transform-controls" class="flex-shrink-0 flex flex-row md:flex-col gap-2 p-2 bg-gray-700/50 rounded-xl border border-gray-700">
-                    <button data-command="bold" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded font-extrabold">B</button>
-                    <button data-command="italic" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded italic">I</button>
-                    <button data-command="underline" class="rich-text-btn bg-gray-800 text-yellow-400 hover:bg-gray-600 px-3 py-2 rounded underline">U</button>
-                    <button data-command="insertUnorderedList" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded">• List</button>
-                    <button data-command="formatBlock" data-value="H3" class="rich-text-btn bg-gray-800 text-indigo-400 hover:bg-gray-600 px-3 py-2 rounded">H3</button>
-                </div>
-                
-                <div class="editor-container flex-grow">
-                    <div id="text-editor-content" contenteditable="true">
-                        <p>Welcome to your minimal cloud scratchpad! Start typing here.</p>
+    <!-- MAIN WORKSPACE: LEFT SIDEBAR + DOCUMENT STAGE -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Left Sidebar: Notebooks, Document Outline & GitHub Quick Sync -->
+        <aside id="left-sidebar" class="w-64 bg-slate-900 border-r border-slate-800 flex-shrink-0 flex flex-col justify-between p-4 overflow-y-auto hidden lg:flex">
+            <div class="space-y-6">
+                <!-- Document / Notebook Switcher -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">My Documents</span>
+                        <button type="button" id="new-doc-btn" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1" title="Create New Document">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>New</span>
+                        </button>
+                    </div>
+                    <div class="space-y-1.5">
+                        <button onclick="textTool.switchNotebook('notebook1')" id="notebook-tab-notebook1" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white flex items-center justify-between transition">
+                            <span>Notebook 1</span>
+                            <i class="fa-solid fa-file-lines opacity-75"></i>
+                        </button>
+                        <button onclick="textTool.switchNotebook('notebook2')" id="notebook-tab-notebook2" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-between transition">
+                            <span>Scratchpad 2</span>
+                            <i class="fa-solid fa-note-sticky opacity-75"></i>
+                        </button>
+                        <button onclick="textTool.switchNotebook('notebook3')" id="notebook-tab-notebook3" class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-between transition">
+                            <span>GitHub Docs Draft</span>
+                            <i class="fa-brands fa-github opacity-75"></i>
+                        </button>
+                        <div id="custom-docs-list" class="space-y-1.5"></div>
                     </div>
                 </div>
+
+                <!-- Live Document Outline (Headings) -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Document Outline</span>
+                        <span id="outline-count" class="text-[11px] text-slate-400">0 sections</span>
+                    </div>
+                    <div id="document-outline" class="space-y-1 text-xs text-slate-300 max-h-56 overflow-y-auto pr-1">
+                        <p class="text-slate-400 italic text-xs">Add H1, H2, or H3 headings to build a clickable outline.</p>
+                    </div>
+                </div>
+
+                <!-- GitHub Sync Summary Card -->
+                <div class="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700/80 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                            <i class="fa-brands fa-github text-sm"></i>
+                            <span>GitHub Sync</span>
+                        </span>
+                        <span id="gh-sidebar-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">Not Linked</span>
+                    </div>
+                    <p id="gh-sidebar-repo" class="text-xs text-slate-400 truncate">Connect a repo to push .md or .html docs directly.</p>
+                    <button type="button" id="sidebar-github-btn" class="w-full py-1.5 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition">
+                        Configure & Push
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Document Metrics Footer -->
+            <div class="pt-4 border-t border-slate-800 space-y-1.5 text-xs text-slate-400">
+                <div class="flex justify-between">
+                    <span>Words:</span>
+                    <span id="word-count" class="font-bold text-slate-200">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Characters:</span>
+                    <span id="char-count" class="font-bold text-slate-200">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Reading Time:</span>
+                    <span id="read-time" class="font-semibold text-slate-300">~1 min</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Document Stage -->
+        <main class="flex-1 editor-workspace overflow-y-auto p-4 sm:p-8">
+            <!-- Top Print Ruler (Visible in Print Layout) -->
+            <div id="page-ruler" class="ruler-bar hidden sm:flex" aria-hidden="true">
+                <div class="w-full flex justify-between text-[9px] font-mono text-slate-400 pb-0.5">
+                    <span>1"</span><span>2"</span><span>3"</span><span>4"</span><span>5"</span><span>6"</span><span>7"</span>
+                </div>
+            </div>
+
+            <!-- Document Page Wrapper -->
+            <div id="zoom-wrapper" class="transition-transform origin-top duration-150">
+                <div class="editor-container">
+                    <div id="text-editor-content" class="page-print-mode" contenteditable="true" spellcheck="true">
+                        <h1>Project Overview &amp; Documentation</h1>
+                        <p>Welcome to <strong>Cloud Doc Studio</strong> — a professional Google Docs-style editor with direct <strong>GitHub repository publishing</strong>. Use the formatting ribbon above to style headings, tables, callouts, checklists, and code blocks.</p>
+                        <h3>Key Capabilities</h3>
+                        <ul>
+                            <li><strong>Print-Ready Page Layout:</strong> Edit on a crisp A4/Letter canvas or switch to Dark Paper / Wide View anytime.</li>
+                            <li><strong>Direct GitHub Sync:</strong> Commit your documents as clean <code>.md</code> (Markdown), <code>.html</code>, or <code>.txt</code> files directly to any GitHub repository branch.</li>
+                            <li><strong>Multi-Document Notebooks:</strong> Switch between notebooks in the sidebar with automatic cloud &amp; local persistence.</li>
+                        </ul>
+                        <blockquote>Tip: Click <strong>Save to GitHub</strong> in the top bar to push this document to your repository via the GitHub API or open it directly in the GitHub web editor.</blockquote>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: SAVE / SYNC TO GITHUB -->
+    <div id="github-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-slate-700 flex items-center justify-center text-white">
+                        <i class="fa-brands fa-github text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">GitHub Document Publishing &amp; Sync</h3>
+                        <p class="text-xs text-slate-400">Commit documents directly to your GitHub repository or import existing files</p>
+                    </div>
+                </div>
+                <button type="button" id="close-github-modal-btn" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Tabs -->
+            <div class="px-6 pt-3 bg-slate-900 border-b border-slate-800 flex gap-2 text-xs font-semibold">
+                <button type="button" id="gh-tab-push" class="px-4 py-2 rounded-t-lg bg-indigo-600 text-white">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>Commit to GitHub
+                </button>
+                <button type="button" id="gh-tab-pull" class="px-4 py-2 rounded-t-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i>Import from GitHub
+                </button>
+                <button type="button" id="gh-tab-preview" class="px-4 py-2 rounded-t-lg bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    <i class="fa-brands fa-markdown mr-1.5"></i>Markdown / HTML Preview
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto space-y-4 text-sm flex-1">
+                <!-- Shared GitHub Auth & Repo Config -->
+                <div class="p-4 rounded-xl bg-slate-800/60 border border-slate-700/80 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label for="gh-token-input" class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-400"></i>
+                            <span>GitHub Personal Access Token (PAT)</span>
+                        </label>
+                        <button type="button" id="gh-verify-token-btn" class="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 px-2.5 py-1 rounded-lg font-semibold transition self-start sm:self-auto">
+                            Verify &amp; Load My Repos
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxx or github_pat_xxxxxxxxxxxx" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500">
+                        <button type="button" id="gh-toggle-token-vis" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs" title="Show/Hide Token">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <p id="gh-auth-feedback" class="text-xs text-slate-400">
+                        Needs <code class="text-indigo-300">repo</code> or fine-grained <code class="text-indigo-300">Contents: Read &amp; write</code> permission. Or use <strong>Open in GitHub Web UI</strong> below without a token.
+                    </p>
+                </div>
+
+                <!-- Repository & Branch Selection -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label for="gh-repo-input" class="block text-xs font-semibold text-slate-300 mb-1">Repository (<code class="text-indigo-300">owner/repo</code>)</label>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="gh-repo-input" placeholder="e.g. octocat/my-docs" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                            <select id="gh-repo-select" class="hidden bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-xs text-slate-200 max-w-[160px]" title="Select from your repositories">
+                                <option value="">My Repos...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="gh-branch-input" class="block text-xs font-semibold text-slate-300 mb-1">Branch</label>
+                        <input type="text" id="gh-branch-input" value="main" placeholder="main" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- PANEL A: PUSH / COMMIT TO GITHUB -->
+                <div id="gh-panel-push" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label for="gh-path-input" class="block text-xs font-semibold text-slate-300 mb-1">File Path in Repository</label>
+                            <input type="text" id="gh-path-input" value="docs/rich_text_document.md" placeholder="docs/my-document.md" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="gh-format-select" class="block text-xs font-semibold text-slate-300 mb-1">Save Format</label>
+                            <select id="gh-format-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                                <option value="md" selected>Markdown (.md)</option>
+                                <option value="html">HTML Document (.html)</option>
+                                <option value="txt">Plain Text (.txt)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="gh-commit-msg" class="block text-xs font-semibold text-slate-300 mb-1">Commit Message</label>
+                        <input type="text" id="gh-commit-msg" value="docs: update rich_text_document.md" placeholder="docs: update document" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Commit Status Result Banner -->
+                    <div id="gh-result-box" class="hidden p-3.5 rounded-xl border text-xs space-y-1"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button type="button" id="gh-web-new-btn" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs font-semibold transition flex items-center gap-2" title="Opens GitHub in a new tab with your document pre-filled — no token required!">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-indigo-400"></i>
+                            <span>Open in GitHub Web UI (No Token)</span>
+                        </button>
+
+                        <button type="button" id="gh-push-btn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-950">
+                            <i class="fa-brands fa-github"></i>
+                            <span>Commit &amp; Push to GitHub</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL B: IMPORT / PULL FROM GITHUB -->
+                <div id="gh-panel-pull" class="hidden space-y-4">
+                    <div>
+                        <label for="gh-pull-path-input" class="block text-xs font-semibold text-slate-300 mb-1">File Path to Load from Repository</label>
+                        <input type="text" id="gh-pull-path-input" value="README.md" placeholder="e.g. README.md or docs/notes.md" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <p class="text-xs text-slate-400">Works with any public repository without a token, or private repositories when your PAT is entered above.</p>
+                    <div class="flex justify-end">
+                        <button type="button" id="gh-fetch-file-btn" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                            <span>Load File into Editor</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL C: LIVE MARKDOWN / HTML PAYLOAD PREVIEW -->
+                <div id="gh-panel-preview" class="hidden space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-300">Generated Payload Preview</span>
+                        <button type="button" id="gh-copy-payload-btn" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700">
+                            <i class="fa-regular fa-copy mr-1"></i>Copy Payload
+                        </button>
+                    </div>
+                    <textarea id="gh-payload-preview" readonly rows="8" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: INSERT LINK OR TABLE OR CONFIRM CLEAR -->
+    <div id="helper-modal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="helper-modal-title" class="text-base font-bold text-white">Insert Element</h3>
+                <button type="button" id="close-helper-modal-btn" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Link Inputs -->
+            <div id="helper-link-fields" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Link Text</label>
+                    <input type="text" id="link-text-input" placeholder="e.g. Project Repository" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">URL</label>
+                    <input type="url" id="link-url-input" placeholder="https://github.com/..." value="https://" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                </div>
+            </div>
+
+            <!-- Table Inputs -->
+            <div id="helper-table-fields" class="hidden grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Rows</label>
+                    <input type="number" id="table-rows-input" value="3" min="1" max="20" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Columns</label>
+                    <input type="number" id="table-cols-input" value="3" min="1" max="10" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                </div>
+            </div>
+
+            <!-- New Document Inputs -->
+            <div id="helper-newdoc-fields" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1">Document Title</label>
+                    <input type="text" id="newdoc-name-input" placeholder="e.g. Q4 Architecture Plan" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                </div>
+            </div>
+
+            <!-- Confirm Clear Message -->
+            <div id="helper-clear-fields" class="hidden">
+                <p class="text-xs text-slate-300">Are you sure you want to clear all content in the current document? This will reset the current page.</p>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="cancel-helper-modal-btn" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-semibold">Cancel</button>
+                <button type="button" id="confirm-helper-modal-btn" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs text-white font-bold">Confirm</button>
             </div>
         </div>
     </div>
@@ -125,12 +802,29 @@
         let userId = 'anonymous';
         let isAuthReady = false;
 
+        // Safe localStorage helpers
+        const safeGetStorage = (key, fallback = null) => {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        };
+
+        const safeSetStorage = (key, val) => {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {}
+        };
+
         const showMessage = (text, isError = false) => {
             const box = document.getElementById('messageBox');
-            box.textContent = text;
-            box.classList.remove('hidden', 'bg-red-600', 'bg-blue-600');
-            box.classList.add(isError ? 'bg-red-600' : 'bg-blue-600');
-            setTimeout(() => box.classList.add('hidden'), 5000);
+            const msgText = document.getElementById('messageText');
+            if (msgText) msgText.textContent = text;
+            box.classList.remove('hidden', 'bg-rose-600', 'bg-indigo-600');
+            box.classList.add(isError ? 'bg-rose-600' : 'bg-indigo-600');
+            setTimeout(() => box.classList.add('hidden'), 4500);
         };
 
         const throttle = (func, delay) => {
@@ -141,32 +835,300 @@
             };
         };
 
+        const TEMPLATES = {
+            proposal: `<h1>Executive Project Proposal</h1>
+<p><strong>Prepared by:</strong> Product Engineering &bull; <strong>Status:</strong> Draft for Review</p>
+<h2>1. Executive Summary</h2>
+<p>This proposal outlines the architecture, milestones, and resource plan for launching the next-generation documentation workflow backed by GitHub version control.</p>
+<h2>2. Objectives &amp; Key Results</h2>
+<ul>
+    <li><strong>Streamline Authoring:</strong> Provide a distraction-free, print-accurate rich text environment.</li>
+    <li><strong>Git-Backed Versioning:</strong> Enable one-click commits of Markdown and HTML specs directly to GitHub repositories.</li>
+    <li><strong>Cross-Team Review:</strong> Standardize technical RFCs and project specifications.</li>
+</ul>
+<h2>3. Milestone Schedule</h2>
+<table>
+    <thead>
+        <tr><th>Phase</th><th>Deliverable</th><th>Target Window</th><th>Owner</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Phase 1</td><td>Core Document Studio &amp; Ribbon</td><td>Week 1–2</td><td>Core UI</td></tr>
+        <tr><td>Phase 2</td><td>GitHub REST API Sync &amp; Markdown Converter</td><td>Week 3</td><td>Platform</td></tr>
+        <tr><td>Phase 3</td><td>Team Rollout &amp; QA</td><td>Week 4</td><td>All Teams</td></tr>
+    </tbody>
+</table>`,
+            readme: `<h1>📦 Project Name</h1>
+<p>A fast, modern toolkit for building, editing, and publishing structured documentation directly to GitHub.</p>
+<h2>✨ Features</h2>
+<ul>
+    <li><strong>Rich WYSIWYG Editing:</strong> Full typographic hierarchy, tables, callouts, and code blocks.</li>
+    <li><strong>GitHub API Integration:</strong> Commit directly to any branch using a Personal Access Token or the GitHub web editor.</li>
+    <li><strong>Clean Markdown Export:</strong> Converts HTML documents into clean, readable GitHub-flavored Markdown.</li>
+</ul>
+<h2>🚀 Quick Start</h2>
+<pre><code>git clone https://github.com/your-org/your-repo.git
+cd your-repo
+npm install &amp;&amp; npm run dev</code></pre>
+<h2>📄 License</h2>
+<p>MIT License &copy; 2026 Contributors</p>`,
+            meeting: `<h1>Weekly Leadership &amp; Product Sync</h1>
+<p><strong>Date:</strong> October 21, 2026 &bull; <strong>Facilitator:</strong> Team Lead</p>
+<h2>Agenda</h2>
+<ol>
+    <li>Review Q4 product roadmap milestones and blockers</li>
+    <li>Evaluate GitHub documentation workflow adoption</li>
+    <li>Assign action items for upcoming sprint</li>
+</ol>
+<h2>Key Decisions</h2>
+<blockquote>All engineering specifications and product proposals will now be committed directly to the <code>docs/</code> folder in our primary GitHub repository.</blockquote>
+<h2>Action Items</h2>
+<ul>
+    <li>[x] Configure repository structure for <code>docs/</code></li>
+    <li>[ ] Finalize Q4 architecture review deck</li>
+    <li>[ ] Publish onboarding guide to GitHub</li>
+</ul>`,
+            spec: `<h1>RFC-042: GitHub-Backed Cloud Document Architecture</h1>
+<p><strong>Status:</strong> Proposed &bull; <strong>Component:</strong> Document Studio</p>
+<h2>Context &amp; Problem Statement</h2>
+<p>Teams frequently draft specifications in rich word processors but need the final artifacts version-controlled alongside source code in GitHub repositories.</p>
+<h2>Proposed Design</h2>
+<p>We introduce a client-side serializer that transforms semantic HTML nodes (headings, lists, tables, blockquotes, and code blocks) into clean GitHub-Flavored Markdown (GFM) and pushes updates via the GitHub Contents REST API (<code>PUT /repos/:owner/:repo/contents/:path</code>).</p>
+<h3>Security Considerations</h3>
+<ul>
+    <li>Personal Access Tokens are stored strictly in the user's browser storage when opted in.</li>
+    <li>All communication occurs directly over HTTPS with <code>api.github.com</code>.</li>
+</ul>`,
+            report: `<h1>Quarterly Technical Operations Report</h1>
+<p><strong>Reporting Period:</strong> Q3–Q4 &bull; <strong>Classification:</strong> Internal</p>
+<h2>1. Performance Highlights</h2>
+<p>Platform reliability exceeded target SLAs across all core services while documentation velocity improved by unifying rich-text drafting and GitHub version control.</p>
+<h2>2. Key Metrics Summary</h2>
+<table>
+    <thead>
+        <tr><th>Metric</th><th>Previous Quarter</th><th>Current Quarter</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>System Availability</td><td>99.92%</td><td>99.98%</td><td>On Track</td></tr>
+        <tr><td>Published Engineering Docs</td><td>42</td><td>118</td><td>Exceeded</td></tr>
+        <tr><td>Mean Time to Recovery</td><td>18 min</td><td>7 min</td><td>Improved</td></tr>
+    </tbody>
+</table>`
+        };
+
         window.textTool = {
-            contentDiv: document.getElementById('text-editor-content'),
-            downloadBtn: document.getElementById('download-text-btn'),
-            clearBtn: document.getElementById('clear-text-btn'),
-            filenameInput: document.getElementById('filename-input'),
-            wordCountDisplay: document.getElementById('word-count'),
-            charCountDisplay: document.getElementById('char-count'),
-            statusDisplay: document.getElementById('text-editor-status'),
-            copyBtn: document.getElementById('copy-text-btn'),
-            downloadTxtBtn: document.getElementById('download-txt-btn'),
+            contentDiv: null,
+            downloadBtn: null,
+            clearBtn: null,
+            filenameInput: null,
+            wordCountDisplay: null,
+            charCountDisplay: null,
+            statusDisplay: null,
+            copyBtn: null,
+            downloadTxtBtn: null,
             currentNotebook: 'notebook1',
             unsubscribeListener: null,
+            savedRange: null,
+            helperMode: null,
+            isDarkPaper: false,
+            isPrintMode: true,
+            customNotebooks: [],
 
             init: function() {
+                this.contentDiv = document.getElementById('text-editor-content');
+                this.downloadBtn = document.getElementById('download-text-btn');
+                this.clearBtn = document.getElementById('clear-text-btn');
+                this.filenameInput = document.getElementById('filename-input');
+                this.wordCountDisplay = document.getElementById('word-count');
+                this.charCountDisplay = document.getElementById('char-count');
+                this.statusDisplay = document.getElementById('text-editor-status');
+                this.copyBtn = document.getElementById('copy-text-btn');
+                this.downloadTxtBtn = document.getElementById('download-txt-btn');
+
+                // Core editor listeners
                 this.contentDiv.addEventListener('input', () => this.updateStatsAndSave());
-                this.clearBtn.addEventListener('click', () => this.clearEditor());
+                this.contentDiv.addEventListener('keyup', () => this.saveSelection());
+                this.contentDiv.addEventListener('mouseup', () => this.saveSelection());
+
+                this.clearBtn.addEventListener('click', () => this.openHelperModal('clear'));
                 this.downloadBtn.addEventListener('click', () => this.downloadText());
                 this.copyBtn.addEventListener('click', () => this.copyCleanText());
                 this.downloadTxtBtn.addEventListener('click', () => this.downloadTxt());
+                document.getElementById('download-md-btn').addEventListener('click', () => this.downloadMarkdown());
+                document.getElementById('print-doc-btn').addEventListener('click', () => window.print());
 
-                document.querySelectorAll('.rich-text-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.handleCommand(e.currentTarget.dataset.command, e.currentTarget.dataset.value));
+                // Sync filename input with GitHub path
+                this.filenameInput.addEventListener('input', () => {
+                    this.syncGitHubPathFromFilename();
+                    this.saveLocalNotebook();
                 });
 
+                // Rich text ribbon buttons
+                document.querySelectorAll('.rich-text-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const cmd = e.currentTarget.dataset.command;
+                        const val = e.currentTarget.dataset.value || null;
+                        this.handleCommand(cmd, val);
+                    });
+                });
+
+                // Select controls in ribbon
+                document.getElementById('block-format-select').addEventListener('change', (e) => {
+                    this.handleCommand('formatBlock', e.target.value);
+                });
+                document.getElementById('font-family-select').addEventListener('change', (e) => {
+                    this.handleCommand('fontName', e.target.value);
+                });
+                document.getElementById('font-size-select').addEventListener('change', (e) => {
+                    this.handleCommand('fontSize', e.target.value);
+                });
+                document.getElementById('fore-color-input').addEventListener('input', (e) => {
+                    this.handleCommand('foreColor', e.target.value);
+                });
+                document.getElementById('hilite-color-input').addEventListener('input', (e) => {
+                    this.handleCommand('hiliteColor', e.target.value);
+                });
+
+                // Insert controls
+                document.getElementById('insert-hr-btn').addEventListener('click', () => {
+                    this.handleCommand('insertHorizontalRule');
+                });
+                document.getElementById('insert-checklist-btn').addEventListener('click', () => {
+                    this.restoreSelection();
+                    this.handleCommand('insertHTML', '<p><input type="checkbox" style="margin-right:8px;transform:scale(1.15);"> Task item...</p>');
+                });
+                document.getElementById('open-link-modal-btn').addEventListener('click', () => this.openHelperModal('link'));
+                document.getElementById('open-table-modal-btn').addEventListener('click', () => this.openHelperModal('table'));
+                document.getElementById('new-doc-btn').addEventListener('click', () => this.openHelperModal('newdoc'));
+
+                // Helper modal controls
+                document.getElementById('close-helper-modal-btn').addEventListener('click', () => this.closeHelperModal());
+                document.getElementById('cancel-helper-modal-btn').addEventListener('click', () => this.closeHelperModal());
+                document.getElementById('confirm-helper-modal-btn').addEventListener('click', () => this.confirmHelperModal());
+
+                // Template selector
+                document.getElementById('template-select').addEventListener('change', (e) => {
+                    const key = e.target.value;
+                    if (key && TEMPLATES[key]) {
+                        this.contentDiv.innerHTML = TEMPLATES[key];
+                        this.filenameInput.value = key + '_document';
+                        this.syncGitHubPathFromFilename();
+                        this.updateStatsAndSave();
+                        showMessage(`Loaded "${e.target.options[e.target.selectedIndex].text}" template.`);
+                        e.target.value = '';
+                    }
+                });
+
+                // View & Theme controls
+                document.getElementById('toggle-paper-theme-btn').addEventListener('click', () => this.togglePaperTheme());
+                document.getElementById('toggle-layout-mode-btn').addEventListener('click', () => this.toggleLayoutMode());
+                document.getElementById('zoom-select').addEventListener('change', (e) => {
+                    const scale = parseFloat(e.target.value) || 1;
+                    const wrapper = document.getElementById('zoom-wrapper');
+                    wrapper.style.transform = scale === 1 ? 'none' : `scale(${scale})`;
+                });
+                document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
+                    const sb = document.getElementById('left-sidebar');
+                    sb.classList.toggle('hidden');
+                });
+
+                // Find & Replace controls
+                document.getElementById('toggle-find-btn').addEventListener('click', () => {
+                    const bar = document.getElementById('find-replace-bar');
+                    bar.classList.toggle('hidden');
+                    if (!bar.classList.contains('hidden')) {
+                        document.getElementById('find-input').focus();
+                    }
+                });
+                document.getElementById('close-find-btn').addEventListener('click', () => {
+                    document.getElementById('find-replace-bar').classList.add('hidden');
+                });
+                document.getElementById('find-input').addEventListener('input', () => this.updateFindCount());
+                document.getElementById('replace-next-btn').addEventListener('click', () => this.replaceText(false));
+                document.getElementById('replace-all-btn').addEventListener('click', () => this.replaceText(true));
+
+                // GitHub modal controls
+                document.getElementById('open-github-modal-btn').addEventListener('click', () => this.openGitHubModal('push'));
+                document.getElementById('open-github-pull-btn').addEventListener('click', () => this.openGitHubModal('pull'));
+                document.getElementById('sidebar-github-btn').addEventListener('click', () => this.openGitHubModal('push'));
+                document.getElementById('close-github-modal-btn').addEventListener('click', () => this.closeGitHubModal());
+
+                document.getElementById('gh-tab-push').addEventListener('click', () => this.switchGitHubTab('push'));
+                document.getElementById('gh-tab-pull').addEventListener('click', () => this.switchGitHubTab('pull'));
+                document.getElementById('gh-tab-preview').addEventListener('click', () => this.switchGitHubTab('preview'));
+
+                document.getElementById('gh-toggle-token-vis').addEventListener('click', () => {
+                    const inp = document.getElementById('gh-token-input');
+                    inp.type = inp.type === 'password' ? 'text' : 'password';
+                });
+                document.getElementById('gh-format-select').addEventListener('change', () => {
+                    this.syncGitHubPathFromFilename();
+                    this.updateGitHubPayloadPreview();
+                });
+                document.getElementById('gh-repo-select').addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        document.getElementById('gh-repo-input').value = e.target.value;
+                        this.saveGitHubSettings();
+                    }
+                });
+                document.getElementById('gh-verify-token-btn').addEventListener('click', () => this.verifyGitHubToken());
+                document.getElementById('gh-push-btn').addEventListener('click', () => this.pushToGitHub());
+                document.getElementById('gh-web-new-btn').addEventListener('click', () => this.openInGitHubWebEditor());
+                document.getElementById('gh-fetch-file-btn').addEventListener('click', () => this.pullFromGitHub());
+                document.getElementById('gh-copy-payload-btn').addEventListener('click', () => {
+                    const txt = document.getElementById('gh-payload-preview').value;
+                    this.copyStringToClipboard(txt, 'Payload copied to clipboard!');
+                });
+
+                this.loadCustomNotebooksList();
+                this.loadLocalNotebook(this.currentNotebook);
+                this.loadGitHubSettings();
                 this.updateStats();
                 this.initFirebase();
+            },
+
+            saveSelection: function() {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0 && this.contentDiv.contains(sel.anchorNode)) {
+                    this.savedRange = sel.getRangeAt(0).cloneRange();
+                }
+            },
+
+            restoreSelection: function() {
+                this.contentDiv.focus();
+                if (this.savedRange) {
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(this.savedRange);
+                }
+            },
+
+            togglePaperTheme: function() {
+                this.isDarkPaper = !this.isDarkPaper;
+                this.contentDiv.classList.toggle('paper-dark', this.isDarkPaper);
+                const icon = document.getElementById('paper-theme-icon');
+                const label = document.getElementById('paper-theme-label');
+                if (this.isDarkPaper) {
+                    icon.className = 'fa-solid fa-moon text-indigo-400';
+                    label.textContent = 'Dark Paper';
+                } else {
+                    icon.className = 'fa-solid fa-sun text-amber-400';
+                    label.textContent = 'Light Paper';
+                }
+            },
+
+            toggleLayoutMode: function() {
+                this.isPrintMode = !this.isPrintMode;
+                this.contentDiv.classList.toggle('page-print-mode', this.isPrintMode);
+                this.contentDiv.classList.toggle('page-wide-mode', !this.isPrintMode);
+                const ruler = document.getElementById('page-ruler');
+                const label = document.getElementById('layout-mode-label');
+                if (this.isPrintMode) {
+                    ruler.classList.remove('sm:hidden');
+                    label.textContent = 'Print View';
+                } else {
+                    ruler.classList.add('sm:hidden');
+                    label.textContent = 'Wide View';
+                }
             },
 
             initFirebase: async function() {
@@ -186,15 +1148,89 @@
                     if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                     else await signInAnonymously(auth);
                 } catch(e) {
-                    this.statusDisplay.textContent = 'Offline Mode';
+                    this.statusDisplay.textContent = 'Local Mode';
                 }
             },
 
+            loadCustomNotebooksList: function() {
+                const raw = safeGetStorage('doc_studio_custom_notebooks');
+                if (raw) {
+                    try {
+                        this.customNotebooks = JSON.parse(raw) || [];
+                    } catch (e) {
+                        this.customNotebooks = [];
+                    }
+                }
+                this.renderCustomNotebooks();
+            },
+
+            renderCustomNotebooks: function() {
+                const container = document.getElementById('custom-docs-list');
+                if (!container) return;
+                container.innerHTML = '';
+                this.customNotebooks.forEach(nb => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = `notebook-tab-${nb.id}`;
+                    const isActive = this.currentNotebook === nb.id;
+                    btn.className = isActive
+                        ? 'w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white flex items-center justify-between transition'
+                        : 'w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-between transition';
+                    btn.innerHTML = `<span class="truncate pr-2">${nb.title}</span><i class="fa-solid fa-file-lines opacity-75"></i>`;
+                    btn.addEventListener('click', () => this.switchNotebook(nb.id));
+                    container.appendChild(btn);
+                });
+            },
+
             switchNotebook: function(id) {
+                this.saveLocalNotebook();
                 this.currentNotebook = id;
-                document.getElementById('notebook-tab-notebook1').className = id === 'notebook1' ? 'px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white' : 'px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300';
-                document.getElementById('notebook-tab-notebook2').className = id === 'notebook2' ? 'px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white' : 'px-4 py-2 rounded-lg font-semibold bg-gray-600 text-gray-300';
+                const baseTabs = ['notebook1', 'notebook2', 'notebook3'];
+                baseTabs.forEach(tabId => {
+                    const el = document.getElementById(`notebook-tab-${tabId}`);
+                    if (el) {
+                        el.className = id === tabId
+                            ? 'w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white flex items-center justify-between transition'
+                            : 'w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-between transition';
+                    }
+                });
+                this.renderCustomNotebooks();
+                this.loadLocalNotebook(id);
                 this.loadTextFromFirestore();
+            },
+
+            saveLocalNotebook: function() {
+                const payload = {
+                    content: this.contentDiv.innerHTML,
+                    filename: this.filenameInput.value || 'rich_text_document',
+                    updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                safeSetStorage(`doc_studio_nb_${this.currentNotebook}`, JSON.stringify(payload));
+                const savedTimeEl = document.getElementById('last-saved-time');
+                if (savedTimeEl) savedTimeEl.textContent = `Saved at ${payload.updatedAt}`;
+            },
+
+            loadLocalNotebook: function(id) {
+                const raw = safeGetStorage(`doc_studio_nb_${id}`);
+                if (raw) {
+                    try {
+                        const data = JSON.parse(raw);
+                        if (data.content) this.contentDiv.innerHTML = data.content;
+                        if (data.filename) this.filenameInput.value = data.filename;
+                        this.syncGitHubPathFromFilename();
+                        this.updateStats();
+                        return;
+                    } catch (e) {}
+                }
+                if (id === 'notebook2') {
+                    this.contentDiv.innerHTML = '<h2>Quick Scratchpad &amp; Notes</h2><p>Capture quick ideas, code snippets, or action items here before pushing to GitHub.</p>';
+                    this.filenameInput.value = 'scratchpad_notes';
+                } else if (id === 'notebook3') {
+                    this.contentDiv.innerHTML = TEMPLATES.readme;
+                    this.filenameInput.value = 'README';
+                }
+                this.syncGitHubPathFromFilename();
+                this.updateStats();
             },
 
             getDocRef: function() {
@@ -206,7 +1242,11 @@
                 const docRef = this.getDocRef();
                 if (!docRef) return;
                 try {
-                    await setDoc(docRef, { content: this.contentDiv.innerHTML, updatedAt: new Date().toISOString() });
+                    await setDoc(docRef, {
+                        content: this.contentDiv.innerHTML,
+                        filename: this.filenameInput.value,
+                        updatedAt: new Date().toISOString()
+                    });
                 } catch(e) { console.error(e); }
             }, 2000),
 
@@ -217,6 +1257,7 @@
                 this.unsubscribeListener = onSnapshot(docRef, snap => {
                     if (snap.exists() && snap.data().content) {
                         this.contentDiv.innerHTML = snap.data().content;
+                        if (snap.data().filename) this.filenameInput.value = snap.data().filename;
                         this.updateStats();
                     }
                 });
@@ -224,45 +1265,734 @@
 
             updateStatsAndSave: function() {
                 this.updateStats();
+                this.saveLocalNotebook();
                 this.saveTextToFirestore();
             },
 
             updateStats: function() {
-                const text = this.contentDiv.textContent;
+                const text = this.contentDiv.textContent || '';
+                const trimmed = text.trim();
+                const words = trimmed ? trimmed.split(/\s+/).length : 0;
                 this.charCountDisplay.textContent = text.length;
-                this.wordCountDisplay.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+                this.wordCountDisplay.textContent = words;
+                const readMin = Math.max(1, Math.ceil(words / 200));
+                const readEl = document.getElementById('read-time');
+                if (readEl) readEl.textContent = `~${readMin} min`;
+
                 const active = text.length > 0;
                 this.downloadBtn.disabled = !active;
                 this.copyBtn.disabled = !active;
                 this.downloadTxtBtn.disabled = !active;
+
+                this.updateDocumentOutline();
             },
 
-            clearEditor: async function() {
+            updateDocumentOutline: function() {
+                const outlineEl = document.getElementById('document-outline');
+                const countEl = document.getElementById('outline-count');
+                if (!outlineEl) return;
+
+                const headings = this.contentDiv.querySelectorAll('h1, h2, h3');
+                if (countEl) countEl.textContent = `${headings.length} section${headings.length === 1 ? '' : 's'}`;
+
+                if (headings.length === 0) {
+                    outlineEl.innerHTML = '<p class="text-slate-400 italic text-xs">Add H1, H2, or H3 headings to build a clickable outline.</p>';
+                    return;
+                }
+
+                outlineEl.innerHTML = '';
+                headings.forEach((h, idx) => {
+                    const level = h.tagName.toLowerCase();
+                    const indent = level === 'h1' ? 'pl-1 font-bold text-white' : (level === 'h2' ? 'pl-3 font-medium text-slate-300' : 'pl-6 text-slate-400');
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = `w-full text-left py-1 px-2 rounded hover:bg-slate-800 truncate block transition ${indent}`;
+                    item.textContent = h.textContent.trim() || `Section ${idx + 1}`;
+                    item.addEventListener('click', () => {
+                        h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                    outlineEl.appendChild(item);
+                });
+            },
+
+            clearEditorConfirmed: async function() {
                 this.contentDiv.innerHTML = '<p><br></p>';
                 this.updateStats();
+                this.saveLocalNotebook();
                 const docRef = this.getDocRef();
                 if (docRef) await deleteDoc(docRef).catch(() => {});
-                showMessage("Editor cleared.");
+                showMessage("Document cleared.");
+            },
+
+            copyStringToClipboard: function(str, successMsg) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(str).then(() => {
+                        showMessage(successMsg);
+                    }).catch(() => {
+                        this.fallbackCopy(str, successMsg);
+                    });
+                } else {
+                    this.fallbackCopy(str, successMsg);
+                }
+            },
+
+            fallbackCopy: function(str, successMsg) {
+                const ta = document.createElement('textarea');
+                ta.value = str;
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage(successMsg);
+                } catch (e) {
+                    showMessage('Could not copy automatically.', true);
+                }
+                document.body.removeChild(ta);
             },
 
             copyCleanText: function() {
-                navigator.clipboard.writeText(this.contentDiv.textContent);
-                showMessage("Clean text copied to clipboard!");
+                this.copyStringToClipboard(this.contentDiv.textContent, "Clean text copied to clipboard!");
             },
 
             downloadTxt: function() {
-                saveAs(new Blob([this.contentDiv.textContent], { type: "text/plain;charset=utf-8" }), `${this.filenameInput.value || 'document'}.txt`);
+                const name = (this.filenameInput.value || 'document').replace(/\.(txt|html|md)$/i, '');
+                saveAs(new Blob([this.contentDiv.textContent], { type: "text/plain;charset=utf-8" }), `${name}.txt`);
+            },
+
+            downloadMarkdown: function() {
+                const name = (this.filenameInput.value || 'document').replace(/\.(txt|html|md)$/i, '');
+                const md = this.htmlToMarkdown(this.contentDiv);
+                saveAs(new Blob([md], { type: "text/markdown;charset=utf-8" }), `${name}.md`);
+                showMessage(`Downloaded ${name}.md`);
             },
 
             downloadText: function() {
-                const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Document</title></head><body>${this.contentDiv.innerHTML}</body></html>`;
-                saveAs(new Blob([html], { type: "text/html;charset=utf-8" }), `${this.filenameInput.value || 'document'}.html`);
+                const name = (this.filenameInput.value || 'document').replace(/\.(txt|html|md)$/i, '');
+                const html = this.buildStandaloneHtml();
+                saveAs(new Blob([html], { type: "text/html;charset=utf-8" }), `${name}.html`);
             },
 
-            handleCommand: function(cmd, val) {
-                this.contentDiv.focus();
+            buildStandaloneHtml: function() {
+                const title = this.filenameInput.value || 'Document';
+                return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title}</title>
+<style>
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 24px; line-height: 1.7; color: #1e293b; }
+  h1, h2, h3 { color: #0f172a; }
+  h1 { border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
+  blockquote { border-left: 4px solid #2563eb; background: #f8fafc; padding: 12px 20px; margin: 16px 0; font-style: italic; }
+  pre, code { font-family: monospace; background: #f1f5f9; border-radius: 4px; }
+  pre { padding: 14px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+  th { background: #f8fafc; }
+</style>
+</head>
+<body>
+${this.contentDiv.innerHTML}
+</body>
+</html>`;
+            },
+
+            htmlToMarkdown: function(rootEl) {
+                const walk = (node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        return node.textContent;
+                    }
+                    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+                    const tag = node.tagName.toLowerCase();
+                    const childrenMd = Array.from(node.childNodes).map(walk).join('');
+
+                    switch (tag) {
+                        case 'h1': return `\n# ${childrenMd.trim()}\n\n`;
+                        case 'h2': return `\n## ${childrenMd.trim()}\n\n`;
+                        case 'h3': return `\n### ${childrenMd.trim()}\n\n`;
+                        case 'h4': return `\n#### ${childrenMd.trim()}\n\n`;
+                        case 'p':
+                        case 'div':
+                            return `${childrenMd.trim()}\n\n`;
+                        case 'strong':
+                        case 'b':
+                            return childrenMd.trim() ? `**${childrenMd.trim()}**` : '';
+                        case 'em':
+                        case 'i':
+                            return childrenMd.trim() ? `*${childrenMd.trim()}*` : '';
+                        case 'u':
+                            return childrenMd;
+                        case 's':
+                        case 'strike':
+                        case 'del':
+                            return childrenMd.trim() ? `~~${childrenMd.trim()}~~` : '';
+                        case 'code':
+                            if (node.parentElement && node.parentElement.tagName.toLowerCase() === 'pre') {
+                                return childrenMd;
+                            }
+                            return `\`${childrenMd.trim()}\``;
+                        case 'pre':
+                            return `\n\`\`\`\n${node.textContent.trim()}\n\`\`\`\n\n`;
+                        case 'blockquote':
+                            return `\n> ${childrenMd.trim().replace(/\n/g, '\n> ')}\n\n`;
+                        case 'hr':
+                            return `\n---\n\n`;
+                        case 'br':
+                            return `\n`;
+                        case 'a': {
+                            const href = node.getAttribute('href') || '#';
+                            return `[${childrenMd.trim() || href}](${href})`;
+                        }
+                        case 'ul': {
+                            const items = Array.from(node.children)
+                                .filter(c => c.tagName && c.tagName.toLowerCase() === 'li')
+                                .map(li => `- ${walk(li).trim()}`)
+                                .join('\n');
+                            return `\n${items}\n\n`;
+                        }
+                        case 'ol': {
+                            const items = Array.from(node.children)
+                                .filter(c => c.tagName && c.tagName.toLowerCase() === 'li')
+                                .map((li, i) => `${i + 1}. ${walk(li).trim()}`)
+                                .join('\n');
+                            return `\n${items}\n\n`;
+                        }
+                        case 'li':
+                            return childrenMd.trim();
+                        case 'input':
+                            if (node.type === 'checkbox') {
+                                return node.checked ? '[x] ' : '[ ] ';
+                            }
+                            return '';
+                        case 'table': {
+                            const rows = Array.from(node.querySelectorAll('tr'));
+                            if (rows.length === 0) return '';
+                            const matrix = rows.map(r =>
+                                Array.from(r.querySelectorAll('th, td')).map(c => c.textContent.trim().replace(/\|/g, '\\|'))
+                            );
+                            const colCount = Math.max(...matrix.map(r => r.length), 1);
+                            const header = matrix[0];
+                            const divider = Array(colCount).fill('---');
+                            const body = matrix.slice(1);
+                            let mdTable = `\n| ${header.join(' | ')} |\n| ${divider.join(' | ')} |\n`;
+                            body.forEach(r => {
+                                mdTable += `| ${r.join(' | ')} |\n`;
+                            });
+                            return mdTable + '\n';
+                        }
+                        default:
+                            return childrenMd;
+                    }
+                };
+
+                return walk(rootEl).replace(/\n{3,}/g, '\n\n').trim() + '\n';
+            },
+
+            markdownToHtml: function(md) {
+                let html = md
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+
+                // Code blocks
+                html = html.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code.trim()}</code></pre>`);
+                // Headings
+                html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+                html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+                html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+                // Blockquotes
+                html = html.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
+                // Inline styles
+                html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                // Bullet lists
+                html = html.replace(/^(?:- |\* )(.*)$/gm, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>\n?)+/g, match => `<ul>${match}</ul>`);
+                // Paragraphs for remaining lines
+                html = html.split(/\n{2,}/).map(block => {
+                    const trimmed = block.trim();
+                    if (!trimmed) return '';
+                    if (/^<(h1|h2|h3|ul|ol|pre|blockquote|table|hr)/i.test(trimmed)) return trimmed;
+                    return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+                }).join('\n');
+
+                return html;
+            },
+
+            handleCommand: function(cmd, val = null) {
+                this.restoreSelection();
                 document.execCommand(cmd, false, val);
                 this.updateStatsAndSave();
+            },
+
+            // Helper Modal (Link / Table / New Doc / Clear)
+            openHelperModal: function(mode) {
+                this.saveSelection();
+                this.helperMode = mode;
+                const modal = document.getElementById('helper-modal');
+                const title = document.getElementById('helper-modal-title');
+                const linkFields = document.getElementById('helper-link-fields');
+                const tableFields = document.getElementById('helper-table-fields');
+                const newdocFields = document.getElementById('helper-newdoc-fields');
+                const clearFields = document.getElementById('helper-clear-fields');
+
+                linkFields.classList.add('hidden');
+                tableFields.classList.add('hidden');
+                newdocFields.classList.add('hidden');
+                clearFields.classList.add('hidden');
+
+                if (mode === 'link') {
+                    title.textContent = 'Insert Hyperlink';
+                    linkFields.classList.remove('hidden');
+                    const sel = window.getSelection();
+                    document.getElementById('link-text-input').value = sel ? sel.toString() : '';
+                    document.getElementById('link-url-input').value = 'https://';
+                } else if (mode === 'table') {
+                    title.textContent = 'Insert Table';
+                    tableFields.classList.remove('hidden');
+                } else if (mode === 'newdoc') {
+                    title.textContent = 'Create New Document';
+                    newdocFields.classList.remove('hidden');
+                    document.getElementById('newdoc-name-input').value = '';
+                } else if (mode === 'clear') {
+                    title.textContent = 'Clear Current Document?';
+                    clearFields.classList.remove('hidden');
+                }
+
+                modal.classList.remove('hidden');
+            },
+
+            closeHelperModal: function() {
+                document.getElementById('helper-modal').classList.add('hidden');
+                this.helperMode = null;
+            },
+
+            confirmHelperModal: function() {
+                if (this.helperMode === 'link') {
+                    const text = document.getElementById('link-text-input').value.trim() || 'Link';
+                    const url = document.getElementById('link-url-input').value.trim();
+                    if (url) {
+                        this.restoreSelection();
+                        document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+                        this.updateStatsAndSave();
+                    }
+                } else if (this.helperMode === 'table') {
+                    const rows = Math.min(20, Math.max(1, parseInt(document.getElementById('table-rows-input').value, 10) || 3));
+                    const cols = Math.min(10, Math.max(1, parseInt(document.getElementById('table-cols-input').value, 10) || 3));
+                    let tableHtml = '<table><thead><tr>';
+                    for (let c = 0; c < cols; c++) {
+                        tableHtml += `<th>Header ${c + 1}</th>`;
+                    }
+                    tableHtml += '</tr></thead><tbody>';
+                    for (let r = 0; r < rows - 1; r++) {
+                        tableHtml += '<tr>';
+                        for (let c = 0; c < cols; c++) {
+                            tableHtml += '<td>Cell</td>';
+                        }
+                        tableHtml += '</tr>';
+                    }
+                    tableHtml += '</tbody></table><p><br></p>';
+                    this.restoreSelection();
+                    document.execCommand('insertHTML', false, tableHtml);
+                    this.updateStatsAndSave();
+                } else if (this.helperMode === 'newdoc') {
+                    const name = document.getElementById('newdoc-name-input').value.trim() || `Doc ${this.customNotebooks.length + 4}`;
+                    const id = 'doc_' + Date.now();
+                    this.customNotebooks.push({ id, title: name });
+                    safeSetStorage('doc_studio_custom_notebooks', JSON.stringify(this.customNotebooks));
+                    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'untitled_doc';
+                    safeSetStorage(`doc_studio_nb_${id}`, JSON.stringify({
+                        content: `<h1>${name}</h1><p>Start drafting your document here...</p>`,
+                        filename: slug,
+                        updatedAt: 'Just now'
+                    }));
+                    this.switchNotebook(id);
+                    showMessage(`Created document "${name}".`);
+                } else if (this.helperMode === 'clear') {
+                    this.clearEditorConfirmed();
+                }
+                this.closeHelperModal();
+            },
+
+            // Find & Replace
+            updateFindCount: function() {
+                const query = document.getElementById('find-input').value;
+                const countEl = document.getElementById('find-match-count');
+                if (!query) {
+                    countEl.textContent = '';
+                    return;
+                }
+                const text = this.contentDiv.textContent || '';
+                const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const matches = text.match(new RegExp(escaped, 'gi'));
+                const total = matches ? matches.length : 0;
+                countEl.textContent = `${total} match${total === 1 ? '' : 'es'}`;
+            },
+
+            replaceText: function(replaceAll = false) {
+                const findVal = document.getElementById('find-input').value;
+                const replaceVal = document.getElementById('replace-input').value;
+                if (!findVal) return;
+
+                const walker = document.createTreeWalker(this.contentDiv, NodeFilter.SHOW_TEXT, null);
+                const escaped = findVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escaped, replaceAll ? 'gi' : 'i');
+                let replacedCount = 0;
+
+                let node;
+                while ((node = walker.nextNode())) {
+                    if (regex.test(node.nodeValue)) {
+                        node.nodeValue = node.nodeValue.replace(regex, replaceVal);
+                        replacedCount++;
+                        if (!replaceAll) break;
+                    }
+                }
+
+                this.updateStatsAndSave();
+                this.updateFindCount();
+                showMessage(replacedCount > 0 ? `Replaced ${replacedCount} occurrence(s).` : 'No matches found.');
+            },
+
+            // GitHub Sync & Publishing Methods
+            syncGitHubPathFromFilename: function() {
+                const rawName = (this.filenameInput.value || 'document').trim().replace(/\.(md|html|txt)$/i, '');
+                const fmt = document.getElementById('gh-format-select') ? document.getElementById('gh-format-select').value : 'md';
+                const pathInput = document.getElementById('gh-path-input');
+                const commitInput = document.getElementById('gh-commit-msg');
+                if (pathInput) {
+                    const currentFolder = pathInput.value.includes('/')
+                        ? pathInput.value.substring(0, pathInput.value.lastIndexOf('/') + 1)
+                        : 'docs/';
+                    pathInput.value = `${currentFolder}${rawName}.${fmt}`;
+                }
+                if (commitInput) {
+                    commitInput.value = `docs: update ${rawName}.${fmt}`;
+                }
+            },
+
+            loadGitHubSettings: function() {
+                const savedToken = safeGetStorage('doc_studio_gh_token', '');
+                const savedRepo = safeGetStorage('doc_studio_gh_repo', '');
+                const savedBranch = safeGetStorage('doc_studio_gh_branch', 'main');
+
+                if (savedToken) document.getElementById('gh-token-input').value = savedToken;
+                if (savedRepo) {
+                    document.getElementById('gh-repo-input').value = savedRepo;
+                    this.updateGitHubBadges(savedRepo, Boolean(savedToken));
+                }
+                if (savedBranch) document.getElementById('gh-branch-input').value = savedBranch;
+                this.syncGitHubPathFromFilename();
+            },
+
+            saveGitHubSettings: function() {
+                const token = document.getElementById('gh-token-input').value.trim();
+                const repo = document.getElementById('gh-repo-input').value.trim();
+                const branch = document.getElementById('gh-branch-input').value.trim() || 'main';
+                safeSetStorage('doc_studio_gh_token', token);
+                safeSetStorage('doc_studio_gh_repo', repo);
+                safeSetStorage('doc_studio_gh_branch', branch);
+                this.updateGitHubBadges(repo, Boolean(token));
+            },
+
+            updateGitHubBadges: function(repo, hasToken) {
+                const dot = document.getElementById('gh-connected-dot');
+                const badge = document.getElementById('gh-sidebar-badge');
+                const repoLabel = document.getElementById('gh-sidebar-repo');
+                if (repo && hasToken) {
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                    if (badge) {
+                        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700';
+                        badge.textContent = 'Connected';
+                    }
+                    if (repoLabel) repoLabel.textContent = `Target: ${repo}`;
+                } else if (repo) {
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+                    if (badge) {
+                        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700';
+                        badge.textContent = 'Web Mode';
+                    }
+                    if (repoLabel) repoLabel.textContent = `Repo: ${repo}`;
+                }
+            },
+
+            openGitHubModal: function(tab = 'push') {
+                this.syncGitHubPathFromFilename();
+                this.updateGitHubPayloadPreview();
+                this.switchGitHubTab(tab);
+                document.getElementById('github-modal').classList.remove('hidden');
+            },
+
+            closeGitHubModal: function() {
+                this.saveGitHubSettings();
+                document.getElementById('github-modal').classList.add('hidden');
+            },
+
+            switchGitHubTab: function(tab) {
+                const tabs = ['push', 'pull', 'preview'];
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`gh-tab-${t}`);
+                    const panel = document.getElementById(`gh-panel-${t}`);
+                    if (btn) {
+                        btn.className = t === tab
+                            ? 'px-4 py-2 rounded-t-lg bg-indigo-600 text-white'
+                            : 'px-4 py-2 rounded-t-lg bg-slate-800 text-slate-300 hover:bg-slate-700';
+                    }
+                    if (panel) {
+                        panel.classList.toggle('hidden', t !== tab);
+                    }
+                });
+                if (tab === 'preview') {
+                    this.updateGitHubPayloadPreview();
+                }
+            },
+
+            getFormattedDocumentPayload: function() {
+                const fmt = document.getElementById('gh-format-select').value;
+                if (fmt === 'md') {
+                    return this.htmlToMarkdown(this.contentDiv);
+                } else if (fmt === 'html') {
+                    return this.buildStandaloneHtml();
+                }
+                return this.contentDiv.textContent || '';
+            },
+
+            updateGitHubPayloadPreview: function() {
+                const previewEl = document.getElementById('gh-payload-preview');
+                if (previewEl) {
+                    previewEl.value = this.getFormattedDocumentPayload();
+                }
+            },
+
+            verifyGitHubToken: async function() {
+                const token = document.getElementById('gh-token-input').value.trim();
+                const feedback = document.getElementById('gh-auth-feedback');
+                const repoSelect = document.getElementById('gh-repo-select');
+                if (!token) {
+                    showMessage('Please enter a GitHub Personal Access Token first.', true);
+                    return;
+                }
+                feedback.textContent = 'Verifying token with api.github.com...';
+                try {
+                    const userRes = await fetch('https://api.github.com/user', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+                    if (!userRes.ok) {
+                        throw new Error(`GitHub authentication failed (${userRes.status})`);
+                    }
+                    const userData = await userRes.json();
+                    const reposRes = await fetch('https://api.github.com/user/repos?sort=updated&per_page=50', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+                    const repos = reposRes.ok ? await reposRes.json() : [];
+                    repoSelect.innerHTML = '<option value="">Select a repo...</option>';
+                    repos.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.full_name;
+                        opt.textContent = r.full_name;
+                        repoSelect.appendChild(opt);
+                    });
+                    repoSelect.classList.remove('hidden');
+                    if (repos.length > 0 && !document.getElementById('gh-repo-input').value.trim()) {
+                        document.getElementById('gh-repo-input').value = repos[0].full_name;
+                        document.getElementById('gh-branch-input').value = repos[0].default_branch || 'main';
+                    }
+                    this.saveGitHubSettings();
+                    feedback.innerHTML = `<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Authenticated as @${userData.login}</span> (${repos.length} repositories loaded)`;
+                    showMessage(`Connected to GitHub as @${userData.login}!`);
+                } catch (err) {
+                    feedback.innerHTML = `<span class="text-rose-400 font-semibold">${err.message}</span>`;
+                    showMessage(err.message, true);
+                }
+            },
+
+            utf8ToBase64: function(str) {
+                const bytes = new TextEncoder().encode(str);
+                let binary = '';
+                bytes.forEach(b => binary += String.fromCharCode(b));
+                return btoa(binary);
+            },
+
+            base64ToUtf8: function(b64) {
+                const binary = atob(b64.replace(/\s/g, ''));
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return new TextDecoder().decode(bytes);
+            },
+
+            showGitHubResult: function(htmlContent, isError = false) {
+                const box = document.getElementById('gh-result-box');
+                box.classList.remove('hidden', 'bg-emerald-950/70', 'border-emerald-700', 'text-emerald-200', 'bg-rose-950/70', 'border-rose-700', 'text-rose-200');
+                if (isError) {
+                    box.classList.add('bg-rose-950/70', 'border-rose-700', 'text-rose-200');
+                } else {
+                    box.classList.add('bg-emerald-950/70', 'border-emerald-700', 'text-emerald-200');
+                }
+                box.innerHTML = htmlContent;
+            },
+
+            pushToGitHub: async function() {
+                this.saveGitHubSettings();
+                const token = document.getElementById('gh-token-input').value.trim();
+                const repo = document.getElementById('gh-repo-input').value.trim();
+                const branch = document.getElementById('gh-branch-input').value.trim() || 'main';
+                const path = document.getElementById('gh-path-input').value.trim().replace(/^\/+/, '');
+                const message = document.getElementById('gh-commit-msg').value.trim() || `Update ${path}`;
+
+                if (!repo || !repo.includes('/')) {
+                    this.showGitHubResult('Please enter a valid repository in <code>owner/repo</code> format.', true);
+                    return;
+                }
+                if (!path) {
+                    this.showGitHubResult('Please enter a target file path in the repository (e.g., <code>docs/notes.md</code>).', true);
+                    return;
+                }
+                if (!token) {
+                    this.showGitHubResult('Direct API push requires a GitHub Personal Access Token above — or click <strong>Open in GitHub Web UI (No Token)</strong> to commit in your browser.', true);
+                    return;
+                }
+
+                const pushBtn = document.getElementById('gh-push-btn');
+                const originalText = pushBtn.innerHTML;
+                pushBtn.disabled = true;
+                pushBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Committing to GitHub...</span>';
+
+                try {
+                    const apiUrl = `https://api.github.com/repos/${repo}/contents/${encodeURI(path)}`;
+                    let existingSha = null;
+
+                    // Check if file already exists on the target branch to obtain its SHA
+                    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${encodeURI(path)}?ref=${encodeURIComponent(branch)}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github+json'
+                        }
+                    });
+                    if (getRes.ok) {
+                        const existingData = await getRes.json();
+                        if (existingData && existingData.sha) {
+                            existingSha = existingData.sha;
+                        }
+                    }
+
+                    const contentPayload = this.getFormattedDocumentPayload();
+                    const bodyObj = {
+                        message,
+                        content: this.utf8ToBase64(contentPayload),
+                        branch
+                    };
+                    if (existingSha) {
+                        bodyObj.sha = existingSha;
+                    }
+
+                    const putRes = await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bodyObj)
+                    });
+
+                    const resultData = await putRes.json();
+                    if (!putRes.ok) {
+                        throw new Error(resultData.message || `GitHub API returned ${putRes.status}`);
+                    }
+
+                    const htmlUrl = (resultData.content && resultData.content.html_url)
+                        ? resultData.content.html_url
+                        : `https://github.com/${repo}/blob/${branch}/${path}`;
+
+                    this.statusDisplay.textContent = 'Synced to GitHub';
+                    this.showGitHubResult(
+                        `<div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Successfully committed to ${repo}@${branch}!</div>
+                         <div>File: <a href="${htmlUrl}" target="_blank" rel="noopener noreferrer" class="underline font-mono text-white">${path}</a></div>`,
+                        false
+                    );
+                    showMessage(`Saved ${path} to GitHub (${repo})!`);
+                } catch (err) {
+                    this.showGitHubResult(`<strong>Commit failed:</strong> ${err.message}`, true);
+                    showMessage(`GitHub error: ${err.message}`, true);
+                } finally {
+                    pushBtn.disabled = false;
+                    pushBtn.innerHTML = originalText;
+                }
+            },
+
+            openInGitHubWebEditor: function() {
+                this.saveGitHubSettings();
+                const repo = document.getElementById('gh-repo-input').value.trim();
+                const branch = document.getElementById('gh-branch-input').value.trim() || 'main';
+                const path = document.getElementById('gh-path-input').value.trim().replace(/^\/+/, '');
+                const payload = this.getFormattedDocumentPayload();
+
+                if (!repo || !repo.includes('/')) {
+                    this.showGitHubResult('Enter your repository name (<code>owner/repo</code>) first so we can open its GitHub web editor.', true);
+                    return;
+                }
+
+                const webUrl = `https://github.com/${repo}/new/${encodeURIComponent(branch)}?filename=${encodeURIComponent(path)}&value=${encodeURIComponent(payload)}`;
+                window.open(webUrl, '_blank', 'noopener,noreferrer');
+                this.showGitHubResult(
+                    `Opened <strong>${repo}</strong> in a new tab with your document pre-filled as <code>${path}</code>. Click <strong>Commit changes...</strong> on GitHub to finish saving!`,
+                    false
+                );
+            },
+
+            pullFromGitHub: async function() {
+                this.saveGitHubSettings();
+                const token = document.getElementById('gh-token-input').value.trim();
+                const repo = document.getElementById('gh-repo-input').value.trim();
+                const branch = document.getElementById('gh-branch-input').value.trim() || 'main';
+                const pullPath = document.getElementById('gh-pull-path-input').value.trim().replace(/^\/+/, '');
+
+                if (!repo || !repo.includes('/') || !pullPath) {
+                    showMessage('Enter both Repository (owner/repo) and File Path to import.', true);
+                    return;
+                }
+
+                const headers = { 'Accept': 'application/vnd.github+json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                try {
+                    const url = `https://api.github.com/repos/${repo}/contents/${encodeURI(pullPath)}?ref=${encodeURIComponent(branch)}`;
+                    const res = await fetch(url, { headers });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.message || `Could not load ${pullPath} (${res.status})`);
+                    }
+                    const decoded = this.base64ToUtf8(data.content || '');
+                    const baseName = pullPath.split('/').pop().replace(/\.(md|html|txt)$/i, '');
+                    this.filenameInput.value = baseName || 'github_imported_doc';
+
+                    if (/\.md$/i.test(pullPath)) {
+                        this.contentDiv.innerHTML = this.markdownToHtml(decoded);
+                    } else if (/\.html?$/i.test(pullPath)) {
+                        const bodyMatch = decoded.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                        this.contentDiv.innerHTML = bodyMatch ? bodyMatch[1] : decoded;
+                    } else {
+                        const escaped = decoded.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        this.contentDiv.innerHTML = `<pre>${escaped}</pre>`;
+                    }
+
+                    this.updateStatsAndSave();
+                    this.closeGitHubModal();
+                    showMessage(`Imported "${pullPath}" from ${repo}!`);
+                } catch (err) {
+                    showMessage(`Import failed: ${err.message}`, true);
+                }
             }
         };
     </script>
