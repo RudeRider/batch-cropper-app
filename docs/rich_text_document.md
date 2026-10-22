@@ -4,19 +4,25 @@
 
 ### **Scene 1: Introduction to Class**
 
-* **Timecode:** `0:00 - 0:10`
+### Scene Blueprint: 0:00 - 0:10
 
-* **Shot Type:** Wide Establishing Shot
+### Shot Classification: Wide Establishing Shot
 
-* **Visual Action:** Usthaz Rasheed stands at the whiteboard rhythmically tapping a marker. Seated at desks are Elena, Maya, Mark, and Kabir.
+### Cinematic Setting: Realistic classroom interior with soft, natural lighting (35mm film aesthetic)
 
-* **AI Prompt Instruction:** Wide shot of classroom, Usthaz Rasheed at whiteboard tapping marker, students Elena, Maya, Mark, Kabir seated facing him, cinematic 35mm film, realistic classroom lighting.
+### Visual Action
 
-* **Dialogue Track:**
+### Usthaz Rasheed stands by the whiteboard, holding a dry-erase marker, and begins walking slowly toward the front of the room. Students Elena, Maya, Mark, and Kabir are seated attentively at their desks, facing him.
 
-> **USTHAZ RASHEED:** *(Clears throat)* "އައްސަލާމް ޢަލައިކުމް. މަރުޙަބާ ދިވެހި ބަސް ކްލާހަށް. މި ކްލާހުގެ ބޭނުމަކީ ތިޔަބޭފުޅުންނަށް..."
+### AI Prompt Instruction
 
----
+### Wide shot of a modern classroom, Usthaz Rasheed walks slowly holding a marker, students Elena, Maya, Mark, and Kabir seated facing him, cinematic 35mm film, natural realistic classroom lighting, shallow depth of field, 8k resolution.
+
+### Audio / Dialogue Track
+
+### USTHAZ RASHEED: (Clears throat) "އައްސަލާމް ޢަލައިކުމް. މަރުޙަބާ ދިވެހި ބަސް ކްލާހަށް. މި ކްލާހުގެ ބޭނުމަކީ ތިޔަބޭފުޅުންނަށް... ސާފު، ރިވެތި ދިވެހި ބަހުން ވާހަކަދައްކަން ދަސްކޮށްދިނުން."
+
+### ---
 
 ### **Scene 2: Kabir’s Overconfidence**
 
@@ -30,9 +36,9 @@
 
 * **Dialogue Track:**
 
-> **USTHAZ RASHEED:** "...ސާފު، ރިވެތި ދިވެހި ބަހުން ވާހަކަދައްކަން ދަސްކޮށްދިނުން."
+> **MARK speak broken dhivehi in British accent:** "...އާރުން ސާފު ކުރަނީ"
 
-> **KABIR:** "ސަރ! އަހަރެން ދިވެހި ވަރަށް ސާފު! ބާޒާރު މަތީ އެންމެން ބުނާނެ ކަބީރު ދިވެހި އޯކޭއޭ!"
+> **KABIR:** "ސަރ! މަ ދިވެހި ބަރޯބަރު ސާފު! ބާޒާރު އެންމެން ބުނާނީ ކަބީރު ދިވެހި އޯކޭ!"
 
 ---
 
@@ -98,7 +104,7 @@
 
 * **Dialogue Track:**
 
-> **USTHAZ RASHEED:** "ކޮބާ ކުޑަކުއްޖާ... އެންެމެ ފަހުން އަހަރެމެންގެ ތެރެއިން ކުއްޖެއް! ނަން ބުނެލަބަލަ. ކީއްވެގެން މި ކްލާހަށް ތި އައީ؟"
+> **USTHAZ RASHEED:** "ކޮބާ... މިކޮޅުން؟ ތައާރަފްވެލާފައި ބުނެބަލަ ކީއްވެގެން ތޯ މި ކްލާހަށް ތި އައީ؟"
 
 > **MAYA:** "Um... ހައި! އަހަރެންގެ... I mean, މައި ނޭމް އިޒް މަޔާ..."
 
@@ -116,7 +122,7 @@
 
 * **Dialogue Track:**
 
-> **MAYA:** "...ލައިކް... މަންމަ ބުނީ އައި ނީޑް ޓު ފިކްސް މައި ދިވެހި because mock exam އިން އަހަރެން 'ޔޫ' އެއް ހޯދީއޭ! Like, literally, it’s not my fault ދިވެހި ލިޔުން is so... weirdly curved? ބްރޯ، އައި ކާންޓް އިވަން ރީޑް ދަ ނޫސް."
+> **MAYA:** "...ލައިކް... މަންމަ ބުނީ އައި ނީޑް ޓު ފިކްސް މައި ދިވެހި because mock exam ދިވެހިން އަހަރެން 'ޔޫ' އެއް ހޯދީއޭ! Like, literally, it’s not my fault ދިވެހި ލިޔުން is so... weirdly curved? ބްރޯ، އައި ކާންޓް އިވަން ރީޑް ދަ ނޫސ"
 
 ---
 
