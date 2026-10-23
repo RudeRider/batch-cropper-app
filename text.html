@@ -119,42 +119,56 @@
             overflow-y: auto;
             overflow-x: auto;
             flex: 1;
-            padding: 36px 24px 64px 24px;
+            padding: 28px 24px 64px 24px;
             scroll-behavior: smooth;
         }
 
+        /* Responsive 2-Up Side-by-Side Grid Lock (Never wraps at 100% zoom on desktop) */
         .pages-grid {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(420px, 740px));
             justify-content: center;
-            align-items: flex-start;
-            gap: 40px;
-            flex-wrap: wrap;
-            max-width: 1750px;
+            align-items: start;
+            gap: 28px;
+            width: 100%;
+            max-width: 1560px;
             margin: 0 auto;
             transform-origin: top center;
             transition: transform 0.15s ease;
         }
 
-        .pages-grid.single-col {
-            flex-direction: column;
-            align-items: center;
+        /* Vertical Stack Mode or Single Page Centering */
+        .pages-grid.stack-vertical,
+        .pages-grid.single-page-only {
+            grid-template-columns: minmax(420px, 780px);
+        }
+
+        .pages-grid.stack-vertical.landscape-grid,
+        .pages-grid.single-page-only.landscape-grid {
+            grid-template-columns: minmax(520px, 1020px);
+        }
+
+        /* Responsive fallback only for very narrow mobile/small-tablet screens (< 900px) */
+        @media (max-width: 900px) {
+            .pages-grid {
+                grid-template-columns: minmax(300px, 1fr);
+            }
         }
 
         /* Page Container (holds editable page + drawing overlay + header/footer controls) */
         .page-wrapper {
             position: relative;
-            width: 750px;
-            min-height: 980px;
+            width: 100%;
+            min-height: 920px;
             border-radius: 4px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
-            transition: width 0.2s ease, min-height 0.2s ease, background-color 0.2s ease;
+            transition: min-height 0.2s ease, background-color 0.2s ease;
             background: #ffffff;
             color: #0f172a;
         }
 
         .page-wrapper.landscape {
-            width: 1020px;
-            min-height: 720px;
+            min-height: 680px;
         }
 
         /* Paper Themes */
@@ -185,7 +199,7 @@
         .doc-page {
             width: 100%;
             min-height: inherit;
-            padding: 64px 60px;
+            padding: 56px 52px;
             box-sizing: border-box;
             position: relative;
             outline: none;
@@ -196,13 +210,13 @@
         }
 
         .page-wrapper.margin-narrow .doc-page {
-            padding: 32px 32px;
+            padding: 28px 28px;
         }
         .page-wrapper.margin-normal .doc-page {
-            padding: 64px 60px;
+            padding: 56px 52px;
         }
         .page-wrapper.margin-wide .doc-page {
-            padding: 80px 96px;
+            padding: 72px 76px;
         }
 
         .page-wrapper:focus-within {
@@ -683,7 +697,10 @@
                 <!-- Populated dynamically by JS -->
             </div>
             <div class="flex items-center gap-2 pb-1">
-                <span class="text-[11px] text-slate-500 hidden sm:inline">Double-click tab to rename</span>
+                <span class="text-[11px] text-slate-500 hidden md:inline">Double-click tab to rename</span>
+                <button type="button" onclick="wordcraftApp.ensureTwoPageSpread()" class="text-xs bg-indigo-950/80 hover:bg-indigo-900 text-indigo-200 px-2.5 py-1 rounded border border-indigo-700/70 transition flex items-center gap-1" title="Ensure at least 2 pages for Side-by-Side spread">
+                    <i class="fa-solid fa-book-open text-[10px] text-indigo-400"></i> 2-Page Spread
+                </button>
                 <button type="button" onclick="wordcraftApp.addPageToCurrentProject()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center gap-1" title="Add another page to current project">
                     <i class="fa-solid fa-plus text-[10px] text-blue-400"></i> Add Page
                 </button>
@@ -1439,7 +1456,12 @@
 
             applyLayoutConfig: function() {
                 const grid = document.getElementById('pages-grid');
-                grid.classList.toggle('single-col', this.layoutConfig.grid === '1col');
+                const proj = this.projects[this.currentTab];
+                const pageCount = proj && proj.pages ? proj.pages.length : 2;
+
+                grid.classList.toggle('stack-vertical', this.layoutConfig.grid === '1col');
+                grid.classList.toggle('single-page-only', pageCount === 1);
+                grid.classList.toggle('landscape-grid', this.layoutConfig.orientation === 'landscape');
 
                 document.querySelectorAll('.page-wrapper').forEach(w => {
                     w.classList.toggle('landscape', this.layoutConfig.orientation === 'landscape');
@@ -1592,7 +1614,7 @@
                     // Top subtle page badge + delete page option (if > 1 page)
                     const badgeBar = document.createElement('div');
                     badgeBar.className = 'page-badge-bar absolute top-2 right-3 z-30 flex items-center gap-2 text-[11px] text-slate-400 select-none';
-                    badgeBar.innerHTML = `<span>Page ${idx + 1}</span>`;
+                    badgeBar.innerHTML = `<span class="font-medium">Page ${idx + 1}</span>`;
                     if (proj.pages.length > 1) {
                         const delBtn = document.createElement('button');
                         delBtn.type = 'button';
@@ -1634,8 +1656,24 @@
                     requestAnimationFrame(() => this.initPageCanvas(canvas, idx));
                 });
 
+                this.applyLayoutConfig();
                 this.activePageEl = document.querySelector('.editable-page');
                 this.updateWordCount();
+            },
+
+            ensureTwoPageSpread: function() {
+                this.saveCurrentPages();
+                const proj = this.projects[this.currentTab];
+                if (!proj) return;
+                if (proj.pages.length < 2) {
+                    const defaultPage2 = DEFAULT_PROJECTS[this.currentTab]?.pages?.[1]
+                        || `<h3>${proj.name} - Page 2: Notes</h3><p>Second page of ${proj.name}. Ready for your notes and edits.</p>`;
+                    proj.pages.push(defaultPage2);
+                }
+                this.setGridLayout('2up');
+                this.renderActiveProjectPages();
+                this.saveToLocalStorage(true);
+                this.showToast('2-Page Side-by-Side Spread active!');
             },
 
             addPageToCurrentProject: function() {
@@ -1761,6 +1799,12 @@
                         const parsed = JSON.parse(raw);
                         if (parsed && parsed.projects) {
                             this.projects = parsed.projects;
+                            // Auto-heal default projects if any cached version accidentally had < 2 pages
+                            ['project1', 'project2', 'project3'].forEach(key => {
+                                if (this.projects[key] && Array.isArray(this.projects[key].pages) && this.projects[key].pages.length < 2) {
+                                    this.projects[key].pages.push(DEFAULT_PROJECTS[key].pages[1]);
+                                }
+                            });
                             this.currentTab = parsed.currentTab && this.projects[parsed.currentTab]
                                 ? parsed.currentTab
                                 : Object.keys(this.projects)[0];
