@@ -40,7 +40,7 @@
             border: 1px solid #1e1e1e;
         }
         .menu-dropdown { display: none; }
-        .menu-item-group:hover .menu-dropdown { display: block; }
+        .menu-item-group.open .menu-dropdown { display: block; }
         .checkerboard-bg {
             background-image: 
                 linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
@@ -75,10 +75,10 @@
     </header>
 
     <!-- Photoshop Top Menu Bar -->
-    <div class="bg-[#2c2c2c] border-b border-[#1c1c1c] px-2 py-1 flex items-center justify-between shrink-0 z-40 text-gray-300">
+    <div id="top-menu-bar" class="bg-[#2c2c2c] border-b border-[#1c1c1c] px-2 py-1 flex items-center justify-between shrink-0 z-40 text-gray-300">
         <div class="flex items-center space-x-1">
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">File</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">File</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-new" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>New Document...</span><span class="text-[10px] text-gray-400">Ctrl+N</span></button>
                     <button id="menu-open" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Open...</span><span class="text-[10px] text-gray-400">Ctrl+O</span></button>
@@ -91,13 +91,15 @@
             </div>
 
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Edit</button>
-                <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Edit</button>
+                <div class="menu-dropdown absolute top-full left-0 w-56 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-undo" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Undo</span><span class="text-[10px] text-gray-400">Ctrl+Z</span></button>
                     <div class="border-t border-[#3c3c3c] my-1"></div>
                     <button id="menu-cut" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Cut</span><span class="text-[10px] text-gray-400">Ctrl+X</span></button>
                     <button id="menu-copy" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Copy</span><span class="text-[10px] text-gray-400">Ctrl+C</span></button>
                     <button id="menu-paste" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Paste</span><span class="text-[10px] text-gray-400">Ctrl+V</span></button>
+                    <div class="border-t border-[#3c3c3c] my-1"></div>
+                    <button id="menu-free-transform" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Free Transform</span><span class="text-[10px] text-gray-400">Ctrl+T</span></button>
                     <div class="border-t border-[#3c3c3c] my-1"></div>
                     <button id="menu-fill-fg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill FG</span><span class="text-[10px] text-gray-400">Ctrl+Backspace</span></button>
                     <button id="menu-fill-bg" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Fill BG</span><span class="text-[10px] text-gray-400">Alt+Backspace</span></button>
@@ -106,7 +108,7 @@
 
             <!-- Select Menu -->
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Select</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Select</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-select-all" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>All</span><span class="text-[10px] text-gray-400">Ctrl+A</span></button>
                     <button id="menu-deselect" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Deselect</span><span class="text-[10px] text-gray-400">Ctrl+D</span></button>
@@ -115,14 +117,14 @@
             </div>
 
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Image</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Image</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="adjust-panel">Adjustments (Active Layer)</button>
                 </div>
             </div>
 
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Layer</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Layer</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button id="menu-new-layer" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>New Layer</span><span class="text-[10px] text-gray-400">Ctrl+Shift+N</span></button>
                     <button id="menu-merge-down" class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white flex justify-between items-center"><span>Merge Down</span><span class="text-[10px] text-gray-400">Ctrl+E</span></button>
@@ -131,14 +133,14 @@
             </div>
 
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Filter</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Filter</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="filters-panel">Filter Presets...</button>
                 </div>
             </div>
 
             <div class="relative menu-item-group">
-                <button class="px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Window</button>
+                <button class="menu-trigger px-3 py-1 hover:bg-[#3c3c3c] hover:text-white rounded transition">Window</button>
                 <div class="menu-dropdown absolute top-full left-0 w-52 bg-[#2c2c2c] border border-[#1c1c1c] shadow-xl rounded py-1 z-50">
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="layers-panel">Layers (F7)</button>
                     <button class="w-full text-left px-4 py-1.5 hover:bg-[#0058d0] hover:text-white toggle-panel-link" data-target="swatches-panel">Swatches</button>
@@ -165,6 +167,7 @@
             <div class="flex items-center space-x-4" id="dynamic-options-container"></div>
         </div>
         <div class="flex items-center space-x-2">
+            <button id="free-transform-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Free Transform (Ctrl+T)"><i class="fa-solid fa-vector-square mr-1"></i>Transform (Ctrl+T)</button>
             <button id="fill-fg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+Backspace">Fill FG</button>
             <button id="fill-bg-btn" class="px-3 py-1 bg-[#444] hover:bg-[#555] text-white rounded text-[11px] font-medium border border-gray-600 transition" title="Alt+Backspace">Fill BG</button>
             <button id="clear-selection-btn" class="px-3 py-1 bg-[#333] hover:bg-[#444] text-gray-300 rounded text-[11px] font-medium border border-gray-600 transition" title="Ctrl+D">Deselect (Ctrl+D)</button>
@@ -178,8 +181,9 @@
         <input type="file" id="place-file-input" accept="image/*" class="hidden">
 
         <!-- New Document / Upload Modal Overlay -->
-        <div id="upload-overlay" class="absolute inset-0 z-50 bg-[#353535] flex flex-col items-center justify-center p-6 transition-opacity duration-300">
-            <div class="max-w-md w-full rounded-lg p-6 bg-[#262626] border border-[#1a1a1a] shadow-2xl space-y-5">
+        <div id="upload-overlay" class="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+            <div id="upload-modal-card" class="max-w-md w-full rounded-lg p-6 bg-[#262626] border border-[#1a1a1a] shadow-2xl space-y-5 relative">
+                <button id="close-upload-modal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-sm" title="Close"><i class="fa-solid fa-xmark"></i></button>
                 <div class="text-center">
                     <div class="w-12 h-12 bg-[#0058d0]/20 text-[#0058d0] rounded-xl flex items-center justify-center mx-auto mb-2">
                         <i class="fa-solid fa-file-image text-xl"></i>
@@ -224,6 +228,7 @@
         <!-- Left Vertical Photoshop Toolbar Dock -->
         <aside id="left-dock" class="w-12 bg-[#323232] border-r border-[#1c1c1c] flex flex-col items-center py-2 space-y-1 shrink-0 z-20 shadow-lg">
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#0058d0] text-white flex items-center justify-center transition relative group" data-tool="move" title="Move Tool (V)"><i class="fa-solid fa-arrows-up-down-left-right text-xs"></i></button>
+            <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="transform" title="Free Transform Tool (Ctrl+T)"><i class="fa-solid fa-vector-square text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="rect-select" title="Rectangular Marquee (F)"><i class="fa-regular fa-square text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="circle-select" title="Elliptical Marquee (Shift+F)"><i class="fa-regular fa-circle text-xs"></i></button>
             <button class="tool-dock-btn w-9 h-9 rounded bg-[#3a3a3a] text-gray-300 hover:text-white flex items-center justify-center transition relative group" data-tool="lasso-select" title="Lasso Tool (Shift+F)"><i class="fa-solid fa-circle-notch text-xs"></i></button>
@@ -362,9 +367,9 @@
 
     <!-- Photoshop Color Picker Modal with FG/BG Selector Option -->
     <div id="ps-color-picker-modal" class="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center hidden">
-        <div class="bg-[#353535] border border-[#1e1e1e] rounded shadow-2xl w-[530px] flex flex-col overflow-hidden text-xs text-gray-200">
+        <div id="ps-cp-dialog" class="bg-[#353535] border border-[#1e1e1e] rounded shadow-2xl w-[530px] flex flex-col overflow-hidden text-xs text-gray-200">
             <div id="ps-cp-header" class="bg-[#2c2c2c] px-3 py-2 flex items-center justify-between border-b border-[#1c1c1c] cursor-move">
-                <span class="font-bold text-white flex items-center space-x-1.5"><i class="fa-solid fa-palette text-indigo-400"></i><span>Color Picker</span></span>
+                <span class="font-bold text-white flex items-center space-x-1.5"><i class="fa-solid fa-palette text-indigo-400"></i><span>Color Picker (Pick a color to auto-apply & close)</span></span>
                 <button id="ps-cp-close" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
@@ -400,7 +405,7 @@
                     <div class="flex items-center space-x-2">
                         <div class="flex flex-col w-24 text-[10px] text-center font-medium text-gray-400">
                             <span>New</span>
-                            <div id="ps-cp-new-preview" class="w-full h-7 border border-black mt-1"></div>
+                            <div id="ps-cp-new-preview" class="w-full h-7 border border-black mt-1 cursor-pointer" title="Click to apply & close"></div>
                         </div>
                         <div class="flex flex-col w-24 text-[10px] text-center font-medium text-gray-400">
                             <span>Current</span>
@@ -512,6 +517,10 @@
         let internalClipboard = null;
         let lastClientX = -1000, lastClientY = -1000;
 
+        // --- Photoshop Free Transform (Ctrl+T) State ---
+        let freeTransformState = null;
+        let transformDragAction = null;
+
         // --- Photoshop-Style Pen Tool State ---
         let penPaths = [];
         let currentPenPath = { points: [], closed: false };
@@ -557,6 +566,7 @@
         const fillFgBtn = document.getElementById('fill-fg-btn');
         const fillBgBtn = document.getElementById('fill-bg-btn');
         const clearSelectionBtn = document.getElementById('clear-selection-btn');
+        const freeTransformBtn = document.getElementById('free-transform-btn');
 
         let swatchesList = [
             '#000000', '#ffffff', '#6366f1', '#ef4444', '#10b981', '#f59e0b',
@@ -570,6 +580,7 @@
         let originalHeight = 512;
 
         let currentTool = 'move';
+        let previousToolBeforeTransform = 'move';
         let fgColor = '#6366f1';
         let bgColor = '#ffffff';
         let brushSize = 15;
@@ -612,6 +623,69 @@
         let lassoPoints = [];
         let historyStack = [];
         let historyIndex = -1;
+
+        // --- Top Menu Bar & Pop-up Dismissal on Left Mouse Click ---
+        const menuGroups = document.querySelectorAll('.menu-item-group');
+        function closeAllMenuDropdowns() {
+            menuGroups.forEach(g => g.classList.remove('open'));
+        }
+
+        menuGroups.forEach(group => {
+            const trigger = group.querySelector('.menu-trigger');
+            trigger.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return;
+                e.stopPropagation();
+                const wasOpen = group.classList.contains('open');
+                closeAllMenuDropdowns();
+                if (!wasOpen) group.classList.add('open');
+            });
+            group.addEventListener('mouseenter', () => {
+                const anyOpen = Array.from(menuGroups).some(g => g.classList.contains('open'));
+                if (anyOpen) {
+                    closeAllMenuDropdowns();
+                    group.classList.add('open');
+                }
+            });
+        });
+
+        document.querySelectorAll('.menu-dropdown button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeAllMenuDropdowns();
+            });
+        });
+
+        // Global left-click dismissal for open dropdowns & modal popups
+        window.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return; // Only left mouse click
+
+            // 1. Close top menu dropdowns if clicking outside menu triggers/dropdowns
+            if (!e.target.closest('.menu-item-group')) {
+                closeAllMenuDropdowns();
+            }
+
+            // 2. Close Color Picker Modal if left-clicking on backdrop outside the dialog box
+            const cpModal = document.getElementById('ps-color-picker-modal');
+            const cpDialog = document.getElementById('ps-cp-dialog');
+            if (cpModal && !cpModal.classList.contains('hidden')) {
+                if (!cpDialog.contains(e.target) && !e.target.closest('#swatch-container') && !e.target.closest('#opt-brush-color-btn')) {
+                    cpModal.classList.add('hidden');
+                }
+            }
+
+            // 3. Close New Document / Upload modal if left-clicking on backdrop (when a document is already initialized)
+            const uploadCard = document.getElementById('upload-modal-card');
+            if (uploadOverlay && !uploadOverlay.classList.contains('pointer-events-none') && layers.length > 0) {
+                if (uploadCard && !uploadCard.contains(e.target) && !e.target.closest('#menu-new')) {
+                    uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }
+        });
+
+        document.getElementById('close-upload-modal')?.addEventListener('click', () => {
+            if (layers.length > 0) {
+                uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }
+        });
 
         // --- Photoshop Color Picker Modal Logic ---
         const psColorPickerModal = document.getElementById('ps-color-picker-modal');
@@ -816,6 +890,14 @@
             psColorPickerModal.classList.remove('hidden');
         }
 
+        function applyCurrentPickerSelectionAndClose() {
+            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            if (psTargetFgRadio.checked) setForegroundColor(hex);
+            else setBackgroundColor(hex);
+            psColorPickerModal.classList.add('hidden');
+        }
+
         psTargetFgRadio.addEventListener('change', () => { if (psTargetFgRadio.checked) loadPickerTargetColor('fg'); });
         psTargetBgRadio.addEventListener('change', () => { if (psTargetBgRadio.checked) loadPickerTargetColor('bg'); });
 
@@ -826,23 +908,26 @@
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             setForegroundColor(rgbToHex(rgb.r, rgb.g, rgb.b));
             psCpCurrPreview.style.backgroundColor = fgColor;
+            psColorPickerModal.classList.add('hidden');
         });
 
         document.getElementById('ps-cp-apply-bg').addEventListener('click', () => {
             const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
             setBackgroundColor(rgbToHex(rgb.r, rgb.g, rgb.b));
             if (!psTargetFgRadio.checked) psCpCurrPreview.style.backgroundColor = bgColor;
-        });
-
-        document.getElementById('ps-cp-ok').addEventListener('click', () => {
-            const rgb = hsbToRgb(pickerHue, pickerSat, pickerVal);
-            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            if (psTargetFgRadio.checked) setForegroundColor(hex);
-            else setBackgroundColor(hex);
             psColorPickerModal.classList.add('hidden');
         });
 
+        document.getElementById('ps-cp-ok').addEventListener('click', () => {
+            applyCurrentPickerSelectionAndClose();
+        });
+
+        psCpNewPreview.addEventListener('click', () => {
+            applyCurrentPickerSelectionAndClose();
+        });
+
         psCpFieldCanvas.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
             isDraggingField = true;
             handleFieldPointer(e);
         });
@@ -851,7 +936,11 @@
             if (isDraggingSlider) handleSliderPointer(e);
         });
         window.addEventListener('pointerup', () => {
-            isDraggingField = false;
+            if (isDraggingField) {
+                isDraggingField = false;
+                // Automatically apply the picked color & close the Color Picker once the mouse button is released
+                applyCurrentPickerSelectionAndClose();
+            }
             isDraggingSlider = false;
         });
 
@@ -865,6 +954,7 @@
         }
 
         psCpSliderCanvas.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
             isDraggingSlider = true;
             handleSliderPointer(e);
         });
@@ -962,6 +1052,7 @@
 
         function restoreHistoryState(index) {
             if (index < 0 || index >= historyStack.length) return;
+            if (freeTransformState) cancelFreeTransform();
             commitFloatingSelection();
             historyIndex = index;
             const state = historyStack[historyIndex];
@@ -1003,6 +1094,10 @@
         }
 
         function undoLastAction() {
+            if (freeTransformState) {
+                cancelFreeTransform();
+                return;
+            }
             if (historyIndex <= 0) return;
             restoreHistoryState(historyIndex - 1);
         }
@@ -1065,7 +1160,7 @@
 
         function updateBrushCursorPosition(clientX, clientY) {
             const activeBrushes = ['brush', 'eraser', 'mixer-brush', 'smudge'];
-            if (!activeBrushes.includes(currentTool) || isSpacePressed || isAltPressed) {
+            if (!activeBrushes.includes(currentTool) || isSpacePressed || isAltPressed || freeTransformState) {
                 brushCursor.classList.add('hidden');
                 return;
             }
@@ -1084,6 +1179,278 @@
             } else {
                 brushCursor.classList.add('hidden');
             }
+        }
+
+        // --- Photoshop Free Transform Tool (Ctrl+T) Engine ---
+        function startFreeTransform() {
+            if (freeTransformState) return;
+            commitFloatingSelection();
+
+            const active = layers.find(l => l.id === activeLayerId);
+            if (!active || !active.visible) return;
+
+            const w = canvas.width, h = canvas.height;
+            const lCtx = active.canvas.getContext('2d');
+            const layerImgData = lCtx.getImageData(0, 0, w, h);
+            const data = layerImgData.data;
+
+            const backupCanvas = createOffscreenCanvas(w, h);
+            backupCanvas.getContext('2d').putImageData(layerImgData, 0, 0);
+
+            const extractedCanvas = createOffscreenCanvas(w, h);
+            const exCtx = extractedCanvas.getContext('2d');
+            const exImgData = exCtx.createImageData(w, h);
+            const exData = exImgData.data;
+
+            let minX = w, minY = h, maxX = -1, maxY = -1;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const i = y * w + x;
+                    const selAlpha = hasActiveSelection ? (selectionMask[i] / 255) : 1;
+                    if (selAlpha <= 0) continue;
+
+                    const idx = i * 4;
+                    const pixelA = data[idx + 3];
+                    const moveAlpha = Math.round(pixelA * selAlpha);
+
+                    if (moveAlpha > 0) {
+                        exData[idx] = data[idx];
+                        exData[idx + 1] = data[idx + 1];
+                        exData[idx + 2] = data[idx + 2];
+                        exData[idx + 3] = moveAlpha;
+
+                        if (!active.lockTransparency) {
+                            data[idx + 3] = Math.round(pixelA * (1 - selAlpha));
+                        } else {
+                            data[idx + 3] = Math.round(pixelA * (1 - selAlpha));
+                        }
+
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            // If layer or selection is completely blank, fallback to selection bounds or full canvas bounds
+            if (maxX < minX || maxY < minY) {
+                if (hasActiveSelection && selectionMask) {
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            if (selectionMask[y * w + x] > 0) {
+                                if (x < minX) minX = x;
+                                if (x > maxX) maxX = x;
+                                if (y < minY) minY = y;
+                                if (y > maxY) maxY = y;
+                            }
+                        }
+                    }
+                }
+                if (maxX < minX || maxY < minY) {
+                    minX = 0; minY = 0; maxX = w - 1; maxY = h - 1;
+                }
+            }
+
+            exCtx.putImageData(exImgData, 0, 0);
+            lCtx.putImageData(layerImgData, 0, 0);
+
+            const boxW = Math.max(4, maxX - minX + 1);
+            const boxH = Math.max(4, maxY - minY + 1);
+            const srcCrop = createOffscreenCanvas(boxW, boxH);
+            srcCrop.getContext('2d').drawImage(extractedCanvas, minX, minY, boxW, boxH, 0, 0, boxW, boxH);
+
+            freeTransformState = {
+                layerId: active.id,
+                backupCanvas,
+                sourceCanvas: srcCrop,
+                origW: boxW,
+                origH: boxH,
+                cx: minX + boxW / 2,
+                cy: minY + boxH / 2,
+                w: boxW,
+                h: boxH,
+                scaleX: 1,
+                scaleY: 1,
+                rotation: 0 // radians
+            };
+
+            if (currentTool !== 'transform') {
+                previousToolBeforeTransform = currentTool;
+            }
+            setTool('transform', true);
+            compositeCanvas();
+            redrawSelectionOverlay();
+        }
+
+        function commitFreeTransform() {
+            if (!freeTransformState) return;
+            const active = layers.find(l => l.id === freeTransformState.layerId);
+            if (active) {
+                const lCtx = active.canvas.getContext('2d');
+                lCtx.save();
+                if (active.lockTransparency) lCtx.globalCompositeOperation = 'source-atop';
+                lCtx.translate(freeTransformState.cx, freeTransformState.cy);
+                lCtx.rotate(freeTransformState.rotation);
+                lCtx.scale(freeTransformState.scaleX, freeTransformState.scaleY);
+                lCtx.drawImage(
+                    freeTransformState.sourceCanvas,
+                    -freeTransformState.w / 2,
+                    -freeTransformState.h / 2,
+                    freeTransformState.w,
+                    freeTransformState.h
+                );
+                lCtx.restore();
+            }
+
+            if (hasActiveSelection) {
+                clearSelection();
+            }
+
+            freeTransformState = null;
+            transformDragAction = null;
+            compositeCanvas();
+            redrawSelectionOverlay();
+            saveHistoryState("Free Transform");
+            setTool(previousToolBeforeTransform || 'move', true);
+        }
+
+        function cancelFreeTransform() {
+            if (!freeTransformState) return;
+            const active = layers.find(l => l.id === freeTransformState.layerId);
+            if (active && freeTransformState.backupCanvas) {
+                const lCtx = active.canvas.getContext('2d');
+                lCtx.clearRect(0, 0, canvas.width, canvas.height);
+                lCtx.drawImage(freeTransformState.backupCanvas, 0, 0);
+            }
+            freeTransformState = null;
+            transformDragAction = null;
+            compositeCanvas();
+            redrawSelectionOverlay();
+            setTool(previousToolBeforeTransform || 'move', true);
+        }
+
+        function transformLocalToCanvas(lx, ly, st = freeTransformState) {
+            const cos = Math.cos(st.rotation);
+            const sin = Math.sin(st.rotation);
+            return {
+                x: st.cx + (lx * cos - ly * sin),
+                y: st.cy + (lx * sin + ly * cos)
+            };
+        }
+
+        function transformCanvasToLocal(px, py, st = freeTransformState) {
+            const dx = px - st.cx;
+            const dy = py - st.cy;
+            const cos = Math.cos(-st.rotation);
+            const sin = Math.sin(-st.rotation);
+            return {
+                x: dx * cos - dy * sin,
+                y: dx * sin + dy * cos
+            };
+        }
+
+        function getFreeTransformHandles(st = freeTransformState) {
+            const hw = st.w / 2;
+            const hh = st.h / 2;
+            return {
+                nw: { lx: -hw, ly: -hh, cursor: 'nwse-resize' },
+                n:  { lx: 0,   ly: -hh, cursor: 'ns-resize' },
+                ne: { lx: hw,  ly: -hh, cursor: 'nesw-resize' },
+                e:  { lx: hw,  ly: 0,   cursor: 'ew-resize' },
+                se: { lx: hw,  ly: hh,  cursor: 'nwse-resize' },
+                s:  { lx: 0,   ly: hh,  cursor: 'ns-resize' },
+                sw: { lx: -hw, ly: hh,  cursor: 'nesw-resize' },
+                w:  { lx: -hw, ly: 0,   cursor: 'ew-resize' }
+            };
+        }
+
+        function hitTestFreeTransform(px, py) {
+            if (!freeTransformState) return null;
+            const invZoom = 1 / Math.max(0.2, zoomLevel);
+            const handleHitRadius = 8 * invZoom;
+            const handles = getFreeTransformHandles(freeTransformState);
+
+            for (const [key, h] of Object.entries(handles)) {
+                const worldPt = transformLocalToCanvas(h.lx, h.ly, freeTransformState);
+                if (Math.hypot(px - worldPt.x, py - worldPt.y) <= handleHitRadius) {
+                    return { type: 'scale', handle: key, cursor: h.cursor };
+                }
+            }
+
+            const local = transformCanvasToLocal(px, py, freeTransformState);
+            const hw = freeTransformState.w / 2;
+            const hh = freeTransformState.h / 2;
+
+            if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+                return { type: 'move', cursor: 'move' };
+            }
+
+            return { type: 'rotate', cursor: 'crosshair' };
+        }
+
+        function drawFreeTransformOverlay() {
+            if (!freeTransformState) return;
+            const st = freeTransformState;
+            const invZoom = 1 / Math.max(0.25, zoomLevel);
+
+            selectionCtx.save();
+            selectionCtx.translate(st.cx, st.cy);
+            selectionCtx.rotate(st.rotation);
+
+            const hw = st.w / 2;
+            const hh = st.h / 2;
+
+            // Subtle Rule-of-Thirds grid lines inside transform bounding box
+            selectionCtx.strokeStyle = 'rgba(0, 140, 255, 0.35)';
+            selectionCtx.lineWidth = 1 * invZoom;
+            selectionCtx.beginPath();
+            selectionCtx.moveTo(-hw / 3, -hh); selectionCtx.lineTo(-hw / 3, hh);
+            selectionCtx.moveTo(hw / 3, -hh);  selectionCtx.lineTo(hw / 3, hh);
+            selectionCtx.moveTo(-hw, -hh / 3); selectionCtx.lineTo(hw, -hh / 3);
+            selectionCtx.moveTo(-hw, hh / 3);  selectionCtx.lineTo(hw, hh / 3);
+            selectionCtx.stroke();
+
+            // Main Photoshop Transform Bounding Box
+            selectionCtx.strokeStyle = '#0078ff';
+            selectionCtx.lineWidth = 1.5 * invZoom;
+            selectionCtx.strokeRect(-hw, -hh, st.w, st.h);
+
+            // Center Reference Point Crosshair
+            const cr = 4.5 * invZoom;
+            selectionCtx.beginPath();
+            selectionCtx.arc(0, 0, cr, 0, Math.PI * 2);
+            selectionCtx.moveTo(-cr * 1.6, 0); selectionCtx.lineTo(cr * 1.6, 0);
+            selectionCtx.moveTo(0, -cr * 1.6); selectionCtx.lineTo(0, cr * 1.6);
+            selectionCtx.stroke();
+
+            // 8 Transform Handles
+            const hs = 4.5 * invZoom;
+            const handles = getFreeTransformHandles(st);
+            Object.values(handles).forEach(h => {
+                selectionCtx.fillStyle = '#ffffff';
+                selectionCtx.strokeStyle = '#0058d0';
+                selectionCtx.lineWidth = 1.5 * invZoom;
+                selectionCtx.fillRect(h.lx - hs, h.ly - hs, hs * 2, hs * 2);
+                selectionCtx.strokeRect(h.lx - hs, h.ly - hs, hs * 2, hs * 2);
+            });
+
+            selectionCtx.restore();
+        }
+
+        function syncTransformOptionsBarInputs() {
+            if (!freeTransformState) return;
+            const xIn = document.getElementById('tf-opt-x');
+            const yIn = document.getElementById('tf-opt-y');
+            const wIn = document.getElementById('tf-opt-w');
+            const hIn = document.getElementById('tf-opt-h');
+            const aIn = document.getElementById('tf-opt-angle');
+            if (xIn && document.activeElement !== xIn) xIn.value = Math.round(freeTransformState.cx);
+            if (yIn && document.activeElement !== yIn) yIn.value = Math.round(freeTransformState.cy);
+            if (wIn && document.activeElement !== wIn) wIn.value = Math.round((freeTransformState.w / freeTransformState.origW) * 100 * freeTransformState.scaleX);
+            if (hIn && document.activeElement !== hIn) hIn.value = Math.round((freeTransformState.h / freeTransformState.origH) * 100 * freeTransformState.scaleY);
+            if (aIn && document.activeElement !== aIn) aIn.value = Math.round((freeTransformState.rotation * 180) / Math.PI);
         }
 
         // --- Unified Selection Mask Engine ---
@@ -1356,7 +1723,7 @@
 
         // --- Marching Ants Animation & Overlay Rendering ---
         function animateMarchingAnts() {
-            if (hasActiveSelection || currentDragSelection || currentPenPath.points.length > 0) {
+            if (hasActiveSelection || currentDragSelection || currentPenPath.points.length > 0 || freeTransformState) {
                 dashOffset = (dashOffset - 0.35) % 8;
                 redrawSelectionOverlay();
             }
@@ -1367,6 +1734,11 @@
         function redrawSelectionOverlay() {
             selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
             const invZoom = 1 / Math.max(0.25, zoomLevel);
+
+            if (freeTransformState) {
+                drawFreeTransformOverlay();
+                return;
+            }
 
             if (hasActiveSelection && selectionContourSegments.length > 0) {
                 selectionCtx.save();
@@ -1589,6 +1961,91 @@
 
         // --- Dynamic Tool Options Bar ---
         function updateOptionsBarForTool(toolName) {
+            if (toolName === 'transform') {
+                optionsTitle.textContent = "Free Transform (Ctrl+T):";
+                const cx = freeTransformState ? Math.round(freeTransformState.cx) : 0;
+                const cy = freeTransformState ? Math.round(freeTransformState.cy) : 0;
+                const wPct = freeTransformState ? Math.round((freeTransformState.w / freeTransformState.origW) * 100 * freeTransformState.scaleX) : 100;
+                const hPct = freeTransformState ? Math.round((freeTransformState.h / freeTransformState.origH) * 100 * freeTransformState.scaleY) : 100;
+                const deg = freeTransformState ? Math.round((freeTransformState.rotation * 180) / Math.PI) : 0;
+
+                dynamicOptionsContainer.innerHTML = `
+                    <div class="flex items-center space-x-1">
+                        <span class="text-gray-400">X:</span>
+                        <input type="number" id="tf-opt-x" value="${cx}" class="w-14 bg-[#222] border border-[#555] rounded px-1 py-0.5 text-white font-mono text-[11px]">
+                        <span class="text-gray-400 ml-1">Y:</span>
+                        <input type="number" id="tf-opt-y" value="${cy}" class="w-14 bg-[#222] border border-[#555] rounded px-1 py-0.5 text-white font-mono text-[11px]">
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <span class="text-gray-400">W:</span>
+                        <input type="number" id="tf-opt-w" value="${wPct}" class="w-14 bg-[#222] border border-[#555] rounded px-1 py-0.5 text-white font-mono text-[11px]">
+                        <span class="text-gray-400">%</span>
+                        <span class="text-gray-400 ml-1">H:</span>
+                        <input type="number" id="tf-opt-h" value="${hPct}" class="w-14 bg-[#222] border border-[#555] rounded px-1 py-0.5 text-white font-mono text-[11px]">
+                        <span class="text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <i class="fa-solid fa-rotate-right text-gray-400 text-[10px]"></i>
+                        <input type="number" id="tf-opt-angle" value="${deg}" class="w-14 bg-[#222] border border-[#555] rounded px-1 py-0.5 text-white font-mono text-[11px]">
+                        <span class="text-gray-400">°</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button id="tf-flip-h" class="px-2 py-0.5 bg-[#2a2a2a] hover:bg-[#444] text-gray-200 rounded border border-[#555] text-[11px]" title="Flip Horizontal"><i class="fa-solid fa-arrows-left-right"></i> Flip H</button>
+                        <button id="tf-flip-v" class="px-2 py-0.5 bg-[#2a2a2a] hover:bg-[#444] text-gray-200 rounded border border-[#555] text-[11px]" title="Flip Vertical"><i class="fa-solid fa-arrows-up-down"></i> Flip V</button>
+                    </div>
+                    <div class="flex items-center space-x-1.5 border-l border-[#555] pl-3">
+                        <button id="tf-cancel-btn" class="px-2.5 py-0.5 bg-red-900/60 hover:bg-red-700 text-red-100 rounded border border-red-700 text-[11px] font-medium flex items-center space-x-1" title="Cancel Transform (Esc)"><i class="fa-solid fa-ban text-[10px]"></i><span>Cancel</span></button>
+                        <button id="tf-commit-btn" class="px-2.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded border border-emerald-500 text-[11px] font-medium flex items-center space-x-1" title="Commit Transform (Enter)"><i class="fa-solid fa-check text-[10px]"></i><span>Commit (Enter)</span></button>
+                    </div>
+                `;
+
+                document.getElementById('tf-opt-x')?.addEventListener('input', (e) => {
+                    if (!freeTransformState) return;
+                    freeTransformState.cx = parseFloat(e.target.value) || 0;
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-opt-y')?.addEventListener('input', (e) => {
+                    if (!freeTransformState) return;
+                    freeTransformState.cy = parseFloat(e.target.value) || 0;
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-opt-w')?.addEventListener('input', (e) => {
+                    if (!freeTransformState) return;
+                    const pct = parseFloat(e.target.value) || 100;
+                    freeTransformState.scaleX = pct < 0 ? -1 : 1;
+                    freeTransformState.w = Math.max(2, (Math.abs(pct) / 100) * freeTransformState.origW);
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-opt-h')?.addEventListener('input', (e) => {
+                    if (!freeTransformState) return;
+                    const pct = parseFloat(e.target.value) || 100;
+                    freeTransformState.scaleY = pct < 0 ? -1 : 1;
+                    freeTransformState.h = Math.max(2, (Math.abs(pct) / 100) * freeTransformState.origH);
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-opt-angle')?.addEventListener('input', (e) => {
+                    if (!freeTransformState) return;
+                    const degVal = parseFloat(e.target.value) || 0;
+                    freeTransformState.rotation = (degVal * Math.PI) / 180;
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-flip-h')?.addEventListener('click', () => {
+                    if (!freeTransformState) return;
+                    freeTransformState.scaleX *= -1;
+                    syncTransformOptionsBarInputs();
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-flip-v')?.addEventListener('click', () => {
+                    if (!freeTransformState) return;
+                    freeTransformState.scaleY *= -1;
+                    syncTransformOptionsBarInputs();
+                    compositeCanvas(); redrawSelectionOverlay();
+                });
+                document.getElementById('tf-cancel-btn')?.addEventListener('click', () => cancelFreeTransform());
+                document.getElementById('tf-commit-btn')?.addEventListener('click', () => commitFreeTransform());
+                return;
+            }
+
             if (toolName === 'move') {
                 optionsTitle.textContent = "Move Tool (V):";
                 dynamicOptionsContainer.innerHTML = `
@@ -1596,7 +2053,7 @@
                         <input type="checkbox" id="opt-move-autoselect" ${moveAutoSelect ? 'checked' : ''} class="rounded bg-[#222] border-[#555]">
                         <span>Auto-Select Layer</span>
                     </label>
-                    <span class="text-gray-400 text-[11px]">Drag to move Layer or Selection • Hold <b>Alt</b> to Duplicate • Hold <b>Shift</b> to Constrain • Hold <b>Space</b> to Pan</span>
+                    <span class="text-gray-400 text-[11px]">Drag to move Layer or Selection • <b>Ctrl+T</b> Free Transform • Hold <b>Alt</b> to Duplicate</span>
                 `;
                 document.getElementById('opt-move-autoselect').addEventListener('change', (e) => {
                     moveAutoSelect = e.target.checked;
@@ -1814,7 +2271,14 @@
             }
         }
 
-        function setTool(toolName) {
+        function setTool(toolName, internalSwitch = false) {
+            if (!internalSwitch && toolName === 'transform') {
+                startFreeTransform();
+                return;
+            }
+            if (!internalSwitch && freeTransformState && toolName !== 'transform') {
+                commitFreeTransform();
+            }
             if (currentTool === 'move' && toolName !== 'move') {
                 commitFloatingSelection();
             }
@@ -1830,6 +2294,7 @@
 
             const toolNamesMap = {
                 'move': 'Move (V)',
+                'transform': 'Free Transform (Ctrl+T)',
                 'rect-select': 'Rectangular Marquee (F)',
                 'circle-select': 'Elliptical Marquee (Shift+F)',
                 'lasso-select': 'Lasso Tool (Shift+F)',
@@ -1852,6 +2317,8 @@
             if (isSpacePressed) {
                 brushCursor.classList.add('hidden');
                 canvasWrapper.style.cursor = isPanning ? 'grabbing' : 'grab';
+            } else if (freeTransformState) {
+                brushCursor.classList.add('hidden');
             } else if (activeBrushes.includes(currentTool) && !isAltPressed) {
                 canvasWrapper.style.cursor = 'none';
                 updateBrushCursorSize();
@@ -1869,6 +2336,9 @@
         document.querySelectorAll('.tool-dock-btn').forEach(btn => {
             btn.addEventListener('click', () => setTool(btn.getAttribute('data-tool')));
         });
+
+        freeTransformBtn.addEventListener('click', () => startFreeTransform());
+        document.getElementById('menu-free-transform').addEventListener('click', () => startFreeTransform());
 
         function changeBrushSize(delta) {
             brushSize = Math.max(1, Math.min(150, parseInt(brushSize) + delta));
@@ -1968,6 +2438,7 @@
         }
 
         function copySelectionOrLayer() {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
@@ -2002,6 +2473,7 @@
 
         function pasteClipboard() {
             if (!internalClipboard) return;
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const newId = 'layer-' + Date.now();
             const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
@@ -2050,6 +2522,7 @@
             r.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
+                    if (freeTransformState) commitFreeTransform();
                     const newId = 'layer-' + Date.now();
                     const newCanvas = createOffscreenCanvas(canvas.width, canvas.height);
                     const nCtx = newCanvas.getContext('2d');
@@ -2090,6 +2563,8 @@
                     syncAdjustmentsUI();
                     compositeCanvas();
                     saveHistoryState(`Place ${currentPlaceType === 'linked' ? 'Linked' : 'Embedded'}`);
+                    // Automatically enter Free Transform mode after placing an image, just like Photoshop!
+                    startFreeTransform();
                 };
                 img.src = ev.target.result;
             };
@@ -2097,9 +2572,18 @@
             placeFileInput.value = '';
         });
 
-        // --- Keyboard Shortcuts (Strictly Preserved) ---
+        // --- Keyboard Shortcuts (Including Ctrl+T, Enter, Escape, Arrow Nudge) ---
         window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                if (e.key === 'Enter' && freeTransformState) {
+                    e.preventDefault();
+                    commitFreeTransform();
+                } else if (e.key === 'Escape' && freeTransformState) {
+                    e.preventDefault();
+                    cancelFreeTransform();
+                }
+                return;
+            }
 
             const key = e.key.toLowerCase();
             if (e.code === 'Space') { isSpacePressed = true; updateCanvasCursor(); }
@@ -2107,7 +2591,24 @@
             if (e.key === 'Shift') isShiftPressed = true;
             if (e.key === 'Alt') { isAltPressed = true; updateCanvasCursor(); }
 
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+                if (freeTransformState) {
+                    e.preventDefault();
+                    commitFreeTransform();
+                    return;
+                }
+            }
+
             if (e.key === 'Escape') {
+                if (!psColorPickerModal.classList.contains('hidden')) {
+                    psColorPickerModal.classList.add('hidden');
+                    return;
+                }
+                if (freeTransformState) {
+                    e.preventDefault();
+                    cancelFreeTransform();
+                    return;
+                }
                 if (currentTool === 'pen' && currentPenPath.points.length > 0) {
                     currentPenPath = { points: [], closed: false };
                     selectedAnchorIndex = null;
@@ -2115,11 +2616,30 @@
                 } else if (floatingSelection) {
                     commitFloatingSelection();
                 }
+                closeAllMenuDropdowns();
+                return;
+            }
+
+            // Arrow Key Nudging for Free Transform
+            if (freeTransformState && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+                const step = e.shiftKey ? 10 : 1;
+                if (e.key === 'ArrowLeft') freeTransformState.cx -= step;
+                if (e.key === 'ArrowRight') freeTransformState.cx += step;
+                if (e.key === 'ArrowUp') freeTransformState.cy -= step;
+                if (e.key === 'ArrowDown') freeTransformState.cy += step;
+                syncTransformOptionsBarInputs();
+                compositeCanvas();
+                redrawSelectionOverlay();
                 return;
             }
 
             if (e.key === 'Delete' || (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey)) {
                 e.preventDefault();
+                if (freeTransformState) {
+                    cancelFreeTransform();
+                    return;
+                }
                 if (currentTool === 'pen' && selectedAnchorIndex !== null && currentPenPath.points.length > 0) {
                     currentPenPath.points.splice(selectedAnchorIndex, 1);
                     if (currentPenPath.points.length < 3) currentPenPath.closed = false;
@@ -2137,7 +2657,9 @@
 
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
-                if (currentPenPath.points.length >= 2) {
+                if (freeTransformState) {
+                    commitFreeTransform();
+                } else if (currentPenPath.points.length >= 2) {
                     convertPathToSelection();
                 }
                 return;
@@ -2155,7 +2677,8 @@
                 e.stopImmediatePropagation();
 
                 if (e.ctrlKey || e.metaKey) {
-                    if (key === 'z') { undoLastAction(); }
+                    if (key === 't') { startFreeTransform(); }
+                    else if (key === 'z') { undoLastAction(); }
                     else if (key === 'a') { selectAllCanvas(); }
                     else if (key === 'c') { copySelectionOrLayer(); }
                     else if (key === 'x') { cutSelectionOrLayer(); }
@@ -2222,6 +2745,17 @@
             if (e.key === 'Shift') isShiftPressed = false;
             if (e.key === 'Alt') { isAltPressed = false; updateCanvasCursor(); }
         }, { capture: true });
+
+        // Double click inside transform box commits Free Transform
+        viewportContainer.addEventListener('dblclick', (e) => {
+            if (freeTransformState) {
+                const pos = getCanvasPointerPos(e);
+                const hit = hitTestFreeTransform(pos.x, pos.y);
+                if (hit && hit.type === 'move') {
+                    commitFreeTransform();
+                }
+            }
+        });
 
         // --- Layer Management ---
         function initLayers(w, h) {
@@ -2310,7 +2844,7 @@
             });
         }
 
-        window.setActiveLayer = (id) => { commitFloatingSelection(); activeLayerId = id; renderLayersUI(); syncAdjustmentsUI(); };
+        window.setActiveLayer = (id) => { if (freeTransformState) commitFreeTransform(); commitFloatingSelection(); activeLayerId = id; renderLayersUI(); syncAdjustmentsUI(); };
         window.renameLayerPrompt = (id) => {
             const l = layers.find(x => x.id === id);
             if (!l) return;
@@ -2327,6 +2861,7 @@
         window.updateLayerBlendMode = (id, mode) => { const l = layers.find(x => x.id === id); if (l) { l.blendMode = mode; compositeCanvas(); saveHistoryState("Blend Mode Change"); } };
         
         window.duplicateLayer = (id) => {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             if (idx === -1) return;
@@ -2359,6 +2894,7 @@
         };
 
         window.mergeLayerDown = (id) => {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             if (idx <= 0) return;
@@ -2401,6 +2937,7 @@
         };
 
         window.deleteLayer = (id) => {
+            if (freeTransformState) cancelFreeTransform();
             commitFloatingSelection();
             if (layers.length <= 1) return;
             layers = layers.filter(x => x.id !== id);
@@ -2408,6 +2945,7 @@
             renderLayersUI(); syncAdjustmentsUI(); compositeCanvas(); saveHistoryState("Delete Layer");
         };
         window.moveLayer = (id, dir) => {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const idx = layers.findIndex(x => x.id === id);
             const target = idx + dir;
@@ -2417,6 +2955,7 @@
         };
 
         addLayerBtn.addEventListener('click', () => {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const newId = 'layer-' + Date.now();
             const activeIdx = layers.findIndex(l => l.id === activeLayerId);
@@ -2439,6 +2978,7 @@
 
         // --- Document Setup & Loading ---
         function setupNewDocument(w, h, name = "document.png") {
+            if (freeTransformState) cancelFreeTransform();
             originalWidth = w; originalHeight = h;
             imageName = name;
             uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
@@ -2473,6 +3013,7 @@
             const img = new Image();
             img.crossOrigin = "anonymous";
             img.onload = () => {
+                if (freeTransformState) cancelFreeTransform();
                 originalImage = img; imageName = name;
                 originalWidth = img.naturalWidth; originalHeight = img.naturalHeight;
                 uploadOverlay.classList.add('opacity-0', 'pointer-events-none');
@@ -2547,6 +3088,22 @@
                 if (floatingSelection && l.id === activeLayerId) {
                     ctx.drawImage(floatingSelection.canvas, Math.round(floatingSelection.offsetX), Math.round(floatingSelection.offsetY));
                 }
+
+                if (freeTransformState && l.id === freeTransformState.layerId) {
+                    ctx.save();
+                    ctx.translate(freeTransformState.cx, freeTransformState.cy);
+                    ctx.rotate(freeTransformState.rotation);
+                    ctx.scale(freeTransformState.scaleX, freeTransformState.scaleY);
+                    ctx.drawImage(
+                        freeTransformState.sourceCanvas,
+                        -freeTransformState.w / 2,
+                        -freeTransformState.h / 2,
+                        freeTransformState.w,
+                        freeTransformState.h
+                    );
+                    ctx.restore();
+                }
+
                 ctx.restore();
             });
         }
@@ -2571,6 +3128,7 @@
         [brightnessInput, contrastInput, saturationInput, blurInput].forEach(i => i.addEventListener('change', () => saveHistoryState("Adjustments")));
 
         function applyPixelFilter(filterType) {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
             if (!active) return;
@@ -2897,8 +3455,7 @@
         // --- Pointer Events on Workspace ---
         viewportContainer.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            // Do not clear selection when right-clicking or Alt+right-clicking in Pen tool
-            if (currentTool === 'pen') return;
+            if (currentTool === 'pen' || freeTransformState) return;
             clearSelection();
         });
 
@@ -2917,6 +3474,10 @@
                 panX = e.clientX - startPanX;
                 panY = e.clientY - startPanY;
                 updateViewportTransform();
+            } else if (freeTransformState && !transformDragAction && !isSpacePressed) {
+                const pos = getCanvasPointerPos(e);
+                const hit = hitTestFreeTransform(pos.x, pos.y);
+                canvasWrapper.style.cursor = hit ? hit.cursor : 'default';
             }
         });
 
@@ -2950,11 +3511,9 @@
                         }
                         if (Math.hypot(pos.x - p.x, pos.y - p.y) <= hitRadius) {
                             if ((e.altKey || isAltPressed) && i === pts.length - 1 && p.outHandle) {
-                                // Alt+Right-Click on the last created anchor cuts its forward handle first
                                 p.outHandle = null;
                                 selectedAnchorIndex = i;
                             } else {
-                                // Delete the anchor point
                                 pts.splice(i, 1);
                                 if (pts.length < 3) currentPenPath.closed = false;
                                 selectedAnchorIndex = pts.length > 0 ? Math.min(i, pts.length - 1) : null;
@@ -2978,6 +3537,47 @@
                 startPanX = e.clientX - panX;
                 startPanY = e.clientY - panY;
                 updateCanvasCursor();
+                return;
+            }
+
+            // Free Transform Interaction
+            if (freeTransformState) {
+                const hit = hitTestFreeTransform(pos.x, pos.y);
+                if (!hit) return;
+
+                if (hit.type === 'move') {
+                    transformDragAction = {
+                        type: 'move',
+                        startX: pos.x,
+                        startY: pos.y,
+                        startCx: freeTransformState.cx,
+                        startCy: freeTransformState.cy
+                    };
+                } else if (hit.type === 'rotate') {
+                    transformDragAction = {
+                        type: 'rotate',
+                        startAngle: Math.atan2(pos.y - freeTransformState.cy, pos.x - freeTransformState.cx),
+                        initialRotation: freeTransformState.rotation
+                    };
+                } else if (hit.type === 'scale') {
+                    const handles = getFreeTransformHandles(freeTransformState);
+                    const oppositeMap = { nw: 'se', n: 's', ne: 'sw', e: 'w', se: 'nw', s: 'n', sw: 'ne', w: 'e' };
+                    const oppKey = oppositeMap[hit.handle];
+                    const oppLocal = handles[oppKey];
+                    const oppWorld = transformLocalToCanvas(oppLocal.lx, oppLocal.ly, freeTransformState);
+
+                    transformDragAction = {
+                        type: 'scale',
+                        handle: hit.handle,
+                        startCx: freeTransformState.cx,
+                        startCy: freeTransformState.cy,
+                        startW: freeTransformState.w,
+                        startH: freeTransformState.h,
+                        aspect: freeTransformState.w / Math.max(1, freeTransformState.h),
+                        oppWorldX: oppWorld.x,
+                        oppWorldY: oppWorld.y
+                    };
+                }
                 return;
             }
 
@@ -3114,8 +3714,6 @@
                             return;
                         }
                         if (altHeld) {
-                            // Photoshop Convert Point behavior:
-                            // Clicking the last active anchor cuts its outgoing handle; clicking again or another anchor converts/deletes
                             if (i === pts.length - 1 && p.outHandle) {
                                 p.outHandle = null;
                             } else if (p.inHandle || p.outHandle) {
@@ -3181,6 +3779,99 @@
 
         window.addEventListener('pointermove', (e) => {
             const pos = getCanvasPointerPos(e);
+
+            // Handle Free Transform Dragging
+            if (freeTransformState && transformDragAction) {
+                const act = transformDragAction;
+                if (act.type === 'move') {
+                    let dx = pos.x - act.startX;
+                    let dy = pos.y - act.startY;
+                    if (isShiftPressed) {
+                        if (Math.abs(dx) > Math.abs(dy)) dy = 0;
+                        else dx = 0;
+                    }
+                    freeTransformState.cx = act.startCx + dx;
+                    freeTransformState.cy = act.startCy + dy;
+                } else if (act.type === 'rotate') {
+                    const currAngle = Math.atan2(pos.y - freeTransformState.cy, pos.x - freeTransformState.cx);
+                    let newRot = act.initialRotation + (currAngle - act.startAngle);
+                    if (isShiftPressed) {
+                        const snapRad = (15 * Math.PI) / 180;
+                        newRot = Math.round(newRot / snapRad) * snapRad;
+                    }
+                    freeTransformState.rotation = newRot;
+                } else if (act.type === 'scale') {
+                    const handle = act.handle;
+                    const scaleFromCenter = e.altKey || isAltPressed;
+                    const lockAspect = e.shiftKey || isShiftPressed;
+
+                    if (scaleFromCenter) {
+                        const local = transformCanvasToLocal(pos.x, pos.y, {
+                            cx: act.startCx,
+                            cy: act.startCy,
+                            rotation: freeTransformState.rotation
+                        });
+                        let newW = act.startW;
+                        let newH = act.startH;
+
+                        if (handle.includes('e') || handle.includes('w')) {
+                            newW = Math.max(4, Math.abs(local.x) * 2);
+                        }
+                        if (handle.includes('n') || handle.includes('s')) {
+                            newH = Math.max(4, Math.abs(local.y) * 2);
+                        }
+                        if (lockAspect && handle.length === 2) {
+                            if (newW / newH > act.aspect) newH = newW / act.aspect;
+                            else newW = newH * act.aspect;
+                        }
+                        freeTransformState.cx = act.startCx;
+                        freeTransformState.cy = act.startCy;
+                        freeTransformState.w = newW;
+                        freeTransformState.h = newH;
+                    } else {
+                        // Scale relative to opposite anchor point
+                        const cos = Math.cos(-freeTransformState.rotation);
+                        const sin = Math.sin(-freeTransformState.rotation);
+                        const vx = pos.x - act.oppWorldX;
+                        const vy = pos.y - act.oppWorldY;
+                        let localDx = vx * cos - vy * sin;
+                        let localDy = vx * sin + vy * cos;
+
+                        let newW = act.startW;
+                        let newH = act.startH;
+
+                        if (handle.includes('e') || handle.includes('w')) {
+                            newW = Math.max(4, Math.abs(localDx));
+                        }
+                        if (handle.includes('n') || handle.includes('s')) {
+                            newH = Math.max(4, Math.abs(localDy));
+                        }
+
+                        if (lockAspect && handle.length === 2) {
+                            if (newW / newH > act.aspect) newH = newW / act.aspect;
+                            else newW = newH * act.aspect;
+                        }
+
+                        const signX = handle.includes('e') ? 1 : (handle.includes('w') ? -1 : 0);
+                        const signY = handle.includes('s') ? 1 : (handle.includes('n') ? -1 : 0);
+
+                        const offsetLocalX = signX * (newW / 2);
+                        const offsetLocalY = signY * (newH / 2);
+
+                        const fCos = Math.cos(freeTransformState.rotation);
+                        const fSin = Math.sin(freeTransformState.rotation);
+
+                        freeTransformState.cx = act.oppWorldX + (offsetLocalX * fCos - offsetLocalY * fSin);
+                        freeTransformState.cy = act.oppWorldY + (offsetLocalX * fSin + offsetLocalY * fCos);
+                        freeTransformState.w = newW;
+                        freeTransformState.h = newH;
+                    }
+                }
+                syncTransformOptionsBarInputs();
+                compositeCanvas();
+                redrawSelectionOverlay();
+                return;
+            }
 
             if (currentTool === 'pen' && !activeAction && currentPenPath.points.length > 2 && !currentPenPath.closed) {
                 const p0 = currentPenPath.points[0];
@@ -3344,6 +4035,7 @@
         window.addEventListener('pointerup', () => {
             isPanning = false;
             isZoomingScrub = false;
+            transformDragAction = null;
             updateCanvasCursor();
 
             if (activeAction === 'select') {
@@ -3366,7 +4058,6 @@
                 moveLayerSnapshot = null;
                 saveHistoryState("Move Layer");
             } else if (activeAction === 'pen-draw' || activeAction === 'pen-edit') {
-                // If user Alt+Clicked a direction handle without dragging, delete that handle
                 if (activeAction === 'pen-edit' && penDraggingHandle && penDraggingHandle.altClicked && !penDraggingHandle.moved) {
                     const pt = currentPenPath.points[penDraggingHandle.ptIndex];
                     if (pt) {
@@ -3389,6 +4080,7 @@
 
         window.addEventListener('pointercancel', () => {
             activeAction = null;
+            transformDragAction = null;
             currentDragSelection = null;
             isDrawingPenBezier = false;
             penDraggingHandle = null;
@@ -3396,6 +4088,7 @@
 
         // --- Photoshop Fill FG / BG ---
         function performSelectionFill(colorToFill) {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const active = layers.find(l => l.id === activeLayerId);
             if (!active || !active.visible) return;
@@ -3416,6 +4109,7 @@
         clearSelectionBtn.addEventListener('click', () => clearSelection());
 
         function resetEdits() {
+            if (freeTransformState) cancelFreeTransform();
             const active = layers.find(l => l.id === activeLayerId);
             if (active) {
                 active.brightness = 100;
@@ -3430,6 +4124,7 @@
 
         resetBtn.addEventListener('click', resetEdits);
         downloadBtn.addEventListener('click', () => {
+            if (freeTransformState) commitFreeTransform();
             commitFloatingSelection();
             const link = document.createElement('a');
             link.download = `photoshop-web-${imageName.replace(/\.[^/.]+$/, "")}.png`;
