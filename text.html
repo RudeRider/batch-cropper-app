@@ -888,25 +888,117 @@
                 this.saveCurrentPages();
             },
 
+            /**
+             * Robust force-apply method that iterates over selected text nodes or paragraphs,
+             * wrapping or updating inline styles even after huge paste blocks.
+             */
             applyStyleToSelection: function(styleProp, value) {
                 this.restoreSelection();
                 const sel = window.getSelection();
+                
+                // If nothing is selected (collapsed cursor), apply to current paragraph or active page
                 if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
                     const page = this.activePageEl || document.querySelector('.editable-page');
-                    if (page) page.style[styleProp] = value;
+                    if (!page) return;
+                    let target = page;
+                    if (sel && sel.anchorNode) {
+                        const base = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+                        if (base && base.closest('.editable-page')) {
+                            target = base.closest('p, h1, h2, h3, li, blockquote, span') || page;
+                        }
+                    }
+                    target.style[styleProp] = value;
                     this.saveCurrentPages();
                     return;
                 }
+
                 const range = sel.getRangeAt(0);
-                const span = document.createElement('span');
-                span.style[styleProp] = value;
-                try {
-                    range.surroundContents(span);
-                } catch (e) {
-                    const contents = range.extractContents();
-                    span.appendChild(contents);
-                    range.insertNode(span);
+                const pageEl = (range.commonAncestorContainer.nodeType === 1
+                    ? range.commonAncestorContainer
+                    : range.commonAncestorContainer.parentElement).closest('.editable-page');
+
+                if (!pageEl) {
+                    // Fallback to standard surroundContents if outside page container
+                    try {
+                        const span = document.createElement('span');
+                        span.style[styleProp] = value;
+                        range.surroundContents(span);
+                    } catch (e) {
+                        const contents = range.extractContents();
+                        const span = document.createElement('span');
+                        span.style[styleProp] = value;
+                        span.appendChild(contents);
+                        range.insertNode(span);
+                    }
+                    this.saveCurrentPages();
+                    return;
                 }
+
+                // Collect text nodes within selection to robustly wrap or update
+                const textNodes = [];
+                const walker = document.createTreeWalker(pageEl, NodeFilter.SHOW_TEXT, {
+                    acceptNode: function(node) {
+                        if (!node.nodeValue || node.nodeValue.length === 0) return NodeFilter.FILTER_REJECT;
+                        return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                    }
+                });
+
+                let curr;
+                while ((curr = walker.nextNode())) {
+                    textNodes.push(curr);
+                }
+
+                if (textNodes.length === 0) return;
+
+                const startContainer = range.startContainer;
+                const startOffset = range.startOffset;
+                const endContainer = range.endContainer;
+                const endOffset = range.endOffset;
+
+                let firstSpan = null;
+                let lastSpan = null;
+
+                textNodes.forEach((tNode) => {
+                    let sOffset = (tNode === startContainer) ? startOffset : 0;
+                    let eOffset = (tNode === endContainer) ? endOffset : tNode.nodeValue.length;
+
+                    if (sOffset >= eOffset) return;
+
+                    if (
+                        sOffset === 0 &&
+                        eOffset === tNode.nodeValue.length &&
+                        tNode.parentElement &&
+                        tNode.parentElement.tagName === 'SPAN' &&
+                        tNode.parentElement.childNodes.length === 1
+                    ) {
+                        tNode.parentElement.style[styleProp] = value;
+                        if (!firstSpan) firstSpan = tNode.parentElement;
+                        lastSpan = tNode.parentElement;
+                        return;
+                    }
+
+                    let middle = tNode;
+                    if (eOffset < middle.nodeValue.length) middle.splitText(eOffset);
+                    if (sOffset > 0) middle = middle.splitText(sOffset);
+
+                    const span = document.createElement('span');
+                    span.style[styleProp] = value;
+                    middle.parentNode.insertBefore(span, middle);
+                    span.appendChild(middle);
+
+                    if (!firstSpan) firstSpan = span;
+                    lastSpan = span;
+                });
+
+                if (firstSpan && lastSpan) {
+                    const newRange = document.createRange();
+                    newRange.setStartBefore(firstSpan);
+                    newRange.setEndAfter(lastSpan);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                    this.savedRange = newRange.cloneRange();
+                }
+
                 this.saveCurrentPages();
             },
 
